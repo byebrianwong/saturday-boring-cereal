@@ -1,0 +1,32 @@
+{
+  "slug": "calbee-frugra-reduced-sugar-fruit-and-granola",
+  "recorded": {
+    "protein": 10,
+    "totalSugars": 4,
+    "dietaryFiber": 6,
+    "servingSize": 56
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": false,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "Fruit Granola Reduced Sugar",
+    "matchedBrand": "Calbee Frugra",
+    "barcode": "4901330748470",
+    "url": "https://world.openfoodfacts.org/product/4901330748470",
+    "image": "https://images.openfoodfacts.org/images/products/490/133/074/8470/front_en.3.400.jpg",
+    "calories": null,
+    "saturatedFat": 3,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": null,
+    "sodium": 128,
+    "score": 17.39999999999999,
+    "comparedFields": 2,
+    "flags": [
+      "calories 510 implausible (9.1 kcal/g) — dropped"
+    ]
+  }
+}

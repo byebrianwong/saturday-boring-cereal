@@ -1,0 +1,30 @@
+{
+  "slug": "kind-dark-chocolate-clusters",
+  "recorded": {
+    "protein": 10,
+    "totalSugars": 7,
+    "dietaryFiber": 4,
+    "servingSize": 65
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": false,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "Be kind nut clusters dark chocolate nuts and sea salt",
+    "matchedBrand": "Be kind",
+    "barcode": "5000159553162",
+    "url": "https://world.openfoodfacts.org/product/5000159553162",
+    "image": "https://images.openfoodfacts.org/images/products/500/015/955/3162/front_en.7.400.jpg",
+    "calories": 365,
+    "saturatedFat": 4,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": null,
+    "sodium": 172,
+    "score": 2.9666666666666663,
+    "comparedFields": 3,
+    "flags": []
+  }
+}

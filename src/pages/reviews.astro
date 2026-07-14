@@ -1,0 +1,49 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import Receipt from '../components/Receipt.astro';
+
+const cereals = await getCollection('cereals');
+const lines = [...cereals]
+  .sort((a, b) => b.data.dateReviewed.getTime() - a.data.dateReviewed.getTime())
+  .map((c) => ({
+    title: `${c.data.brand} ${c.data.name}`,
+    rating: c.data.rating,
+    note: c.data.shortNote ?? '',
+    href: `/cereals/${c.id}/`,
+    date: c.data.dateReviewed,
+  }));
+---
+
+<Layout title="Receipts — Saturday Boring Cereal">
+  <div class="light"></div>
+  <h1 class="pagetitle">RECEIPTS</h1>
+  <p class="pagesub">Every review, printed at lane 1. Keep for your records.</p>
+  <div class="checkout wrap">
+    <Receipt lines={lines} heading="*** ALL REVIEWS · NEWEST FIRST ***" showDates />
+  </div>
+</Layout>
+
+<style>
+  .pagetitle {
+    text-align: center;
+    font-size: 30px;
+    letter-spacing: 0.2em;
+    margin-top: 30px;
+  }
+
+  .pagesub {
+    text-align: center;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 13.5px;
+    color: #6b4a2a;
+    margin-top: 6px;
+  }
+
+  .checkout {
+    display: flex;
+    justify-content: center;
+    padding: 30px 20px 10px;
+  }
+</style>

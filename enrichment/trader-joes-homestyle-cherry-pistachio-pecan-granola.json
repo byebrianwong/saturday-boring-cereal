@@ -1,0 +1,34 @@
+{
+  "slug": "trader-joes-homestyle-cherry-pistachio-pecan-granola",
+  "recorded": {
+    "protein": 6,
+    "totalSugars": 14,
+    "dietaryFiber": 5,
+    "servingSize": 60
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "Homestyle Cherry Pistachio Pecan Granola",
+    "matchedBrand": "Trader Joe's",
+    "barcode": "00810005",
+    "url": "https://world.openfoodfacts.org/product/00810005",
+    "image": "https://images.openfoodfacts.org/images/products/000/000/081/0005/front_en.20.400.jpg",
+    "calories": null,
+    "saturatedFat": 3.5,
+    "transFat": 0,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": null,
+    "sodium": 160,
+    "score": 7.697546304067751e-15,
+    "comparedFields": 3,
+    "flags": [
+      "calories 1400 implausible (23.3 kcal/g) — dropped",
+      "addedSugars 60 > recorded total 14 — dropped"
+    ]
+  },
+  "reviewNote": "Manually approved: exact product, plausible surviving values."
+}

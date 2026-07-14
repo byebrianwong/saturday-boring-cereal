@@ -1,0 +1,27 @@
+---
+import { rating as fmtRating } from '../lib/format';
+
+interface Props {
+  rating: number | null;
+  macros: string;
+}
+
+const { rating, macros } = Astro.props;
+---
+
+<div class="ptag">
+  {
+    rating == null ? (
+      <div class="p unrated">—<small>unrated</small></div>
+    ) : (
+      <div class="p">{fmtRating(rating)}<small>/10</small></div>
+    )
+  }
+  <div class="macros">{macros}</div>
+</div>
+
+<style>
+  .p.unrated {
+    color: var(--tag-gray);
+  }
+</style>

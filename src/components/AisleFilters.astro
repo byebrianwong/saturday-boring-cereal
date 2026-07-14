@@ -1,0 +1,29 @@
+---
+import { AISLE_FILTERS } from '../lib/taxonomy';
+
+interface Props {
+  /** 'links' renders anchors to the explorer; 'buttons' renders client-side filter buttons. */
+  mode?: 'links' | 'buttons';
+  active?: string;
+}
+
+const { mode = 'links', active = 'all' } = Astro.props;
+---
+
+<div class="aisles" data-filter-bar={mode === 'buttons' ? '' : undefined}>
+  {
+    AISLE_FILTERS.map((f) =>
+      mode === 'links' ? (
+        <a href={f.key === 'all' ? '/cereals/' : `/cereals/#f=${f.key}`} class:list={{ on: f.key === active }}>
+          <small>{f.aisle}</small>
+          {f.label}
+        </a>
+      ) : (
+        <button type="button" data-filter={f.key} class:list={{ on: f.key === active }}>
+          <small>{f.aisle}</small>
+          {f.label}
+        </button>
+      )
+    )
+  }
+</div>

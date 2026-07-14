@@ -1,0 +1,30 @@
+{
+  "slug": "cascadian-farm-kernza-grains-climate-smart-organic",
+  "recorded": {
+    "protein": 5,
+    "totalSugars": 9,
+    "dietaryFiber": 5,
+    "servingSize": 56
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": false,
+  "draft": {
+    "source": "usda_fdc",
+    "matchedName": "CLIMATE SMART KERNZA WHOLE GRAIN AND KERNZA WHEAT FLAKES WITH HONEY OAT CLUSTERS CEREAL, CLIMATE SMART",
+    "matchedBrand": "Small Planet Foods, Inc.",
+    "barcode": "021908123813",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2486916/nutrients",
+    "image": null,
+    "calories": null,
+    "saturatedFat": null,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": null,
+    "sodium": null,
+    "score": 999,
+    "comparedFields": 0,
+    "flags": []
+  }
+}

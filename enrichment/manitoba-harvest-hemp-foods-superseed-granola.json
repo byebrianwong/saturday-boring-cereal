@@ -1,0 +1,30 @@
+{
+  "slug": "manitoba-harvest-hemp-foods-superseed-granola",
+  "recorded": {
+    "protein": 11,
+    "totalSugars": 9,
+    "dietaryFiber": 4,
+    "servingSize": 60
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": false,
+  "draft": {
+    "source": "usda_fdc",
+    "matchedName": "MANITOBA HARVEST HEMP FOODS, RAW SHELLED HEMP SEEDS",
+    "matchedBrand": "The Harrell Sisters",
+    "barcode": "697658101076",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2665901/nutrients",
+    "image": null,
+    "calories": null,
+    "saturatedFat": null,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": null,
+    "sodium": null,
+    "score": 999,
+    "comparedFields": 0,
+    "flags": []
+  }
+}

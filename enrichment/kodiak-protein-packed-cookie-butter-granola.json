@@ -1,0 +1,30 @@
+{
+  "slug": "kodiak-protein-packed-cookie-butter-granola",
+  "recorded": {
+    "protein": 17,
+    "totalSugars": 9,
+    "dietaryFiber": 7,
+    "servingSize": 64
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": false,
+  "draft": {
+    "source": "usda_fdc",
+    "matchedName": "PROTEIN-PACKED PEANUT BUTTER CRUNCHY GRANOLA BARS, PEANUT BUTTER",
+    "matchedBrand": "Baker Mills",
+    "barcode": "0705599015403",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2579251/nutrients",
+    "image": null,
+    "calories": null,
+    "saturatedFat": null,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": null,
+    "sodium": null,
+    "score": 999,
+    "comparedFields": 0,
+    "flags": []
+  }
+}

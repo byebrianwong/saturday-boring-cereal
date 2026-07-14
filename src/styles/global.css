@@ -1,0 +1,186 @@
+/* Saturday Boring Cereal — "The Grocery Aisle" design system (variant A2) */
+
+:root {
+  --red: #d32f2f;
+  --red-dark: #b02525;
+  --yellow: #ffc928;
+  --cream: #fff3d6;
+  --brown: #5b3a1e;
+  --shelfwood: #8a5a2e;
+  --shelfwood-light: #a8743f;
+  --store-blue: #1f6fb2;
+  --store-blue-dark: #17578d;
+  --floor: #dfe6ea;
+  --tag-ink: #263238;
+  --tag-gray: #455a64;
+
+  --font-display: 'Arial Black', 'Arial Bold', Arial, sans-serif;
+  --font-body: Georgia, 'Times New Roman', serif;
+  --font-receipt: 'Courier New', Courier, monospace;
+  --font-label: Helvetica, Arial, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-display);
+  color: var(--brown);
+  background: var(--floor);
+  /* supermarket floor tile */
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.5) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.5) 1px, transparent 1px);
+  background-size: 80px 80px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+a {
+  color: inherit;
+}
+
+/* ---- shared bits ---- */
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 22px;
+}
+
+.rowlabel {
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: #546e7a;
+  margin: 26px 0 4px;
+  text-transform: uppercase;
+}
+
+/* fluorescent supermarket light */
+.light {
+  width: 340px;
+  height: 14px;
+  background: linear-gradient(#fff, #cfd8dc);
+  margin: 26px auto 0;
+  border-radius: 7px;
+  box-shadow: 0 30px 80px 30px rgba(255, 255, 240, 0.8);
+}
+
+/* aisle sign filter chips */
+.aisles {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 34px 0 8px;
+}
+
+.aisles a,
+.aisles button {
+  font-family: var(--font-display);
+  background: var(--store-blue);
+  color: #fff;
+  text-decoration: none;
+  border: 0;
+  cursor: pointer;
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  padding: 9px 14px 7px;
+  border-radius: 6px 6px 2px 2px;
+  position: relative;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+  text-transform: uppercase;
+}
+
+.aisles a::before,
+.aisles button::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 8px;
+  background: #90a4ae;
+}
+
+.aisles a.on,
+.aisles button.on {
+  background: var(--red);
+}
+
+.aisles a small,
+.aisles button small {
+  display: block;
+  font-size: 8px;
+  color: #bfe0ff;
+  letter-spacing: 0.2em;
+}
+
+.aisles a.on small,
+.aisles button.on small {
+  color: #ffd9d9;
+}
+
+/* shelf bar */
+.shelfbar {
+  height: 20px;
+  background: linear-gradient(var(--shelfwood-light), var(--shelfwood));
+  border-radius: 3px;
+  box-shadow: 0 12px 18px rgba(0, 0, 0, 0.25);
+}
+
+/* price tag */
+.ptag {
+  background: #fff;
+  border: 2px solid var(--tag-ink);
+  text-align: center;
+  padding: 3px 4px 4px;
+}
+
+.ptag .p {
+  font-size: 17px;
+  color: var(--red);
+}
+
+.ptag .p small {
+  font-size: 9px;
+  color: var(--tag-ink);
+}
+
+.ptag .macros {
+  font-family: var(--font-label);
+  font-size: 8px;
+  color: var(--tag-gray);
+  letter-spacing: 0.04em;
+}
+
+/* sticker */
+.sticker {
+  background: var(--yellow);
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  transform: rotate(-2deg);
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .wrap {
+    padding: 0 14px;
+  }
+}

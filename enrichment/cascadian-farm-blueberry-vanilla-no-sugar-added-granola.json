@@ -1,0 +1,30 @@
+{
+  "slug": "cascadian-farm-blueberry-vanilla-no-sugar-added-granola",
+  "recorded": {
+    "protein": 5,
+    "totalSugars": 7,
+    "dietaryFiber": 4,
+    "servingSize": 52
+  },
+  "confidence": "HIGH",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "Blueberry vanilla granola no added sugar",
+    "matchedBrand": "Cascadian farm",
+    "barcode": "0021908119915",
+    "url": "https://world.openfoodfacts.org/product/0021908119915",
+    "image": null,
+    "calories": 240,
+    "saturatedFat": 3,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": null,
+    "sodium": 70,
+    "score": 8.00007319649391e-10,
+    "comparedFields": 3,
+    "flags": []
+  }
+}

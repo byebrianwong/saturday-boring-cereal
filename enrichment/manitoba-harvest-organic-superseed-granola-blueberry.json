@@ -1,0 +1,30 @@
+{
+  "slug": "manitoba-harvest-organic-superseed-granola-blueberry",
+  "recorded": {
+    "protein": 11,
+    "totalSugars": 10,
+    "dietaryFiber": 4,
+    "servingSize": 60
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": false,
+  "draft": {
+    "source": "usda_fdc",
+    "matchedName": "BLUEBERRY PROTEIN HARVEST GRANOLA, BLUEBERRY",
+    "matchedBrand": "New England Natural Bakers Inc",
+    "barcode": "046689800364",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2085062/nutrients",
+    "image": null,
+    "calories": null,
+    "saturatedFat": null,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": null,
+    "sodium": null,
+    "score": 999,
+    "comparedFields": 0,
+    "flags": []
+  }
+}

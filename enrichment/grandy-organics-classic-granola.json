@@ -1,0 +1,30 @@
+{
+  "slug": "grandy-organics-classic-granola",
+  "recorded": {
+    "protein": 8,
+    "totalSugars": 6,
+    "dietaryFiber": 5,
+    "servingSize": 56
+  },
+  "confidence": "HIGH",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "Classic Granola",
+    "matchedBrand": "Grandy Organics",
+    "barcode": "0648960015018",
+    "url": "https://world.openfoodfacts.org/product/0648960015018",
+    "image": "https://images.openfoodfacts.org/images/products/064/896/001/5018/front_en.35.400.jpg",
+    "calories": 280,
+    "saturatedFat": 3,
+    "transFat": 0,
+    "polyunsaturatedFat": 4,
+    "monounsaturatedFat": 5,
+    "addedSugars": 0,
+    "sodium": 70,
+    "score": 0.3333333333333357,
+    "comparedFields": 3,
+    "flags": []
+  }
+}

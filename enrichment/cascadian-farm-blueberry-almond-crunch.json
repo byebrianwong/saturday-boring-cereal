@@ -1,0 +1,30 @@
+{
+  "slug": "cascadian-farm-blueberry-almond-crunch",
+  "recorded": {
+    "protein": 5,
+    "totalSugars": 6,
+    "dietaryFiber": 5,
+    "servingSize": 54
+  },
+  "confidence": "HIGH",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "Blueberry Almond Crunch Cereal",
+    "matchedBrand": "Cascadian Farm",
+    "barcode": "0021908120232",
+    "url": "https://world.openfoodfacts.org/product/0021908120232",
+    "image": "https://images.openfoodfacts.org/images/products/002/190/812/0232/front_en.57.400.jpg",
+    "calories": 240,
+    "saturatedFat": 3,
+    "transFat": 0,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": 0,
+    "sodium": 270,
+    "score": 1.7763568394002505e-15,
+    "comparedFields": 3,
+    "flags": []
+  }
+}

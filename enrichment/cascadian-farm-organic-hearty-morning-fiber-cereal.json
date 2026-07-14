@@ -1,0 +1,33 @@
+{
+  "slug": "cascadian-farm-organic-hearty-morning-fiber-cereal",
+  "recorded": {
+    "protein": 6,
+    "totalSugars": 10,
+    "dietaryFiber": 10,
+    "servingSize": 64
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "HEARTY MORNING FIBER CEREAL",
+    "matchedBrand": "CASCADIAN FARM",
+    "barcode": "0021908455525",
+    "url": "https://world.openfoodfacts.org/product/0021908455525",
+    "image": "https://images.openfoodfacts.org/images/products/002/190/845/5525/front_en.22.400.jpg",
+    "calories": 220,
+    "saturatedFat": 0.5,
+    "transFat": 0,
+    "polyunsaturatedFat": 0.5,
+    "monounsaturatedFat": 1.5,
+    "addedSugars": null,
+    "sodium": 180,
+    "score": 0,
+    "comparedFields": 3,
+    "flags": [
+      "addedSugars 16 > recorded total 10 — dropped"
+    ]
+  },
+  "reviewNote": "Manually approved: exact product, plausible surviving values."
+}
