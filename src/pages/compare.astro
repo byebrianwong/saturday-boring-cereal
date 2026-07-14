@@ -1,0 +1,401 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+
+const cereals = await getCollection('cereals');
+const ranked = [...cereals].sort((a, b) => (b.data.rating ?? -1) - (a.data.rating ?? -1));
+
+// Compact payload for the client picker + table.
+const items = ranked.map((c) => ({
+  id: c.id,
+  brand: c.data.brand,
+  name: c.data.name,
+  emoji: c.data.emoji,
+  boxColor: c.data.boxColor,
+  boxImage: c.data.boxImage ?? null,
+  rating: c.data.rating,
+  href: `/cereals/${c.id}/`,
+  n: {
+    servingSize: c.data.nutrition.servingSize,
+    calories: c.data.nutrition.calories ?? null,
+    protein: c.data.nutrition.protein ?? null,
+    totalSugars: c.data.nutrition.totalSugars ?? null,
+    addedSugars: c.data.nutrition.addedSugars ?? null,
+    dietaryFiber: c.data.nutrition.dietaryFiber ?? null,
+    totalFat: c.data.nutrition.totalFat ?? null,
+    saturatedFat: c.data.nutrition.saturatedFat ?? null,
+    sodium: c.data.nutrition.sodium ?? null,
+  },
+}));
+---
+
+<Layout title="Price Check — Saturday Boring Cereal" description="Compare cereals side by side, scanned at the register.">
+  <div class="light"></div>
+  <h1 class="pagetitle">PRICE CHECK</h1>
+  <p class="pagesub">Scan up to four boxes to compare them side by side at the register.</p>
+
+  <div class="picker wrap" id="picker"></div>
+
+  <div class="board wrap" id="board">
+    <div class="empty" id="empty">
+      <div class="shelfbar"></div>
+      <p>NO ITEMS SCANNED — tap boxes above to add them to the belt.</p>
+    </div>
+  </div>
+
+  <script is:inline id="cereal-data" type="application/json" set:html={JSON.stringify(items)}></script>
+
+  <script>
+    interface Row {
+      id: string; brand: string; name: string; emoji: string;
+      boxColor: string; boxImage: string | null; rating: number | null; href: string;
+      n: Record<string, number | null>;
+    }
+    const data: Row[] = JSON.parse(document.getElementById('cereal-data')!.textContent!);
+    const picker = document.getElementById('picker')!;
+    const board = document.getElementById('board')!;
+    const empty = document.getElementById('empty')!;
+    const MAX = 4;
+    const selected = new Set<string>();
+
+    // Deep-link support: /compare?ids=a,b,c
+    const initial = new URLSearchParams(location.search).get('ids');
+    if (initial) initial.split(',').forEach((id) => data.some((d) => d.id === id) && selected.add(id));
+
+    const rating = (v: number | null) => (v == null ? '—' : v.toFixed(1));
+    const g = (v: number | null) => (v == null ? '<span class="na">not listed</span>' : `${v}g`);
+    const mg = (v: number | null) => (v == null ? '<span class="na">not listed</span>' : `${v}mg`);
+    const plain = (v: number | null) => (v == null ? '<span class="na">not listed</span>' : String(v));
+
+    // Which direction is "better" for the best-in-row star.
+    const METRICS: Array<{ key: string; label: string; fmt: (v: number | null) => string; best?: 'max' | 'min' }> = [
+      { key: 'servingSize', label: 'Serving', fmt: g },
+      { key: 'calories', label: 'Calories', fmt: plain, best: 'min' },
+      { key: 'protein', label: 'Protein', fmt: g, best: 'max' },
+      { key: 'totalSugars', label: 'Total sugars', fmt: g, best: 'min' },
+      { key: 'addedSugars', label: 'Added sugars', fmt: g, best: 'min' },
+      { key: 'dietaryFiber', label: 'Fiber', fmt: g, best: 'max' },
+      { key: 'totalFat', label: 'Total fat', fmt: g },
+      { key: 'saturatedFat', label: 'Saturated fat', fmt: g },
+      { key: 'sodium', label: 'Sodium', fmt: mg, best: 'min' },
+    ];
+
+    function bestId(key: string, dir: 'max' | 'min', chosen: Row[]): string | null {
+      const vals = chosen
+        .map((c) => ({ id: c.id, v: c.n[key] }))
+        .filter((x): x is { id: string; v: number } => x.v != null);
+      if (vals.length < 2) return null; // no point crowning a winner of one
+      const target = dir === 'max' ? Math.max(...vals.map((x) => x.v)) : Math.min(...vals.map((x) => x.v));
+      const winners = vals.filter((x) => x.v === target);
+      return winners.length === 1 ? winners[0].id : null; // no star on ties
+    }
+
+    function renderPicker() {
+      picker.innerHTML = '';
+      for (const d of data) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip' + (selected.has(d.id) ? ' on' : '');
+        b.disabled = !selected.has(d.id) && selected.size >= MAX;
+        b.innerHTML = `<span class="cb">${d.boxImage ? `<img src="${d.boxImage}" alt="">` : d.emoji}</span>` +
+          `<span class="ct"><b>${d.name}</b><small>${d.brand}</small></span>`;
+        b.addEventListener('click', () => {
+          if (selected.has(d.id)) selected.delete(d.id);
+          else if (selected.size < MAX) selected.add(d.id);
+          sync();
+        });
+        picker.appendChild(b);
+      }
+    }
+
+    function renderBoard() {
+      const chosen = data.filter((d) => selected.has(d.id));
+      if (!chosen.length) {
+        empty.style.display = '';
+        // remove any table
+        board.querySelector('.compare')?.remove();
+        return;
+      }
+      empty.style.display = 'none';
+      board.querySelector('.compare')?.remove();
+
+      const winners: Record<string, string | null> = {};
+      for (const m of METRICS) if (m.best) winners[m.key] = bestId(m.key, m.best, chosen);
+
+      const el = document.createElement('div');
+      el.className = 'compare';
+      el.style.setProperty('--cols', String(chosen.length));
+      el.innerHTML =
+        `<div class="cgrid" style="grid-template-columns: 150px repeat(${chosen.length}, 1fr)">` +
+        // header row: box + name + rating
+        `<div class="rh corner"></div>` +
+        chosen.map((c) => `
+          <div class="chead">
+            <a class="box" href="${c.href}" style="--bc:${c.boxColor}">
+              ${c.boxImage ? `<img src="${c.boxImage}" alt="${c.brand} ${c.name}">` : `<span class="e">${c.emoji}</span>`}
+            </a>
+            <div class="cn"><b>${c.name}</b><small>${c.brand}</small></div>
+            <div class="crate">${rating(c.rating)}<small>/10</small></div>
+            <button class="drop" data-id="${c.id}" title="remove">✕</button>
+          </div>`).join('') +
+        // metric rows
+        METRICS.map((m) => `
+          <div class="rh">${m.label}</div>` +
+          chosen.map((c) => {
+            const win = m.best && winners[m.key] === c.id;
+            return `<div class="cell${win ? ' win' : ''}">${m.fmt(c.n[m.key])}${win ? '<span class="star">★</span>' : ''}</div>`;
+          }).join('')
+        ).join('') +
+        `</div>`;
+      board.appendChild(el);
+      el.querySelectorAll<HTMLButtonElement>('.drop').forEach((btn) =>
+        btn.addEventListener('click', () => { selected.delete(btn.dataset.id!); sync(); })
+      );
+    }
+
+    function sync() {
+      const ids = [...selected];
+      const url = ids.length ? `?ids=${ids.join(',')}` : location.pathname;
+      history.replaceState(null, '', url);
+      renderPicker();
+      renderBoard();
+    }
+
+    renderPicker();
+    renderBoard();
+  </script>
+</Layout>
+
+<style>
+  .pagetitle {
+    text-align: center;
+    font-size: 30px;
+    letter-spacing: 0.2em;
+    margin-top: 30px;
+  }
+
+  .pagesub {
+    text-align: center;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 13.5px;
+    color: #6b4a2a;
+    margin-top: 6px;
+  }
+
+  .picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin: 26px auto 10px;
+    max-width: 980px;
+  }
+
+  .picker :global(.chip) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-display);
+    background: #fff;
+    border: 2px solid var(--tag-ink);
+    border-radius: 8px;
+    padding: 6px 12px 6px 6px;
+    cursor: pointer;
+    text-align: left;
+    box-shadow: 0 3px 0 rgba(38, 50, 56, 0.25);
+  }
+
+  .picker :global(.chip.on) {
+    background: var(--yellow);
+    border-color: var(--brown);
+  }
+
+  .picker :global(.chip:disabled) {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .picker :global(.chip .cb) {
+    width: 26px;
+    height: 26px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    overflow: hidden;
+    background: var(--floor);
+    flex: 0 0 26px;
+  }
+
+  .picker :global(.chip .cb img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .picker :global(.chip .ct) {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+
+  .picker :global(.chip .ct b) {
+    font-size: 12px;
+  }
+
+  .picker :global(.chip .ct small) {
+    font-size: 9px;
+    color: #8a6a45;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .board {
+    max-width: 980px;
+    margin: 20px auto 0;
+    overflow-x: auto;
+  }
+
+  .empty {
+    text-align: center;
+    padding-top: 10px;
+  }
+
+  .empty p {
+    font-family: var(--font-receipt);
+    font-size: 13px;
+    color: #546e7a;
+    margin-top: 14px;
+    letter-spacing: 0.05em;
+  }
+
+  .board :global(.cgrid) {
+    display: grid;
+    min-width: 520px;
+    border: 3px solid var(--brown);
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .board :global(.chead) {
+    position: relative;
+    padding: 12px 10px 10px;
+    text-align: center;
+    border-left: 1px solid #e2d6bb;
+    background: var(--cream);
+  }
+
+  .board :global(.corner) {
+    background: var(--cream);
+  }
+
+  .board :global(.box) {
+    display: block;
+    width: 70px;
+    height: 90px;
+    margin: 0 auto 8px;
+    border: 3px solid var(--brown);
+    border-radius: 4px;
+    overflow: hidden;
+    background: linear-gradient(145deg, var(--bc), color-mix(in srgb, var(--bc) 72%, #000));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .board :global(.box img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .board :global(.box .e) {
+    font-size: 34px;
+  }
+
+  .board :global(.cn b) {
+    font-size: 12px;
+    display: block;
+    line-height: 1.15;
+  }
+
+  .board :global(.cn small) {
+    font-size: 9px;
+    color: #8a6a45;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .board :global(.crate) {
+    font-size: 20px;
+    color: var(--red);
+    margin-top: 6px;
+  }
+
+  .board :global(.crate small) {
+    font-size: 9px;
+    color: var(--tag-gray);
+  }
+
+  .board :global(.drop) {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 18px;
+    height: 18px;
+    border: 0;
+    border-radius: 50%;
+    background: var(--brown);
+    color: #fff;
+    font-size: 10px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .board :global(.rh) {
+    padding: 9px 12px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    background: var(--cream);
+    border-top: 1px solid #e2d6bb;
+    display: flex;
+    align-items: center;
+  }
+
+  .board :global(.cell) {
+    padding: 9px 12px;
+    font-family: var(--font-label);
+    font-size: 13px;
+    text-align: center;
+    border-top: 1px solid #eee;
+    border-left: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .board :global(.cell.win) {
+    background: #fff8df;
+    font-weight: 700;
+  }
+
+  .board :global(.cell .star) {
+    color: var(--yellow);
+    -webkit-text-stroke: 1px var(--brown);
+    font-size: 13px;
+  }
+
+  .board :global(.cell .na) {
+    color: #aaa;
+    font-style: italic;
+    font-family: var(--font-body);
+    font-size: 12px;
+  }
+</style>
