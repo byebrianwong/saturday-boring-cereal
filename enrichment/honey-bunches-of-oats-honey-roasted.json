@@ -1,0 +1,32 @@
+{
+  "slug": "honey-bunches-of-oats-honey-roasted",
+  "recorded": {
+    "protein": 3,
+    "totalSugars": 9,
+    "dietaryFiber": 2,
+    "servingSize": 30
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": false,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "Honey Bunches of Oats Granola Honey Roasted",
+    "matchedBrand": "Post",
+    "barcode": "0884912003416",
+    "url": "https://world.openfoodfacts.org/product/0884912003416",
+    "image": "https://images.openfoodfacts.org/images/products/088/491/200/3416/front_en.19.400.jpg",
+    "calories": 130,
+    "saturatedFat": 0.5,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": 7,
+    "sodium": null,
+    "score": 1.0817610062893046,
+    "comparedFields": 3,
+    "flags": [
+      "sodium 3mg implausibly low — dropped"
+    ]
+  }
+}

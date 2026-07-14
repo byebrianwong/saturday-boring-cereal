@@ -1,0 +1,120 @@
+---
+import { grams, milligrams, percent, plain } from '../lib/format';
+import type { CollectionEntry } from 'astro:content';
+
+interface Props {
+  nutrition: CollectionEntry<'cereals'>['data']['nutrition'];
+}
+
+const { nutrition: n } = Astro.props;
+
+const rows: Array<{ label: string; value: string; indent?: boolean; bold?: boolean }> = [
+  { label: 'Calories', value: plain(n.calories), bold: true },
+  { label: 'Total Fat', value: grams(n.totalFat), bold: true },
+  { label: 'Saturated Fat', value: grams(n.saturatedFat), indent: true },
+  { label: 'Trans Fat', value: grams(n.transFat), indent: true },
+  { label: 'Polyunsaturated Fat', value: grams(n.polyunsaturatedFat), indent: true },
+  { label: 'Monounsaturated Fat', value: grams(n.monounsaturatedFat), indent: true },
+  { label: 'Sodium', value: milligrams(n.sodium), bold: true },
+  { label: 'Total Carbohydrate', value: grams(n.totalCarbs), bold: true },
+  { label: 'Dietary Fiber', value: grams(n.dietaryFiber), indent: true },
+  { label: 'Total Sugars', value: grams(n.totalSugars), indent: true },
+  { label: 'Incl. Added Sugars', value: grams(n.addedSugars), indent: true },
+  { label: 'Protein', value: grams(n.protein), bold: true },
+  { label: 'Protein %DV', value: percent(n.proteinDV), indent: true },
+];
+---
+
+<div class="nf">
+  <h3>Nutrition Facts</h3>
+  <div class="serving">
+    <span>Serving Size</span>
+    <span>{n.servingDescription ?? `${n.servingSize}g`}{n.servingDescription ? '' : ''}</span>
+  </div>
+  <div class="rule-8"></div>
+  <div class="amount">AMOUNT PER SERVING</div>
+  {
+    rows.map((r) => (
+      <div class:list={['row', { indent: r.indent, bold: r.bold, missing: r.value === 'not listed' }]}>
+        <span>{r.label}</span>
+        <span class="v">{r.value}</span>
+      </div>
+    ))
+  }
+  <div class="fine">
+    “not listed” means the label doesn’t state it — we don’t invent numbers. FDA only requires
+    protein %DV when a protein claim is made.
+  </div>
+</div>
+
+<style>
+  .nf {
+    background: #fff;
+    color: #000;
+    font-family: var(--font-label);
+    border: 2px solid #000;
+    padding: 14px 16px;
+  }
+
+  h3 {
+    font-size: 30px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    border-bottom: 1px solid #000;
+    padding-bottom: 4px;
+  }
+
+  .serving {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 6px 0;
+    font-weight: 700;
+  }
+
+  .rule-8 {
+    border-bottom: 9px solid #000;
+    margin-bottom: 4px;
+  }
+
+  .amount {
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    padding: 4px 0;
+    border-bottom: 4px solid #000;
+  }
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 5px 0;
+    border-bottom: 1px solid #000;
+  }
+
+  .row.bold span:first-child {
+    font-weight: 900;
+  }
+
+  .row.indent {
+    padding-left: 18px;
+    font-size: 12px;
+  }
+
+  .row.missing .v {
+    color: #999;
+    font-style: italic;
+  }
+
+  .v {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .fine {
+    font-size: 9.5px;
+    color: #444;
+    padding-top: 8px;
+    line-height: 1.5;
+  }
+</style>

@@ -1,0 +1,95 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Store Policy — Saturday Boring Cereal">
+  <div class="light"></div>
+  <h1 class="pagetitle">STORE POLICY</h1>
+  <p class="pagesub">The methodology, posted by the register where nobody reads it.</p>
+
+  <div class="policy wrap">
+    <section>
+      <h2>§1 — The Taste Scale</h2>
+      <p>
+        Every cereal is scored 0–10, decimals allowed. The scale is inherited from years of
+        careful record-keeping and will not be changed, recalibrated, or explained. An 8.5 is a
+        very good morning. Nothing has earned a 10. Nothing may ever earn a 10.
+      </p>
+    </section>
+    <section>
+      <h2>§2 — The Numbers</h2>
+      <p>
+        Nutrition is transcribed from the physical box and cross-checked against USDA FoodData
+        Central where possible. Values are per stated serving. When a label doesn't state a value
+        — protein %DV, poly/mono fats, added sugars — this store prints <em>“not listed”</em>
+        rather than inventing a number. The FDA only requires protein %DV when a protein claim is
+        made; most boxes stay quiet, and so do we.
+      </p>
+    </section>
+    <section>
+      <h2>§3 — What Gets Shelved</h2>
+      <p>
+        Granolas and healthier cereals, weighted toward things a functioning adult eats on
+        purpose: flakes, clusters, high-fiber, high-protein. Neon marshmallow products are outside
+        the jurisdiction of this regulatory body.
+      </p>
+    </section>
+    <section>
+      <h2>§4 — On Clusters</h2>
+      <p>
+        Flakes are only acceptable when accompanied by clusters. This is store policy. Complaints
+        may be filed with the spoon.
+      </p>
+    </section>
+    <section>
+      <h2>§5 — Returns</h2>
+      <p>All opinions are final. No refunds. Total regret: 0.00.</p>
+    </section>
+  </div>
+</Layout>
+
+<style>
+  .pagetitle {
+    text-align: center;
+    font-size: 30px;
+    letter-spacing: 0.2em;
+    margin-top: 30px;
+  }
+
+  .pagesub {
+    text-align: center;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 13.5px;
+    color: #6b4a2a;
+    margin-top: 6px;
+  }
+
+  .policy {
+    max-width: 640px;
+    margin-top: 34px;
+    background: #fffdf4;
+    border: 1px solid #e0d5b8;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+    padding: 30px 34px;
+  }
+
+  section + section {
+    margin-top: 22px;
+  }
+
+  h2 {
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 6px;
+  }
+
+  p {
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: #3d2c15;
+  }
+</style>

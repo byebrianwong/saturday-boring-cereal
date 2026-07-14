@@ -1,0 +1,30 @@
+{
+  "slug": "seven-sundays-bright-side-granola-triple-berry",
+  "recorded": {
+    "protein": 6,
+    "totalSugars": 6,
+    "dietaryFiber": 4,
+    "servingSize": 40
+  },
+  "confidence": "HIGH",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "Bright Side Granola Triple Berry",
+    "matchedBrand": "Seven Sundays",
+    "barcode": "0850053830259",
+    "url": "https://world.openfoodfacts.org/product/0850053830259",
+    "image": "https://images.openfoodfacts.org/images/products/085/005/383/0259/front_en.58.400.jpg",
+    "calories": 180,
+    "saturatedFat": 3.5,
+    "transFat": 0,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": 2,
+    "sodium": 50,
+    "score": 0,
+    "comparedFields": 3,
+    "flags": []
+  }
+}

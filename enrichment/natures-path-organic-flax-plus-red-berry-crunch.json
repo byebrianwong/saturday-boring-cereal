@@ -1,0 +1,30 @@
+{
+  "slug": "natures-path-organic-flax-plus-red-berry-crunch",
+  "recorded": {
+    "protein": 6,
+    "totalSugars": 11,
+    "dietaryFiber": 6,
+    "servingSize": 58
+  },
+  "confidence": "HIGH",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "FLAX PLUS RED BERRY CRUNCH",
+    "matchedBrand": "NATURE'S PATH ORGANIC",
+    "barcode": "0058449777656",
+    "url": "https://world.openfoodfacts.org/product/0058449777656",
+    "image": "https://images.openfoodfacts.org/images/products/005/844/977/7656/front_en.33.400.jpg",
+    "calories": 240,
+    "saturatedFat": 0.5,
+    "transFat": null,
+    "polyunsaturatedFat": 2.5,
+    "monounsaturatedFat": 1,
+    "addedSugars": 11,
+    "sodium": 170,
+    "score": 4.144832625267251e-15,
+    "comparedFields": 3,
+    "flags": []
+  }
+}

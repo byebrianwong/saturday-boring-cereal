@@ -1,0 +1,30 @@
+{
+  "slug": "kind-soft-baked-granola-dark-chocolate-peanut-butter",
+  "recorded": {
+    "protein": 5,
+    "totalSugars": 10,
+    "dietaryFiber": 4,
+    "servingSize": 55
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": false,
+  "draft": {
+    "source": "usda_fdc",
+    "matchedName": "KIND, HEALTHY GRAINS GRANOLA BAR, PEANUT BUTTER DARK CHOCOLATE, PEANUT BUTTER DARK CHOCOLATE",
+    "matchedBrand": "KIND Inc.",
+    "barcode": "602652181030",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2585588/nutrients",
+    "image": null,
+    "calories": null,
+    "saturatedFat": null,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": null,
+    "sodium": null,
+    "score": 999,
+    "comparedFields": 0,
+    "flags": []
+  }
+}

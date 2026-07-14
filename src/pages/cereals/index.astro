@@ -1,0 +1,228 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import AisleFilters from '../../components/AisleFilters.astro';
+import MiniBox from '../../components/MiniBox.astro';
+import PriceTag from '../../components/PriceTag.astro';
+import { gramsShort } from '../../lib/format';
+
+const cereals = await getCollection('cereals');
+const ranked = [...cereals].sort((a, b) => (b.data.rating ?? -1) - (a.data.rating ?? -1));
+
+function macroLine(c: (typeof cereals)[number]): string {
+  const n = c.data.nutrition;
+  const parts: string[] = [];
+  const pro = gramsShort(n.protein);
+  const sug = gramsShort(n.totalSugars);
+  if (pro) parts.push(`PRO ${pro}`);
+  if (sug) parts.push(`SUG ${sug}`);
+  parts.push(`${n.servingSize}g`);
+  return parts.join(' · ');
+}
+---
+
+<Layout title="The Aisle — Saturday Boring Cereal">
+  <div class="light"></div>
+  <h1 class="pagetitle">THE AISLE</h1>
+  <p class="pagesub">Every ranked box in the store. Pick an aisle sign to filter; re-sort with the price gun.</p>
+
+  <AisleFilters mode="buttons" />
+
+  <div class="controls wrap">
+    <label class="pricegun">
+      SORT:
+      <select id="sort">
+        <option value="rating">Taste (best first)</option>
+        <option value="protein">Protein (most first)</option>
+        <option value="sugar">Sugar (least first)</option>
+        <option value="fiber">Fiber (most first)</option>
+        <option value="date">Recently reviewed</option>
+      </select>
+    </label>
+    <div class="count" id="count"></div>
+  </div>
+
+  <div class="aislegrid wrap" id="grid">
+    {
+      ranked.map((c) => (
+        <div
+          class="cell"
+          data-form={c.data.formFactors.join(' ')}
+          data-attrs={c.data.attributes.join(' ')}
+          data-rating={c.data.rating ?? -1}
+          data-protein={c.data.nutrition.protein ?? -1}
+          data-sugar={c.data.nutrition.totalSugars ?? 9999}
+          data-fiber={c.data.nutrition.dietaryFiber ?? -1}
+          data-date={c.data.dateReviewed.getTime()}
+        >
+          <MiniBox
+            emoji={c.data.emoji}
+            brand={c.data.brand}
+            name={c.data.name}
+            boxColor={c.data.boxColor}
+            boxImage={c.data.boxImage}
+            href={`/cereals/${c.id}/`}
+          />
+          <div class="shelfbar" />
+          <PriceTag rating={c.data.rating} macros={macroLine(c)} />
+        </div>
+      ))
+    }
+  </div>
+
+  <div class="empty wrap" id="empty" hidden>
+    <div class="shelfbar"></div>
+    <p>OUT OF STOCK — nothing on this shelf matches. Try another aisle.</p>
+  </div>
+</Layout>
+
+<script>
+  const grid = document.getElementById('grid')!;
+  const empty = document.getElementById('empty')!;
+  const count = document.getElementById('count')!;
+  const sortSel = document.getElementById('sort') as HTMLSelectElement;
+  const buttons = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-filter-bar] [data-filter]')
+  );
+  const cells = Array.from(grid.querySelectorAll<HTMLElement>('.cell'));
+
+  let active = 'all';
+
+  function matches(cell: HTMLElement): boolean {
+    if (active === 'all') return true;
+    const form = (cell.dataset.form ?? '').split(' ');
+    const attrs = (cell.dataset.attrs ?? '').split(' ');
+    return form.includes(active) || attrs.includes(active);
+  }
+
+  function apply() {
+    let shown = 0;
+    for (const cell of cells) {
+      const ok = matches(cell);
+      cell.hidden = !ok;
+      if (ok) shown++;
+    }
+    empty.hidden = shown > 0;
+    count.textContent = `${shown} box${shown === 1 ? '' : 'es'} on the shelf`;
+
+    const key = sortSel.value;
+    const dir = key === 'sugar' ? 1 : -1; // sugar ascends; everything else descends
+    const attr = { rating: 'rating', protein: 'protein', sugar: 'sugar', fiber: 'fiber', date: 'date' }[key] ?? 'rating';
+    [...cells]
+      .sort((a, b) => dir * (Number(a.dataset[attr]) - Number(b.dataset[attr])))
+      .forEach((c) => grid.appendChild(c));
+  }
+
+  function setActive(key: string) {
+    active = key;
+    for (const b of buttons) b.classList.toggle('on', b.dataset.filter === key);
+    if (key !== 'all') history.replaceState(null, '', `#f=${key}`);
+    else history.replaceState(null, '', location.pathname);
+    apply();
+  }
+
+  for (const b of buttons) {
+    b.addEventListener('click', () => setActive(b.dataset.filter!));
+  }
+  sortSel.addEventListener('change', apply);
+
+  // Deep-linking: /cereals/#f=granola pre-filters (home page aisle signs use this).
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const initial = hash.get('f');
+  setActive(initial && buttons.some((b) => b.dataset.filter === initial) ? initial : 'all');
+</script>
+
+<style>
+  .pagetitle {
+    text-align: center;
+    font-size: 30px;
+    letter-spacing: 0.2em;
+    margin-top: 30px;
+  }
+
+  .pagesub {
+    text-align: center;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 13.5px;
+    color: #6b4a2a;
+    margin-top: 6px;
+  }
+
+  .controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 22px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+  }
+
+  .pricegun {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    background: var(--red);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 4px;
+    box-shadow: 0 4px 0 var(--brown);
+  }
+
+  .pricegun select {
+    font-family: var(--font-display);
+    font-size: 11px;
+    border: 0;
+    border-radius: 3px;
+    padding: 3px 6px;
+    margin-left: 6px;
+  }
+
+  .count {
+    font-family: var(--font-receipt);
+    font-size: 12px;
+    color: #546e7a;
+  }
+
+  .aislegrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 34px 18px;
+    max-width: 980px;
+    margin-top: 34px;
+  }
+
+  .cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    perspective: 900px;
+  }
+
+  .cell[hidden] {
+    display: none;
+  }
+
+  .cell > :global(.shelfbar) {
+    width: 100%;
+    margin-top: -2px;
+  }
+
+  .cell > :global(.ptag) {
+    width: 118px;
+    margin-top: -1px;
+  }
+
+  .empty {
+    max-width: 680px;
+    text-align: center;
+    margin-top: 40px;
+  }
+
+  .empty p {
+    font-family: var(--font-receipt);
+    font-size: 13px;
+    color: #546e7a;
+    margin-top: 14px;
+    letter-spacing: 0.06em;
+  }
+</style>

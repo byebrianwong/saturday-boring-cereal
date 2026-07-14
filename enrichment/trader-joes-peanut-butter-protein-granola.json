@@ -1,0 +1,30 @@
+{
+  "slug": "trader-joes-peanut-butter-protein-granola",
+  "recorded": {
+    "protein": 11,
+    "totalSugars": 9,
+    "dietaryFiber": 3,
+    "servingSize": 60
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": false,
+  "draft": {
+    "source": "usda_fdc",
+    "matchedName": "TRADER JOE'S, CRUNCHY UNSALTED ORGANIC PEANUT BUTTER",
+    "matchedBrand": "TRADER JOE'S",
+    "barcode": "00507318",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/357456/nutrients",
+    "image": null,
+    "calories": null,
+    "saturatedFat": null,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": null,
+    "sodium": null,
+    "score": 999,
+    "comparedFields": 0,
+    "flags": []
+  }
+}

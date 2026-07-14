@@ -1,0 +1,301 @@
+---
+import { getCollection, render } from 'astro:content';
+import Layout from '../../layouts/Layout.astro';
+import NutritionPanel from '../../components/NutritionPanel.astro';
+import { label } from '../../lib/taxonomy';
+import { rating as fmtRating, shortDate } from '../../lib/format';
+
+export async function getStaticPaths() {
+  const cereals = await getCollection('cereals');
+  return cereals.map((c) => ({ params: { slug: c.id }, props: { cereal: c } }));
+}
+
+const { cereal } = Astro.props;
+const { data } = cereal;
+const { Content } = await render(cereal);
+
+const tags = [...data.formFactors, ...data.attributes];
+const proteinTags = data.proteinSources;
+const hasBody = (cereal.body ?? '').trim().length > 0;
+---
+
+<Layout title={`${data.brand} ${data.name} — Saturday Boring Cereal`} description={data.shortNote}>
+  <div class="light"></div>
+
+  <div class="crumb wrap">
+    <a href="/cereals/">← BACK TO THE AISLE</a>
+  </div>
+
+  <div class="product wrap">
+    <div class="left">
+      <div class="scene">
+        <div class="box3d" style={`--bc: ${data.boxColor}`}>
+          <div class:list={['face front', { hasphoto: data.boxImage }]}>
+            {
+              data.boxImage ? (
+                <img class="photo" src={data.boxImage} alt={`${data.brand} ${data.name}`} />
+              ) : (
+                <>
+                  <div class="em">{data.emoji}</div>
+                  <div class="brand">{data.brand}</div>
+                  <h1>{data.name}</h1>
+                </>
+              )
+            }
+          </div>
+          <div class="face side"></div>
+        </div>
+      </div>
+      <div class="shelfbar"></div>
+      <div class="bigtag ptag">
+        {
+          data.rating == null ? (
+            <div class="p unrated">—<small>unrated</small></div>
+          ) : (
+            <div class="p">{fmtRating(data.rating)}<small>/10</small></div>
+          )
+        }
+        <div class="macros">TASTE · RANKED {shortDate(data.dateReviewed).toUpperCase()}</div>
+      </div>
+
+      <div class="tags">
+        {tags.map((t) => (
+          <a href={`/cereals/#f=${t}`} class="tagchip">{label(t)}</a>
+        ))}
+        {proteinTags.map((t) => (
+          <span class="tagchip plain">{label(t)}</span>
+        ))}
+      </div>
+      {data.imageCredit && <p class="credit">{data.imageCredit}</p>}
+    </div>
+
+    <div class="right">
+      <NutritionPanel nutrition={data.nutrition} />
+    </div>
+  </div>
+
+  <article class="note wrap">
+    <div class="notehead">
+      <span class="sticker">MANAGER'S TASTING NOTE</span>
+    </div>
+    {data.shortNote && <p class="short">“{data.shortNote}”</p>}
+    {hasBody ? (
+      <div class="body"><Content /></div>
+    ) : (
+      !data.shortNote && (
+        <p class="empty">No note on file for this one — just the rating and the numbers, which is the whole point.</p>
+      )
+    )}
+  </article>
+</Layout>
+
+<style>
+  .crumb {
+    margin-top: 22px;
+  }
+
+  .crumb a {
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-decoration: none;
+    color: var(--store-blue-dark);
+  }
+
+  .crumb a:hover {
+    text-decoration: underline;
+  }
+
+  .product {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    margin-top: 20px;
+    align-items: start;
+    max-width: 940px;
+  }
+
+  .scene {
+    perspective: 1000px;
+    display: flex;
+    justify-content: center;
+    padding-top: 20px;
+  }
+
+  .box3d {
+    position: relative;
+    transform-style: preserve-3d;
+    transform: rotateY(-20deg) rotateX(1deg);
+    width: 240px;
+    height: 320px;
+  }
+
+  .face {
+    position: absolute;
+    inset: 0;
+  }
+
+  .front {
+    border: 4px solid var(--brown);
+    background: linear-gradient(145deg, var(--bc), color-mix(in srgb, var(--bc) 72%, #000));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 16px;
+    overflow: hidden;
+  }
+
+  .front.hasphoto {
+    padding: 0;
+  }
+
+  .front .photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .em {
+    font-size: 84px;
+    filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.3));
+  }
+
+  .brand {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: #fff;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 3px 10px;
+    border-radius: 99px;
+    margin-top: 14px;
+    text-transform: uppercase;
+  }
+
+  .front h1 {
+    font-size: 22px;
+    color: #fff;
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+    margin-top: 8px;
+    line-height: 1.15;
+  }
+
+  .side {
+    width: 60px;
+    transform: rotateY(90deg) translateZ(-30px) translateX(30px);
+    left: auto;
+    right: -60px;
+    border: 4px solid var(--brown);
+    border-left: 0;
+    background: color-mix(in srgb, var(--bc) 60%, #000);
+    opacity: 0.85;
+  }
+
+  .left .shelfbar {
+    max-width: 360px;
+    margin: -4px auto 0;
+  }
+
+  .bigtag {
+    width: 200px;
+    margin: -1px auto 0;
+  }
+
+  .bigtag .p {
+    font-size: 30px;
+  }
+
+  .bigtag .p.unrated {
+    color: var(--tag-gray);
+  }
+
+  .empty {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 14px;
+    color: #7a6a4a;
+  }
+
+  .tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 20px;
+  }
+
+  .tagchip {
+    background: var(--store-blue);
+    color: #fff;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-decoration: none;
+    padding: 7px 12px 6px;
+    border-radius: 6px 6px 2px 2px;
+    text-transform: uppercase;
+  }
+
+  .tagchip:hover {
+    background: var(--red);
+  }
+
+  .tagchip.plain {
+    background: #78909c;
+  }
+
+  .credit {
+    text-align: center;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 11px;
+    color: #6b4a2a;
+    margin-top: 14px;
+  }
+
+  .note {
+    max-width: 720px;
+    margin-top: 50px;
+    background: #fffdf4;
+    border: 1px solid #e0d5b8;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+    padding: 26px 30px 30px;
+  }
+
+  .notehead {
+    margin-bottom: 14px;
+  }
+
+  .short {
+    font-family: var(--font-body);
+    font-size: 17px;
+    font-style: italic;
+    color: #4a3418;
+    margin-bottom: 12px;
+  }
+
+  .body {
+    font-family: var(--font-body);
+    font-size: 14.5px;
+    line-height: 1.7;
+    color: #3d2c15;
+  }
+
+  .body :global(p) {
+    margin-bottom: 12px;
+  }
+
+  .body :global(h2),
+  .body :global(h3) {
+    font-family: var(--font-display);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    margin: 18px 0 8px;
+    text-transform: uppercase;
+  }
+
+  @media (max-width: 760px) {
+    .product {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

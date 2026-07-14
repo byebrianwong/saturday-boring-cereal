@@ -1,0 +1,30 @@
+{
+  "slug": "quaker-protein-granola-maple-and-brown-sugar",
+  "recorded": {
+    "protein": 11,
+    "totalSugars": 13,
+    "dietaryFiber": 4,
+    "servingSize": 62
+  },
+  "confidence": "HIGH",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "PROTEIN GRANOLA MAPLE & BROWN SUGAR",
+    "matchedBrand": "QUAKER",
+    "barcode": "0030000576106",
+    "url": "https://world.openfoodfacts.org/product/0030000576106",
+    "image": "https://images.openfoodfacts.org/images/products/003/000/057/6106/front_en.61.400.jpg",
+    "calories": 260,
+    "saturatedFat": 1,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": 12,
+    "sodium": 95,
+    "score": 0.3333333333333351,
+    "comparedFields": 3,
+    "flags": []
+  }
+}

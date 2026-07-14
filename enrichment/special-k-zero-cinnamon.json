@@ -1,0 +1,30 @@
+{
+  "slug": "special-k-zero-cinnamon",
+  "recorded": {
+    "protein": 18,
+    "totalSugars": 0.1,
+    "dietaryFiber": 3,
+    "servingSize": 36
+  },
+  "confidence": "HIGH",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "Special K Zero Cinnamon",
+    "matchedBrand": "Kellogg's",
+    "barcode": "0038000254505",
+    "url": "https://world.openfoodfacts.org/product/0038000254505",
+    "image": "https://images.openfoodfacts.org/images/products/003/800/025/4505/front_en.29.400.jpg",
+    "calories": 150,
+    "saturatedFat": 1,
+    "transFat": 0,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": 0,
+    "sodium": 286,
+    "score": 0.41794871794872507,
+    "comparedFields": 3,
+    "flags": []
+  }
+}

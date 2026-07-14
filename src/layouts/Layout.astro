@@ -1,0 +1,119 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = 'Saturday Boring Cereal',
+  description = "One man's rankings of granolas and healthier cereals. Every box tasted, weighed, and priced in cold, hard macros.",
+} = Astro.props;
+
+const nav = [
+  { href: '/cereals/', label: 'The Aisle' },
+  { href: '/compare/', label: 'Price Check' },
+  { href: '/reviews/', label: 'Receipts (Reviews)' },
+  { href: '/about/', label: 'Store Policy' },
+];
+const path = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥣</text></svg>" />
+    <title>{title}</title>
+  </head>
+  <body>
+    <header>
+      <a class="storesign" href="/">
+        SATURDAY BORING CEREAL
+        <small>OPEN 24/7 · AISLE 4 ONLY · NO SAMPLES</small>
+      </a>
+      <nav>
+        {nav.map((item) => (
+          <a href={item.href} class:list={{ on: path.startsWith(item.href) }}>{item.label}</a>
+        ))}
+      </nav>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer>
+      <div>SATURDAY BORING CEREAL · A SINGLE-PERSON REGULATORY BODY · EST. IN A KITCHEN</div>
+      <div class="fine">Nutrition transcribed from the physical box. Where a label omits a value, we say “not listed” instead of making one up.</div>
+    </footer>
+  </body>
+</html>
+
+<style>
+  header {
+    text-align: center;
+  }
+
+  .storesign {
+    display: block;
+    background: var(--store-blue);
+    color: #fff;
+    padding: 12px;
+    font-size: 14px;
+    letter-spacing: 0.25em;
+    text-decoration: none;
+  }
+
+  .storesign small {
+    display: block;
+    font-size: 9px;
+    letter-spacing: 0.35em;
+    color: #bfe0ff;
+    margin-top: 3px;
+  }
+
+  nav {
+    background: var(--store-blue-dark);
+    padding: 8px;
+  }
+
+  nav a {
+    color: #fff;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    margin: 0 14px;
+    text-transform: uppercase;
+  }
+
+  nav a.on {
+    color: var(--yellow);
+  }
+
+  nav a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  footer {
+    margin-top: 60px;
+    background: var(--brown);
+    color: var(--cream);
+    text-align: center;
+    font-size: 10px;
+    padding: 14px;
+    letter-spacing: 0.15em;
+  }
+
+  footer .fine {
+    margin-top: 6px;
+    font-family: var(--font-body);
+    font-style: italic;
+    letter-spacing: 0.02em;
+    color: #d9c39f;
+  }
+</style>

@@ -1,0 +1,30 @@
+{
+  "slug": "natures-path-heritage-flakes",
+  "recorded": {
+    "protein": 5,
+    "totalSugars": 5,
+    "dietaryFiber": 7,
+    "servingSize": 40
+  },
+  "confidence": "HIGH",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "Heritage Flakes",
+    "matchedBrand": "Nature's Path Organic",
+    "barcode": "0058449770206",
+    "url": "https://world.openfoodfacts.org/product/0058449770206",
+    "image": "https://images.openfoodfacts.org/images/products/005/844/977/0206/front_en.48.400.jpg",
+    "calories": 160,
+    "saturatedFat": 0,
+    "transFat": 0,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": 5,
+    "sodium": 170,
+    "score": 0,
+    "comparedFields": 3,
+    "flags": []
+  }
+}

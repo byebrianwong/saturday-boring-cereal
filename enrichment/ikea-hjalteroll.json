@@ -1,0 +1,30 @@
+{
+  "slug": "ikea-hjalteroll",
+  "recorded": {
+    "protein": 7,
+    "totalSugars": 4,
+    "dietaryFiber": 8,
+    "servingSize": 54
+  },
+  "confidence": "HIGH",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "HJÄLTEROLL",
+    "matchedBrand": "IKEA",
+    "barcode": "7315120008342",
+    "url": "https://world.openfoodfacts.org/product/7315120008342",
+    "image": "https://images.openfoodfacts.org/images/products/731/512/000/8342/front_en.3.400.jpg",
+    "calories": 235,
+    "saturatedFat": 3.5,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": 3,
+    "sodium": 162,
+    "score": 0.31199997425079395,
+    "comparedFields": 2,
+    "flags": []
+  }
+}

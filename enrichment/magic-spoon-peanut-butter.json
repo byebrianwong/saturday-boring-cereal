@@ -1,0 +1,30 @@
+{
+  "slug": "magic-spoon-peanut-butter",
+  "recorded": {
+    "protein": 14,
+    "totalSugars": 0.1,
+    "dietaryFiber": 1,
+    "servingSize": 36
+  },
+  "confidence": "HIGH",
+  "nameMatch": true,
+  "approved": true,
+  "draft": {
+    "source": "open_food_facts",
+    "matchedName": "Peanut Butter",
+    "matchedBrand": "Magic Spoon",
+    "barcode": "0850002887464",
+    "url": "https://world.openfoodfacts.org/product/0850002887464",
+    "image": "https://images.openfoodfacts.org/images/products/085/000/288/7464/front_en.30.400.jpg",
+    "calories": 170,
+    "saturatedFat": 1.5,
+    "transFat": 0,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": 0,
+    "sodium": 210,
+    "score": 0.03333333333333533,
+    "comparedFields": 3,
+    "flags": []
+  }
+}

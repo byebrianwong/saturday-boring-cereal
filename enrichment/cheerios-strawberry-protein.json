@@ -1,0 +1,30 @@
+{
+  "slug": "cheerios-strawberry-protein",
+  "recorded": {
+    "protein": 8,
+    "totalSugars": 12,
+    "dietaryFiber": 2,
+    "servingSize": 37
+  },
+  "confidence": "LOW",
+  "nameMatch": true,
+  "approved": false,
+  "draft": {
+    "source": "usda_fdc",
+    "matchedName": "Cheerios Protein Strawberry Breakfast Cereal Cup",
+    "matchedBrand": "GENERAL MILLS SALES INC.",
+    "barcode": "00016000233775",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2754684/nutrients",
+    "image": null,
+    "calories": null,
+    "saturatedFat": null,
+    "transFat": null,
+    "polyunsaturatedFat": null,
+    "monounsaturatedFat": null,
+    "addedSugars": null,
+    "sodium": null,
+    "score": 999,
+    "comparedFields": 0,
+    "flags": []
+  }
+}
