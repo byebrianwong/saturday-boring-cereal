@@ -5,11 +5,11 @@ import AisleFilters from '../components/AisleFilters.astro';
 import MiniBox from '../components/MiniBox.astro';
 import PriceTag from '../components/PriceTag.astro';
 import Receipt from '../components/Receipt.astro';
-import { gramsShort } from '../lib/format';
+import { macroLine, byRatingDesc } from '../lib/macros';
 
 const cereals = await getCollection('cereals');
 // Unrated (null) cereals sort last.
-const ranked = [...cereals].sort((a, b) => (b.data.rating ?? -1) - (a.data.rating ?? -1));
+const ranked = [...cereals].sort(byRatingDesc);
 const shelves: (typeof ranked)[] = [];
 for (let i = 0; i < Math.min(ranked.length, 6); i += 3) {
   shelves.push(ranked.slice(i, i + 3));
@@ -24,19 +24,6 @@ const recent = [...cereals]
     note: c.data.shortNote ?? '',
     href: `/cereals/${c.id}/`,
   }));
-
-function macroLine(c: (typeof cereals)[number]): string {
-  const n = c.data.nutrition;
-  const parts: string[] = [];
-  const pro = gramsShort(n.protein);
-  const sug = gramsShort(n.totalSugars);
-  const fib = gramsShort(n.dietaryFiber);
-  if (pro) parts.push(`PRO ${pro}`);
-  if (sug) parts.push(`SUG ${sug}`);
-  else if (fib) parts.push(`FIB ${fib}`);
-  parts.push(`${n.servingSize}g`);
-  return parts.join(' · ');
-}
 ---
 
 <Layout>
