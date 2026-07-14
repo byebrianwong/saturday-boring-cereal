@@ -4,21 +4,10 @@ import Layout from '../../layouts/Layout.astro';
 import AisleFilters from '../../components/AisleFilters.astro';
 import MiniBox from '../../components/MiniBox.astro';
 import PriceTag from '../../components/PriceTag.astro';
-import { gramsShort } from '../../lib/format';
+import { macroLine, byRatingDesc } from '../../lib/macros';
 
 const cereals = await getCollection('cereals');
-const ranked = [...cereals].sort((a, b) => (b.data.rating ?? -1) - (a.data.rating ?? -1));
-
-function macroLine(c: (typeof cereals)[number]): string {
-  const n = c.data.nutrition;
-  const parts: string[] = [];
-  const pro = gramsShort(n.protein);
-  const sug = gramsShort(n.totalSugars);
-  if (pro) parts.push(`PRO ${pro}`);
-  if (sug) parts.push(`SUG ${sug}`);
-  parts.push(`${n.servingSize}g`);
-  return parts.join(' · ');
-}
+const ranked = [...cereals].sort(byRatingDesc);
 ---
 
 <Layout title="The Aisle — Saturday Boring Cereal">

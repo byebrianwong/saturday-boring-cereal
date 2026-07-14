@@ -60,10 +60,10 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
 
       <div class="tags">
         {tags.map((t) => (
-          <a href={`/cereals/#f=${t}`} class="tagchip">{label(t)}</a>
+          <a href={`/tags/${t}/`} class="tagchip">{label(t)}</a>
         ))}
         {proteinTags.map((t) => (
-          <span class="tagchip plain">{label(t)}</span>
+          <a href={`/tags/${t}/`} class="tagchip plain">{label(t)}</a>
         ))}
       </div>
       {data.imageCredit && <p class="credit">{data.imageCredit}</p>}
