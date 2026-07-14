@@ -120,4 +120,6 @@ https://fdc.nal.usda.gov/api-key-signup
 ## Still to do (from the build plan)
 
 - Enrich the remaining 13 (need better source matches — often the exact SKU isn't in OFF/USDA).
-- Optional phase 2: `/tags/[tag]` landing pages (comparison view is built — see `/compare`).
+
+Phase-2 items from the plan are now built: comparison view (`/compare`) and `/tags/[tag]`
+landing pages (one per form factor / attribute / protein source).
