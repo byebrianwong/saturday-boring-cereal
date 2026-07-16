@@ -5,6 +5,7 @@ import MiniBox from '../../components/MiniBox.astro';
 import PriceTag from '../../components/PriceTag.astro';
 import { label } from '../../lib/taxonomy';
 import { macroLine, byRatingDesc } from '../../lib/macros';
+import { u } from '../../lib/url';
 
 export async function getStaticPaths() {
   const cereals = await getCollection('cereals');
@@ -34,7 +35,7 @@ const title = label(tag);
 >
   <div class="light"></div>
 
-  <div class="crumb wrap"><a href="/cereals/">← BACK TO THE FULL AISLE</a></div>
+  <div class="crumb wrap"><a href={u('/cereals/')}>← BACK TO THE FULL AISLE</a></div>
 
   <div class="signrow wrap">
     <div class="aislesign">

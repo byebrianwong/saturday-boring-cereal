@@ -5,6 +5,7 @@ import AisleFilters from '../../components/AisleFilters.astro';
 import MiniBox from '../../components/MiniBox.astro';
 import PriceTag from '../../components/PriceTag.astro';
 import { macroLine, byRatingDesc } from '../../lib/macros';
+import { u } from '../../lib/url';
 
 const cereals = await getCollection('cereals');
 const ranked = [...cereals].sort(byRatingDesc);
@@ -69,7 +70,7 @@ const ranked = [...cereals].sort(byRatingDesc);
   <div class="cart" id="cart" hidden>
     <span class="cartlabel">🛒 <b id="cartcount">0</b> in cart</span>
     <span class="carthint" id="carthint"></span>
-    <a class="cartgo" id="cartgo" href="/compare/">PRICE CHECK →</a>
+    <a class="cartgo" id="cartgo" href={u('/compare/')}>PRICE CHECK →</a>
     <button class="cartclear" id="cartclear" type="button">clear</button>
   </div>
 </Layout>
@@ -131,6 +132,7 @@ const ranked = [...cereals].sort(byRatingDesc);
 
   // --- "add to compare" cart -> /compare?ids=... (max 4, matching the compare page) ---
   const CART_MAX = 4;
+  const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
   const cart = document.getElementById('cart')!;
   const cartCount = document.getElementById('cartcount')!;
   const cartHint = document.getElementById('carthint')!;
@@ -149,7 +151,7 @@ const ranked = [...cereals].sort(byRatingDesc);
     cart.hidden = inCart.size === 0;
     cartCount.textContent = String(inCart.size);
     cartHint.textContent = inCart.size >= CART_MAX ? '(max — clear one to swap)' : '';
-    cartGo.href = inCart.size ? `/compare/?ids=${[...inCart].join(',')}` : '/compare/';
+    cartGo.href = inCart.size ? `${BASE}/compare/?ids=${[...inCart].join(',')}` : `${BASE}/compare/`;
   }
 
   for (const b of addBtns) {

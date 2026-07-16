@@ -7,6 +7,7 @@ import PriceTag from '../components/PriceTag.astro';
 import Receipt from '../components/Receipt.astro';
 import { macroLine, byRatingDesc } from '../lib/macros';
 import { label } from '../lib/taxonomy';
+import { u } from '../lib/url';
 
 const cereals = await getCollection('cereals');
 // Unrated (null) cereals sort last.
@@ -67,7 +68,7 @@ const recent = [...cereals]
         One man walks the healthy-cereal aisle so you don't have to. Every box tasted, weighed,
         and priced in cold, hard macros.
       </p>
-      <a class="cta" href="/cereals/">WALK THE AISLE →</a>
+      <a class="cta" href={u('/cereals/')}>WALK THE AISLE →</a>
     </div>
   </div>
   <div class="shelf-hero"></div>
@@ -106,7 +107,7 @@ const recent = [...cereals]
   <div class="browse wrap">
     {
       browseTags.map(([tag, n]) => (
-        <a class="browsetag" href={`/tags/${tag}/`}>
+        <a class="browsetag" href={u(`/tags/${tag}/`)}>
           {label(tag)}<span class="bn">{n}</span>
         </a>
       ))
