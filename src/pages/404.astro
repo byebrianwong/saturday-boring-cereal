@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import { u } from '../lib/url';
 ---
 
 <Layout title="Aisle Not Found — Saturday Boring Cereal">
@@ -15,8 +16,8 @@ import Layout from '../layouts/Layout.astro';
       finite, the milk is warm, and a stock clerk (one man) has been notified.
     </p>
     <div class="links">
-      <a class="cta" href="/">← BACK TO THE FRONT</a>
-      <a class="cta ghost" href="/cereals/">WALK THE AISLE</a>
+      <a class="cta" href={u('/')}>← BACK TO THE FRONT</a>
+      <a class="cta ghost" href={u('/cereals/')}>WALK THE AISLE</a>
     </div>
     <div class="shelfbar"></div>
   </div>

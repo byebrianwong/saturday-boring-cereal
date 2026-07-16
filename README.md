@@ -3,6 +3,8 @@
 One man's rankings of granolas and healthier cereals, styled as a grocery aisle.
 Astro static site + Keystatic admin, no database, no server.
 
+**Live:** https://byebrianwong.github.io/saturday-boring-cereal/
+
 ## Run it
 
 ```bash
@@ -11,6 +13,16 @@ npm run dev        # site at http://localhost:4321, admin at /keystatic
 npm run build      # static output in dist/ (admin excluded — see below)
 npm run preview    # serve the built site
 ```
+
+## Deploy
+
+Pushing to `main` auto-deploys to GitHub Pages via
+[.github/workflows/deploy.yml](.github/workflows/deploy.yml). GitHub Pages serves this
+project repo under `/saturday-boring-cereal/`, so the workflow builds with `PAGES=true`,
+which sets Astro's `base`. Internal links go through [`src/lib/url.ts`](src/lib/url.ts)
+`u()` (reads `import.meta.env.BASE_URL`), so the same code deploys to a **root** host
+(Vercel/Netlify/Cloudflare) unchanged — just build without `PAGES` and set `site` to the
+real domain in [astro.config.mjs](astro.config.mjs).
 
 ## Where the data came from
 

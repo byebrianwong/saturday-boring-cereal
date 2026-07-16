@@ -1,5 +1,6 @@
 ---
 import { rating as fmtRating, receiptDate } from '../lib/format';
+import { u } from '../lib/url';
 
 interface ReceiptLine {
   title: string;
@@ -25,7 +26,7 @@ const { lines, heading = '*** RECENT REVIEWS ***', showDates = false } = Astro.p
     lines.map((l) => (
       <>
         <div class="ln">
-          {l.href ? <a href={l.href}>{l.title}</a> : <span>{l.title}</span>}
+          {l.href ? <a href={u(l.href)}>{l.title}</a> : <span>{l.title}</span>}
           <span class="r">
             {showDates && l.date ? <span class="d">{receiptDate(l.date)} </span> : null}
             {fmtRating(l.rating)}

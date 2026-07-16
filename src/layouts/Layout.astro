@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import { u } from '../lib/url';
 
 interface Props {
   title?: string;
@@ -34,7 +35,7 @@ const path = Astro.url.pathname;
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <link rel="alternate" type="application/rss+xml" title="Saturday Boring Cereal — Receipts" href="/rss.xml" />
+    <link rel="alternate" type="application/rss+xml" title="Saturday Boring Cereal — Receipts" href={u('/rss.xml')} />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥣</text></svg>" />
     <title>{title}</title>
 
@@ -51,13 +52,13 @@ const path = Astro.url.pathname;
   </head>
   <body>
     <header>
-      <a class="storesign" href="/">
+      <a class="storesign" href={u('/')}>
         SATURDAY BORING CEREAL
         <small>OPEN 24/7 · AISLE 4 ONLY · NO SAMPLES</small>
       </a>
       <nav>
         {nav.map((item) => (
-          <a href={item.href} class:list={{ on: path.startsWith(item.href) }}>{item.label}</a>
+          <a href={u(item.href)} class:list={{ on: path.startsWith(u(item.href)) }}>{item.label}</a>
         ))}
       </nav>
     </header>
@@ -70,9 +71,9 @@ const path = Astro.url.pathname;
       <div>SATURDAY BORING CEREAL · A SINGLE-PERSON REGULATORY BODY · EST. IN A KITCHEN</div>
       <div class="fine">Nutrition transcribed from the physical box. Where a label omits a value, we say “not listed” instead of making one up.</div>
       <div class="foot-links">
-        <a href="/cereals/">The Aisle</a> · <a href="/compare/">Price Check</a> ·
-        <a href="/reviews/">Receipts</a> · <a href="/about/">Store Policy</a> ·
-        <a href="/rss.xml">RSS</a>
+        <a href={u('/cereals/')}>The Aisle</a> · <a href={u('/compare/')}>Price Check</a> ·
+        <a href={u('/reviews/')}>Receipts</a> · <a href={u('/about/')}>Store Policy</a> ·
+        <a href={u('/rss.xml')}>RSS</a>
       </div>
     </footer>
   </body>

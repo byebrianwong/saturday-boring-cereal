@@ -4,6 +4,7 @@ import Layout from '../../layouts/Layout.astro';
 import NutritionPanel from '../../components/NutritionPanel.astro';
 import { label } from '../../lib/taxonomy';
 import { rating as fmtRating, shortDate } from '../../lib/format';
+import { u } from '../../lib/url';
 
 export async function getStaticPaths() {
   const cereals = await getCollection('cereals');
@@ -22,12 +23,12 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
 <Layout
   title={`${data.brand} ${data.name} — Saturday Boring Cereal`}
   description={data.shortNote ?? `${data.brand} ${data.name}, ranked and measured.`}
-  image={data.boxImage}
+  image={data.boxImage ? u(data.boxImage) : undefined}
 >
   <div class="light"></div>
 
   <div class="crumb wrap">
-    <a href="/cereals/">← BACK TO THE AISLE</a>
+    <a href={u('/cereals/')}>← BACK TO THE AISLE</a>
   </div>
 
   <div class="product wrap">
@@ -37,7 +38,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
           <div class:list={['face front', { hasphoto: data.boxImage }]}>
             {
               data.boxImage ? (
-                <img class="photo" src={data.boxImage} alt={`${data.brand} ${data.name}`} />
+                <img class="photo" src={u(data.boxImage)} alt={`${data.brand} ${data.name}`} />
               ) : (
                 <>
                   <div class="em">{data.emoji}</div>
@@ -64,10 +65,10 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
 
       <div class="tags">
         {tags.map((t) => (
-          <a href={`/tags/${t}/`} class="tagchip">{label(t)}</a>
+          <a href={u(`/tags/${t}/`)} class="tagchip">{label(t)}</a>
         ))}
         {proteinTags.map((t) => (
-          <a href={`/tags/${t}/`} class="tagchip plain">{label(t)}</a>
+          <a href={u(`/tags/${t}/`)} class="tagchip plain">{label(t)}</a>
         ))}
       </div>
       {data.imageCredit && <p class="credit">{data.imageCredit}</p>}

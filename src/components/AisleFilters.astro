@@ -1,5 +1,6 @@
 ---
 import { AISLE_FILTERS } from '../lib/taxonomy';
+import { u } from '../lib/url';
 
 interface Props {
   /** 'links' renders anchors to the explorer; 'buttons' renders client-side filter buttons. */
@@ -14,7 +15,7 @@ const { mode = 'links', active = 'all' } = Astro.props;
   {
     AISLE_FILTERS.map((f) =>
       mode === 'links' ? (
-        <a href={f.key === 'all' ? '/cereals/' : `/cereals/#f=${f.key}`} class:list={{ on: f.key === active }}>
+        <a href={f.key === 'all' ? u('/cereals/') : u(`/cereals/#f=${f.key}`)} class:list={{ on: f.key === active }}>
           <small>{f.aisle}</small>
           {f.label}
         </a>

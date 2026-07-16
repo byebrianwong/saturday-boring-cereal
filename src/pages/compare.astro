@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
+import { u } from '../lib/url';
 
 const cereals = await getCollection('cereals');
 const ranked = [...cereals].sort((a, b) => (b.data.rating ?? -1) - (a.data.rating ?? -1));
@@ -12,9 +13,9 @@ const items = ranked.map((c) => ({
   name: c.data.name,
   emoji: c.data.emoji,
   boxColor: c.data.boxColor,
-  boxImage: c.data.boxImage ?? null,
+  boxImage: c.data.boxImage ? u(c.data.boxImage) : null,
   rating: c.data.rating,
-  href: `/cereals/${c.id}/`,
+  href: u(`/cereals/${c.id}/`),
   n: {
     servingSize: c.data.nutrition.servingSize,
     calories: c.data.nutrition.calories ?? null,

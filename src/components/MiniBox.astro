@@ -9,15 +9,17 @@ interface Props {
   boxImage?: string;
 }
 
+import { u } from '../lib/url';
+
 const { emoji, brand, name, boxColor, href, boxImage } = Astro.props;
 const Tag = href ? 'a' : 'div';
 ---
 
-<Tag class="mini" href={href} style={`--bc: ${boxColor}`}>
+<Tag class="mini" href={href ? u(href) : undefined} style={`--bc: ${boxColor}`}>
   <div class:list={['mf', { hasphoto: boxImage }]}>
     {
       boxImage ? (
-        <img class="photo" src={boxImage} alt={`${brand} ${name}`} loading="lazy" />
+        <img class="photo" src={u(boxImage)} alt={`${brand} ${name}`} loading="lazy" />
       ) : (
         <>
           <div class="em">{emoji}</div>

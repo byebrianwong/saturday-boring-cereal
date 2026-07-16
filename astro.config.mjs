@@ -10,9 +10,16 @@ import keystatic from '@keystatic/astro';
 const enableKeystatic =
   process.env.npm_lifecycle_event === 'dev' || process.env.KEYSTATIC === '1';
 
+// GitHub Pages serves this project repo under /saturday-boring-cereal/. The
+// deploy workflow sets PAGES=true; a root host (Vercel/Netlify) builds without
+// it and serves at "/". Internal links go through src/lib/url.ts `u()`, which
+// reads BASE_URL, so both work unchanged.
+const onPages = process.env.PAGES === 'true';
+
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://saturdayboringcereal.example',
+  site: onPages ? 'https://byebrianwong.github.io' : 'https://saturdayboringcereal.example',
+  base: onPages ? '/saturday-boring-cereal' : undefined,
   output: 'static',
   integrations: [react(), markdoc(), ...(enableKeystatic ? [keystatic()] : [])],
 });
