@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /keystatic
+
+# Saturday Boring Cereal — a single-person regulatory body
