@@ -4,12 +4,19 @@ import '../styles/global.css';
 interface Props {
   title?: string;
   description?: string;
+  image?: string;
 }
 
 const {
   title = 'Saturday Boring Cereal',
   description = "One man's rankings of granolas and healthier cereals. Every box tasted, weighed, and priced in cold, hard macros.",
+  image,
 } = Astro.props;
+
+// Absolute URLs for canonical + social cards. `site` is set in astro.config;
+// update it to the real deploy URL so these resolve correctly in production.
+const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
+const ogImage = image ? new URL(image, Astro.site ?? Astro.url).href : undefined;
 
 const nav = [
   { href: '/cereals/', label: 'The Aisle' },
@@ -26,8 +33,21 @@ const path = Astro.url.pathname;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" type="application/rss+xml" title="Saturday Boring Cereal — Receipts" href="/rss.xml" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🥣</text></svg>" />
     <title>{title}</title>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Saturday Boring Cereal" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {ogImage && <meta name="twitter:image" content={ogImage} />}
   </head>
   <body>
     <header>
@@ -49,6 +69,11 @@ const path = Astro.url.pathname;
     <footer>
       <div>SATURDAY BORING CEREAL · A SINGLE-PERSON REGULATORY BODY · EST. IN A KITCHEN</div>
       <div class="fine">Nutrition transcribed from the physical box. Where a label omits a value, we say “not listed” instead of making one up.</div>
+      <div class="foot-links">
+        <a href="/cereals/">The Aisle</a> · <a href="/compare/">Price Check</a> ·
+        <a href="/reviews/">Receipts</a> · <a href="/about/">Store Policy</a> ·
+        <a href="/rss.xml">RSS</a>
+      </div>
     </footer>
   </body>
 </html>
@@ -115,5 +140,22 @@ const path = Astro.url.pathname;
     font-style: italic;
     letter-spacing: 0.02em;
     color: #d9c39f;
+  }
+
+  footer .foot-links {
+    margin-top: 10px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: #a8895e;
+  }
+
+  footer .foot-links a {
+    color: var(--cream);
+    text-decoration: none;
+  }
+
+  footer .foot-links a:hover {
+    color: var(--yellow);
+    text-decoration: underline;
   }
 </style>

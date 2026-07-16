@@ -19,7 +19,11 @@ const proteinTags = data.proteinSources;
 const hasBody = (cereal.body ?? '').trim().length > 0;
 ---
 
-<Layout title={`${data.brand} ${data.name} — Saturday Boring Cereal`} description={data.shortNote}>
+<Layout
+  title={`${data.brand} ${data.name} — Saturday Boring Cereal`}
+  description={data.shortNote ?? `${data.brand} ${data.name}, ranked and measured.`}
+  image={data.boxImage}
+>
   <div class="light"></div>
 
   <div class="crumb wrap">

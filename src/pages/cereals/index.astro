@@ -36,6 +36,7 @@ const ranked = [...cereals].sort(byRatingDesc);
       ranked.map((c) => (
         <div
           class="cell"
+          data-id={c.id}
           data-form={c.data.formFactors.join(' ')}
           data-attrs={c.data.attributes.join(' ')}
           data-rating={c.data.rating ?? -1}
@@ -54,6 +55,7 @@ const ranked = [...cereals].sort(byRatingDesc);
           />
           <div class="shelfbar" />
           <PriceTag rating={c.data.rating} macros={macroLine(c)} />
+          <button class="addcmp" type="button" data-id={c.id}>+ compare</button>
         </div>
       ))
     }
@@ -62,6 +64,13 @@ const ranked = [...cereals].sort(byRatingDesc);
   <div class="empty wrap" id="empty" hidden>
     <div class="shelfbar"></div>
     <p>OUT OF STOCK — nothing on this shelf matches. Try another aisle.</p>
+  </div>
+
+  <div class="cart" id="cart" hidden>
+    <span class="cartlabel">🛒 <b id="cartcount">0</b> in cart</span>
+    <span class="carthint" id="carthint"></span>
+    <a class="cartgo" id="cartgo" href="/compare/">PRICE CHECK →</a>
+    <button class="cartclear" id="cartclear" type="button">clear</button>
   </div>
 </Layout>
 
@@ -119,6 +128,40 @@ const ranked = [...cereals].sort(byRatingDesc);
   const hash = new URLSearchParams(location.hash.slice(1));
   const initial = hash.get('f');
   setActive(initial && buttons.some((b) => b.dataset.filter === initial) ? initial : 'all');
+
+  // --- "add to compare" cart -> /compare?ids=... (max 4, matching the compare page) ---
+  const CART_MAX = 4;
+  const cart = document.getElementById('cart')!;
+  const cartCount = document.getElementById('cartcount')!;
+  const cartHint = document.getElementById('carthint')!;
+  const cartGo = document.getElementById('cartgo') as HTMLAnchorElement;
+  const cartClear = document.getElementById('cartclear')!;
+  const addBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('.addcmp'));
+  const inCart = new Set<string>();
+
+  function renderCart() {
+    for (const b of addBtns) {
+      const on = inCart.has(b.dataset.id!);
+      b.classList.toggle('on', on);
+      b.textContent = on ? '✓ added' : '+ compare';
+      b.disabled = !on && inCart.size >= CART_MAX;
+    }
+    cart.hidden = inCart.size === 0;
+    cartCount.textContent = String(inCart.size);
+    cartHint.textContent = inCart.size >= CART_MAX ? '(max — clear one to swap)' : '';
+    cartGo.href = inCart.size ? `/compare/?ids=${[...inCart].join(',')}` : '/compare/';
+  }
+
+  for (const b of addBtns) {
+    b.addEventListener('click', () => {
+      const id = b.dataset.id!;
+      if (inCart.has(id)) inCart.delete(id);
+      else if (inCart.size < CART_MAX) inCart.add(id);
+      renderCart();
+    });
+  }
+  cartClear.addEventListener('click', () => { inCart.clear(); renderCart(); });
+  renderCart();
 </script>
 
 <style>
@@ -213,5 +256,93 @@ const ranked = [...cereals].sort(byRatingDesc);
     color: #546e7a;
     margin-top: 14px;
     letter-spacing: 0.06em;
+  }
+
+  .addcmp {
+    margin-top: 8px;
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: #fff;
+    color: var(--store-blue-dark);
+    border: 2px solid var(--store-blue);
+    border-radius: 999px;
+    padding: 5px 12px;
+    cursor: pointer;
+  }
+
+  .addcmp:hover {
+    background: var(--store-blue);
+    color: #fff;
+  }
+
+  .addcmp.on {
+    background: var(--yellow);
+    border-color: var(--brown);
+    color: var(--brown);
+  }
+
+  .addcmp:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  /* floating price-check cart */
+  .cart {
+    position: fixed;
+    left: 50%;
+    bottom: 20px;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: var(--brown);
+    color: var(--cream);
+    border: 3px solid var(--yellow);
+    border-radius: 999px;
+    padding: 10px 12px 10px 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    font-size: 13px;
+  }
+
+  .cart[hidden] {
+    display: none;
+  }
+
+  .cartlabel b {
+    color: var(--yellow);
+  }
+
+  .carthint {
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 11px;
+    color: #d9c39f;
+  }
+
+  .cartgo {
+    background: var(--red);
+    color: #fff;
+    text-decoration: none;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    padding: 8px 16px;
+    border-radius: 999px;
+  }
+
+  .cartgo:hover {
+    background: var(--red-dark);
+  }
+
+  .cartclear {
+    background: none;
+    border: 0;
+    color: #d9c39f;
+    font-family: var(--font-body);
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
   }
 </style>

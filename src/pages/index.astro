@@ -6,10 +6,20 @@ import MiniBox from '../components/MiniBox.astro';
 import PriceTag from '../components/PriceTag.astro';
 import Receipt from '../components/Receipt.astro';
 import { macroLine, byRatingDesc } from '../lib/macros';
+import { label } from '../lib/taxonomy';
 
 const cereals = await getCollection('cereals');
 // Unrated (null) cereals sort last.
 const ranked = [...cereals].sort(byRatingDesc);
+
+// Tag counts for the "browse the aisles" section (form factors + attributes).
+const tagCounts = new Map<string, number>();
+for (const c of cereals) {
+  for (const t of [...c.data.formFactors, ...c.data.attributes]) {
+    tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+  }
+}
+const browseTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]);
 const shelves: (typeof ranked)[] = [];
 for (let i = 0; i < Math.min(ranked.length, 6); i += 3) {
   shelves.push(ranked.slice(i, i + 3));
@@ -88,6 +98,17 @@ const recent = [...cereals]
             ))}
           </div>
         </>
+      ))
+    }
+  </div>
+
+  <h3 class="rowlabel">— BROWSE THE AISLES —</h3>
+  <div class="browse wrap">
+    {
+      browseTags.map(([tag, n]) => (
+        <a class="browsetag" href={`/tags/${tag}/`}>
+          {label(tag)}<span class="bn">{n}</span>
+        </a>
       ))
     }
   </div>
@@ -298,6 +319,47 @@ const recent = [...cereals]
 
   .pricetags > :global(.ptag) {
     width: 118px;
+  }
+
+  .browse {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    max-width: 760px;
+    margin: 16px auto 0;
+  }
+
+  .browsetag {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: #fff;
+    border: 2px solid var(--store-blue);
+    color: var(--store-blue-dark);
+    text-decoration: none;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 7px 10px 7px 13px;
+    border-radius: 999px;
+  }
+
+  .browsetag:hover {
+    background: var(--store-blue);
+    color: #fff;
+  }
+
+  .browsetag .bn {
+    background: var(--floor);
+    color: var(--tag-gray);
+    font-size: 10px;
+    border-radius: 999px;
+    padding: 1px 7px;
+  }
+
+  .browsetag:hover .bn {
+    background: rgba(255, 255, 255, 0.85);
   }
 
   .checkout {
