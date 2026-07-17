@@ -3,7 +3,8 @@
 One man's rankings of granolas and healthier cereals, styled as a grocery aisle.
 Astro static site + Keystatic admin, no database, no server.
 
-**Live:** https://byebrianwong.github.io/saturday-boring-cereal/
+**Live:** https://saturday-boring-cereal.vercel.app
+(also mirrored on GitHub Pages at https://byebrianwong.github.io/saturday-boring-cereal/)
 
 ## Run it
 
@@ -16,13 +17,18 @@ npm run preview    # serve the built site
 
 ## Deploy
 
-Pushing to `main` auto-deploys to GitHub Pages via
-[.github/workflows/deploy.yml](.github/workflows/deploy.yml). GitHub Pages serves this
-project repo under `/saturday-boring-cereal/`, so the workflow builds with `PAGES=true`,
-which sets Astro's `base`. Internal links go through [`src/lib/url.ts`](src/lib/url.ts)
-`u()` (reads `import.meta.env.BASE_URL`), so the same code deploys to a **root** host
-(Vercel/Netlify/Cloudflare) unchanged — just build without `PAGES` and set `site` to the
-real domain in [astro.config.mjs](astro.config.mjs).
+Pushing to `main` deploys to **both** hosts automatically:
+
+- **Vercel** (primary) — via the Git integration, zero-config. Builds without `PAGES`, so
+  it serves at the root (`/`). `astro.config` reads `VERCEL_PROJECT_PRODUCTION_URL` to set
+  `site`, so canonical/OG/RSS URLs resolve to the real `.vercel.app` domain.
+- **GitHub Pages** (mirror) — via [.github/workflows/deploy.yml](.github/workflows/deploy.yml),
+  which builds with `PAGES=true`. Pages serves this project repo under
+  `/saturday-boring-cereal/`, so that build sets Astro's `base`.
+
+The same code targets both because every internal link/asset goes through
+[`src/lib/url.ts`](src/lib/url.ts) `u()`, which reads `import.meta.env.BASE_URL` (`/` on
+Vercel, `/saturday-boring-cereal/` on Pages).
 
 ## Where the data came from
 
