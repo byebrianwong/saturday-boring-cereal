@@ -1,0 +1,242 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import { byRatingDesc } from '../lib/macros';
+import { gramsShort } from '../lib/format';
+import { u } from '../lib/url';
+
+const cereals = await getCollection('cereals');
+const ranked = [...cereals].sort(byRatingDesc);
+const rated = ranked.filter((c) => c.data.rating != null);
+const unrated = ranked.filter((c) => c.data.rating == null);
+
+const medal = ['gold', 'silver', 'bronze'];
+---
+
+<Layout
+  title="The Rankings — Saturday Boring Cereal"
+  description="Every cereal, ranked worst to best by one man's Taste score. The official chart."
+>
+  <div class="light"></div>
+  <h1 class="pagetitle">THE RANKINGS</h1>
+  <p class="pagesub">Every box, ranked by Taste. The chart is updated whenever the spoon decrees.</p>
+
+  <ol class="chart wrap">
+    {
+      rated.map((c, i) => (
+        <li class:list={['row', { top: i < 3 }]}>
+          <div class:list={['rank', medal[i]]}>{i + 1}</div>
+          <a class="box" href={u(`/cereals/${c.id}/`)} style={`--bc: ${c.data.boxColor}`}>
+            {c.data.boxImage ? (
+              <img src={u(c.data.boxImage)} alt={`${c.data.brand} ${c.data.name}`} loading="lazy" />
+            ) : (
+              <span class="e">{c.data.emoji}</span>
+            )}
+          </a>
+          <div class="who">
+            <a href={u(`/cereals/${c.id}/`)}>{c.data.name}</a>
+            <small>{c.data.brand}</small>
+          </div>
+          <div class="meter">
+            <div class="bar" style={`width: ${(c.data.rating! / 10) * 100}%`}></div>
+            <span class="score">{c.data.rating!.toFixed(1)}</span>
+          </div>
+          <div class="macros">
+            {gramsShort(c.data.nutrition.protein) && <span><b>{gramsShort(c.data.nutrition.protein)}</b> pro</span>}
+            {gramsShort(c.data.nutrition.totalSugars) && <span><b>{gramsShort(c.data.nutrition.totalSugars)}</b> sug</span>}
+          </div>
+        </li>
+      ))
+    }
+    {
+      unrated.map((c) => (
+        <li class="row unrated">
+          <div class="rank">—</div>
+          <a class="box" href={u(`/cereals/${c.id}/`)} style={`--bc: ${c.data.boxColor}`}>
+            {c.data.boxImage ? (
+              <img src={u(c.data.boxImage)} alt={`${c.data.brand} ${c.data.name}`} loading="lazy" />
+            ) : (
+              <span class="e">{c.data.emoji}</span>
+            )}
+          </a>
+          <div class="who">
+            <a href={u(`/cereals/${c.id}/`)}>{c.data.name}</a>
+            <small>{c.data.brand}</small>
+          </div>
+          <div class="meter"><span class="score na">unrated</span></div>
+          <div class="macros"></div>
+        </li>
+      ))
+    }
+  </ol>
+</Layout>
+
+<style>
+  .pagetitle {
+    text-align: center;
+    font-size: 30px;
+    letter-spacing: 0.2em;
+    margin-top: 30px;
+  }
+
+  .pagesub {
+    text-align: center;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 13.5px;
+    color: #6b4a2a;
+    margin-top: 6px;
+  }
+
+  .chart {
+    max-width: 720px;
+    margin: 30px auto 0;
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 46px 56px 1fr 160px auto;
+    align-items: center;
+    gap: 14px;
+    background: #fff;
+    border: 2px solid var(--brown);
+    border-radius: 10px;
+    padding: 10px 16px 10px 10px;
+    box-shadow: 0 4px 0 rgba(91, 58, 30, 0.18);
+  }
+
+  .row.top {
+    border-width: 3px;
+    box-shadow: 0 6px 0 rgba(91, 58, 30, 0.25);
+  }
+
+  .rank {
+    font-family: var(--font-display);
+    font-size: 26px;
+    text-align: center;
+    color: #b0a58c;
+  }
+
+  .rank.gold {
+    color: #e0a400;
+  }
+  .rank.silver {
+    color: #9aa0a6;
+  }
+  .rank.bronze {
+    color: #c17a3a;
+  }
+
+  .box {
+    width: 44px;
+    height: 56px;
+    border: 2px solid var(--brown);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, var(--bc), color-mix(in srgb, var(--bc) 72%, #000));
+  }
+
+  .box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .box .e {
+    font-size: 22px;
+  }
+
+  .who a {
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: var(--brown);
+    text-decoration: none;
+    display: block;
+    line-height: 1.15;
+  }
+
+  .who a:hover {
+    color: var(--red);
+  }
+
+  .who small {
+    font-size: 10px;
+    color: #8a6a45;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .meter {
+    position: relative;
+    height: 22px;
+    background: var(--floor);
+    border-radius: 999px;
+    display: flex;
+    align-items: center;
+  }
+
+  .bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, #e0662c, var(--red));
+    border-radius: 999px;
+    min-width: 20px;
+  }
+
+  .score {
+    position: relative;
+    margin-left: auto;
+    margin-right: 10px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    z-index: 1;
+  }
+
+  .score.na {
+    color: var(--tag-gray);
+    text-shadow: none;
+    font-family: var(--font-body);
+    font-style: italic;
+    font-size: 12px;
+    margin-left: 12px;
+  }
+
+  .macros {
+    display: flex;
+    gap: 8px;
+    font-family: var(--font-label);
+    font-size: 11px;
+    color: var(--tag-gray);
+    white-space: nowrap;
+  }
+
+  .macros b {
+    color: var(--red);
+  }
+
+  .row.unrated {
+    opacity: 0.85;
+  }
+
+  @media (max-width: 640px) {
+    .row {
+      grid-template-columns: 34px 44px 1fr auto;
+    }
+
+    .meter {
+      display: none;
+    }
+  }
+</style>

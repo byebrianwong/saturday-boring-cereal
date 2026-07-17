@@ -17,12 +17,14 @@ const {
 // Absolute URLs for canonical + social cards. `site` is set in astro.config;
 // update it to the real deploy URL so these resolve correctly in production.
 const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
-const ogImage = image ? new URL(image, Astro.site ?? Astro.url).href : undefined;
+// Per-page image (e.g. a cereal's box photo) or the default branded share card.
+const ogImage = new URL(image ?? u('/og.png'), Astro.site ?? Astro.url).href;
 
 const nav = [
   { href: '/cereals/', label: 'The Aisle' },
+  { href: '/top/', label: 'Rankings' },
   { href: '/compare/', label: 'Price Check' },
-  { href: '/reviews/', label: 'Receipts (Reviews)' },
+  { href: '/reviews/', label: 'Receipts' },
   { href: '/about/', label: 'Store Policy' },
 ];
 const path = Astro.url.pathname;
@@ -44,11 +46,11 @@ const path = Astro.url.pathname;
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
-    {ogImage && <meta property="og:image" content={ogImage} />}
-    <meta name="twitter:card" content={ogImage ? 'summary_large_image' : 'summary'} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
-    {ogImage && <meta name="twitter:image" content={ogImage} />}
+    <meta name="twitter:image" content={ogImage} />
   </head>
   <body>
     <header>
