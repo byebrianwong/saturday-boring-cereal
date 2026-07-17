@@ -1,0 +1,161 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { scoreCereal, scoreTier } from '../lib/score';
+import GradeStamp from './GradeStamp.astro';
+import { u } from '../lib/url';
+
+interface Props {
+  cereal: CollectionEntry<'cereals'>;
+}
+
+const { cereal } = Astro.props;
+const score = scoreCereal(cereal);
+---
+
+<section class="verdict">
+  <div class="head">
+    <span class="sticker">The Verdict</span>
+  </div>
+
+  <div class="grid">
+    <div class="stamp-cell">
+      <GradeStamp grade={score.grade} overall={score.overall} size="lg" />
+    </div>
+
+    <div class="bars">
+      {
+        score.subscores.map((s) => {
+          const tier = s.score == null ? 'na' : scoreTier(s.score);
+          return (
+            <div class:list={['sub', tier]}>
+              <div class="lab">
+                <span class="name">{s.label}</span>
+                <span class:list={['det', { missing: s.score == null }]}>{s.detail}</span>
+              </div>
+              <div class="track">
+                {s.score != null && <div class="fill" style={`width: ${Math.max(s.score, 3)}%`} />}
+              </div>
+            </div>
+          );
+        })
+      }
+    </div>
+  </div>
+
+  <p class="fine">
+    Overall = half Taste, half Nutrition (protein, sugar &amp; fiber). Derived from the numbers
+    on this page — see <a href={u('/about/#overall')}>store policy §6</a>.
+  </p>
+</section>
+
+<style>
+  .verdict {
+    background: #fffdf4;
+    border: 2px solid var(--brown);
+    border-radius: 10px;
+    box-shadow: 0 6px 0 rgba(91, 58, 30, 0.18);
+    padding: 16px 18px 14px;
+  }
+
+  .head {
+    margin-bottom: 14px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 118px 1fr;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .stamp-cell {
+    display: flex;
+    justify-content: center;
+  }
+
+  .bars {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+  }
+
+  .lab {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 4px;
+  }
+
+  .name {
+    font-family: var(--font-label);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--tag-gray);
+  }
+
+  .det {
+    font-family: var(--font-label);
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--brown);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .det.missing {
+    font-weight: 400;
+    font-style: italic;
+    color: #a99;
+    text-transform: none;
+  }
+
+  .track {
+    position: relative;
+    height: 10px;
+    background: var(--floor);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: 999px;
+    min-width: 6px;
+  }
+
+  .sub.good .fill {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--score-good) 78%, #fff), var(--score-good));
+  }
+  .sub.mid .fill {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--score-mid) 80%, #fff), var(--score-mid));
+  }
+  .sub.bad .fill {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--score-bad) 82%, #fff), var(--score-bad));
+  }
+
+  .fine {
+    margin-top: 14px;
+    padding-top: 11px;
+    border-top: 1px dashed #d8cba8;
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-style: italic;
+    line-height: 1.5;
+    color: #7a6a4a;
+  }
+
+  .fine a {
+    color: var(--store-blue-dark);
+  }
+
+  @media (max-width: 420px) {
+    .grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .stamp-cell {
+      justify-content: flex-start;
+    }
+  }
+</style>

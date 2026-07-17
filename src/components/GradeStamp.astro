@@ -1,0 +1,114 @@
+---
+import { scoreTier, overallOutOfTen } from '../lib/score';
+
+interface Props {
+  grade: string | null;
+  overall: number | null;
+  size?: 'lg' | 'sm';
+}
+
+const { grade, overall, size = 'lg' } = Astro.props;
+const tier = overall == null ? 'na' : scoreTier(overall);
+const out10 = overall == null ? null : overallOutOfTen(overall);
+---
+
+<div class:list={['stamp', size, tier]} title={overall == null ? 'Unrated overall' : `Overall ${out10} / 10`}>
+  {size === 'lg' && <span class="cap">Overall</span>}
+  <span class="grade">{grade ?? '—'}</span>
+  <span class="num">{out10 ? `${out10} / 10` : 'unrated'}</span>
+</div>
+
+<style>
+  .stamp {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+    line-height: 1;
+  }
+
+  /* --- colour by tier --- */
+  .stamp.good {
+    --seal: var(--score-good);
+    --seal-dark: var(--score-good-dark);
+  }
+  .stamp.mid {
+    --seal: var(--score-mid);
+    --seal-dark: var(--score-mid-dark);
+  }
+  .stamp.bad {
+    --seal: var(--score-bad);
+    --seal-dark: var(--score-bad-dark);
+  }
+  .stamp.na {
+    --seal: #9aa0a6;
+    --seal-dark: #7c8186;
+  }
+
+  /* --- large seal: the hero stamp on the detail page --- */
+  .stamp.lg {
+    width: 118px;
+    height: 118px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--seal) 88%, #fff), var(--seal) 55%, var(--seal-dark));
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px var(--seal-dark), 0 8px 18px rgba(0, 0, 0, 0.28);
+    transform: rotate(-7deg);
+    padding: 6px;
+  }
+
+  .stamp.lg .cap {
+    font-family: var(--font-label);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    opacity: 0.9;
+  }
+
+  .stamp.lg .grade {
+    font-family: var(--font-display);
+    font-size: 52px;
+    letter-spacing: -0.02em;
+    text-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
+    margin: 1px 0 2px;
+  }
+
+  .stamp.lg .num {
+    font-family: var(--font-label);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.95;
+  }
+
+  /* --- small stamp: the leaderboard chip --- */
+  .stamp.sm {
+    width: 44px;
+    padding: 5px 2px 4px;
+    border-radius: 7px;
+    background: linear-gradient(var(--seal), var(--seal-dark));
+    border: 2px solid #fff;
+    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22);
+  }
+
+  .stamp.sm .grade {
+    font-family: var(--font-display);
+    font-size: 20px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+
+  .stamp.sm .num {
+    font-family: var(--font-label);
+    font-size: 8.5px;
+    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+    margin-top: 2px;
+    opacity: 0.92;
+  }
+
+  .stamp.sm.na .num {
+    font-size: 7.5px;
+  }
+</style>

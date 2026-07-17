@@ -14,6 +14,14 @@
   --tag-ink: #263238;
   --tag-gray: #455a64;
 
+  /* Overall-grade good→bad ramp (produce-sticker green to spoiled red) */
+  --score-good: #2f8f3e;
+  --score-good-dark: #256f31;
+  --score-mid: #cf8a00;
+  --score-mid-dark: #a06a00;
+  --score-bad: #c0392b;
+  --score-bad-dark: #98271b;
+
   --font-display: 'Arial Black', 'Arial Bold', Arial, sans-serif;
   --font-body: Georgia, 'Times New Roman', serif;
   --font-receipt: 'Courier New', Courier, monospace;
