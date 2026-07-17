@@ -16,9 +16,18 @@ const enableKeystatic =
 // reads BASE_URL, so both work unchanged.
 const onPages = process.env.PAGES === 'true';
 
+// `site` drives canonical + OpenGraph + RSS absolute URLs. Pick the real domain
+// for whichever host is building: GitHub Pages, Vercel (which exposes its stable
+// production domain via VERCEL_PROJECT_PRODUCTION_URL), else a local placeholder.
+const site = onPages
+  ? 'https://byebrianwong.github.io'
+  : process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : 'https://saturdayboringcereal.example';
+
 // https://astro.build/config
 export default defineConfig({
-  site: onPages ? 'https://byebrianwong.github.io' : 'https://saturdayboringcereal.example',
+  site,
   base: onPages ? '/saturday-boring-cereal' : undefined,
   output: 'static',
   integrations: [react(), markdoc(), ...(enableKeystatic ? [keystatic()] : [])],
