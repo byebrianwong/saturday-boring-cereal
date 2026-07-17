@@ -7,7 +7,10 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "astro check"
+    "check": "astro check",
+    "add": "node scripts/add.mjs",
+    "enrich": "node scripts/enrich.mjs",
+    "enrich:apply": "node scripts/enrich.mjs --apply"
   },
   "dependencies": {
     "@astrojs/markdoc": "^0.14.2",

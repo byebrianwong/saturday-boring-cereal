@@ -42,12 +42,40 @@ edits in Keystatic.
 
 ## Adding / editing cereals
 
-Two ways, same files:
+Three ways, same files:
 
-1. **Admin UI** — run `npm run dev`, open [http://localhost:4321/keystatic](http://localhost:4321/keystatic).
+1. **One-step add (auto-pulls nutrition)** — the fastest way to add a new one:
+
+   ```bash
+   npm run add          # interactive: asks brand, product, score, serving, macros
+   ```
+
+   It scaffolds `src/content/cereals/<slug>.md` from what you type, then **looks the
+   product up on Open Food Facts + USDA in the same step** and fills in the blanks
+   (calories, added sugars, sodium, sat/trans fat) plus a real box photo — but only
+   when the match is confident (its macros cross-check against the numbers you entered
+   **and** the product name overlaps). Anything it isn't sure about is left for you to
+   confirm instead of guessed. Your recorded numbers are never overwritten.
+
+   Prefer flags over prompts (or to script it):
+
+   ```bash
+   npm run add -- --brand "Magic Spoon" --name "Peanut Butter" --rating 5 \
+                  --serving 36 --protein 14 --sugars 0.1 --fiber 1 \
+                  --form os --protein-src milk-protein --attrs high-protein,low-sugar
+   ```
+
+   Enter at least two of protein / sugar / fiber — that's what lets it verify a match is
+   the right product. Useful flags: `--no-enrich` (just scaffold, skip the lookup),
+   `--review` (look up but always hold for confirmation, never auto-apply),
+   `--no-usda`, `--serving-desc`, `--note`, `--emoji`, `--color`. Set `FDC_API_KEY` for a
+   personal USDA key ([free](https://fdc.nal.usda.gov/api-key-signup)).
+
+2. **Admin UI** — run `npm run dev`, open [http://localhost:4321/keystatic](http://localhost:4321/keystatic).
    Full CRUD with pickers for form factors, protein sources, attributes, and every
-   nutrition field. Saves write straight to `src/content/cereals/*.md`.
-2. **By hand** — edit the markdown files in [src/content/cereals/](src/content/cereals/).
+   nutrition field. Saves write straight to `src/content/cereals/*.md`. (Nutrition is
+   entered by hand here — to auto-pull it, use `npm run add` above or `npm run enrich`.)
+3. **By hand** — edit the markdown files in [src/content/cereals/](src/content/cereals/).
    Frontmatter schema lives in [src/content.config.ts](src/content.config.ts) (Zod) and is
    mirrored in [keystatic.config.ts](keystatic.config.ts).
 
@@ -92,14 +120,18 @@ Migrated entries carry exactly what Brian recorded in Notion: serving size, tast
 tasting notes. Everything he didn't record — calories, added sugars, trans/poly/mono fat,
 protein %DV — renders as **"not listed"** rather than a guess.
 
-Backfilling those is a **reviewable** job, run by [scripts/enrich.mjs](scripts/enrich.mjs):
+For a **single new cereal**, `npm run add` already pulls this in the same step (see
+above). To **backfill the existing catalog in bulk**, use the batch tool
+[scripts/enrich.mjs](scripts/enrich.mjs) — both share the same lookup + safety code in
+[scripts/lib/enrich-core.mjs](scripts/lib/enrich-core.mjs), so they behave identically:
 
 ```bash
-node scripts/enrich.mjs            # fetch candidates -> enrichment/<slug>.json + REVIEW.md
+npm run enrich                     # fetch candidates -> enrichment/<slug>.json + REVIEW.md
 # open enrichment/REVIEW.md, verify each match via its OFF link,
 # set "approved": true in the slug's JSON for the good ones, then:
-node scripts/enrich.mjs --apply    # writes ONLY approved drafts, filling null fields only
-FDC_API_KEY=xxxx node scripts/enrich.mjs   # also query USDA FoodData Central (free key)
+npm run enrich:apply               # writes ONLY approved drafts, filling null fields only
+node scripts/enrich.mjs --auto-approve   # auto-approve matches that pass BOTH checks
+FDC_API_KEY=xxxx npm run enrich     # also query USDA FoodData Central (free key)
 ```
 
 It pulls from Open Food Facts (free, no key) and — with `FDC_API_KEY` — USDA, then scores
