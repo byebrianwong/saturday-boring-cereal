@@ -3,12 +3,16 @@ import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 import { byRatingDesc } from '../lib/macros';
 import { gramsShort } from '../lib/format';
+import { scoreCereal } from '../lib/score';
+import GradeStamp from '../components/GradeStamp.astro';
 import { u } from '../lib/url';
 
 const cereals = await getCollection('cereals');
 const ranked = [...cereals].sort(byRatingDesc);
 const rated = ranked.filter((c) => c.data.rating != null);
 const unrated = ranked.filter((c) => c.data.rating == null);
+
+const scoreOf = new Map(ranked.map((c) => [c.id, scoreCereal(c)]));
 
 const medal = ['gold', 'silver', 'bronze'];
 ---
@@ -19,7 +23,7 @@ const medal = ['gold', 'silver', 'bronze'];
 >
   <div class="light"></div>
   <h1 class="pagetitle">THE RANKINGS</h1>
-  <p class="pagesub">Every box, ranked by Taste. The chart is updated whenever the spoon decrees.</p>
+  <p class="pagesub">Ranked by Taste — with each box's <b>Overall grade</b> (taste + macros) stamped alongside.</p>
 
   <ol class="chart wrap">
     {
@@ -41,6 +45,7 @@ const medal = ['gold', 'silver', 'bronze'];
             <div class="bar" style={`width: ${(c.data.rating! / 10) * 100}%`}></div>
             <span class="score">{c.data.rating!.toFixed(1)}</span>
           </div>
+          <GradeStamp grade={scoreOf.get(c.id)!.grade} overall={scoreOf.get(c.id)!.overall} size="sm" />
           <div class="macros">
             {gramsShort(c.data.nutrition.protein) && <span><b>{gramsShort(c.data.nutrition.protein)}</b> pro</span>}
             {gramsShort(c.data.nutrition.totalSugars) && <span><b>{gramsShort(c.data.nutrition.totalSugars)}</b> sug</span>}
@@ -64,6 +69,7 @@ const medal = ['gold', 'silver', 'bronze'];
             <small>{c.data.brand}</small>
           </div>
           <div class="meter"><span class="score na">unrated</span></div>
+          <GradeStamp grade={scoreOf.get(c.id)!.grade} overall={scoreOf.get(c.id)!.overall} size="sm" />
           <div class="macros"></div>
         </li>
       ))
@@ -100,7 +106,7 @@ const medal = ['gold', 'silver', 'bronze'];
 
   .row {
     display: grid;
-    grid-template-columns: 46px 56px 1fr 160px auto;
+    grid-template-columns: 46px 56px 1fr 150px 44px auto;
     align-items: center;
     gap: 14px;
     background: #fff;
@@ -232,7 +238,7 @@ const medal = ['gold', 'silver', 'bronze'];
 
   @media (max-width: 640px) {
     .row {
-      grid-template-columns: 34px 44px 1fr auto;
+      grid-template-columns: 34px 44px 1fr 44px auto;
     }
 
     .meter {

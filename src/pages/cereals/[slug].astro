@@ -2,6 +2,7 @@
 import { getCollection, render } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import NutritionPanel from '../../components/NutritionPanel.astro';
+import ScorePanel from '../../components/ScorePanel.astro';
 import { label } from '../../lib/taxonomy';
 import { rating as fmtRating, shortDate } from '../../lib/format';
 import { u } from '../../lib/url';
@@ -75,6 +76,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
     </div>
 
     <div class="right">
+      <ScorePanel cereal={cereal} />
       <NutritionPanel nutrition={data.nutrition} />
     </div>
   </div>
@@ -117,6 +119,12 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
     margin-top: 20px;
     align-items: start;
     max-width: 940px;
+  }
+
+  .right {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
   }
 
   .scene {
