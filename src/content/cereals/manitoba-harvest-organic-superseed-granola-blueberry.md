@@ -19,5 +19,8 @@ nutrition:
   dietaryFiber: 4
   protein: 11
   proteinDV: null
+boxImage: /images/cereals/manitoba-harvest-organic-superseed-granola-blueberry.jpg
+imageSource: other
+imageCredit: "Image: Manitoba Harvest, via Kroger"
 ---
 

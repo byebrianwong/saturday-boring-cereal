@@ -7,8 +7,8 @@ emoji: '🍓'
 boxColor: "#6fae57"
 boxImage: /images/cereals/natures-path-organic-flax-plus-red-berry-crunch.jpg
 barcode: '0058449777656'
-imageSource: open_food_facts
-imageCredit: "Photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0058449777656"
+imageSource: manufacturer
+imageCredit: "Image: Nature's Path (naturespath.com)"
 formFactors: [flakes]
 proteinSources: []
 attributes: [organic]

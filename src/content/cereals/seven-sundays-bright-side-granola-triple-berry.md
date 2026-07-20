@@ -7,8 +7,8 @@ emoji: '🍓'
 boxColor: "#f28b30"
 barcode: '0850053830259'
 boxImage: /images/cereals/seven-sundays-bright-side-granola-triple-berry.jpg
-imageSource: open_food_facts
-imageCredit: "Photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0850053830259"
+imageSource: manufacturer
+imageCredit: "Image: Seven Sundays (sevensundays.com)"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: []

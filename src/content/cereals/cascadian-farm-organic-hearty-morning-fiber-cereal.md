@@ -7,9 +7,6 @@ dateReviewed: 2025-02-11
 emoji: '🥣'
 boxColor: "#6fa8d6"
 barcode: '0021908455525'
-boxImage: /images/cereals/cascadian-farm-organic-hearty-morning-fiber-cereal.jpg
-imageSource: open_food_facts
-imageCredit: "Photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0021908455525"
 formFactors: [flakes, clusters]
 proteinSources: []
 attributes: [organic, high-fiber]

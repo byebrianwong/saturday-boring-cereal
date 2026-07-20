@@ -19,5 +19,8 @@ nutrition:
   dietaryFiber: 4
   protein: 11
   proteinDV: null
+boxImage: /images/cereals/manitoba-harvest-hemp-foods-superseed-granola.jpg
+imageSource: other
+imageCredit: "Image: Manitoba Harvest, via Kroger"
 ---
 

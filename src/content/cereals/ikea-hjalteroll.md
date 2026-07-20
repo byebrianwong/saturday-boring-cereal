@@ -7,8 +7,8 @@ emoji: '🥣'
 boxColor: "#2b6cb0"
 barcode: '7315120008342'
 boxImage: /images/cereals/ikea-hjalteroll.jpg
-imageSource: open_food_facts
-imageCredit: "Photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/7315120008342"
+imageSource: manufacturer
+imageCredit: "Image: IKEA (ikea.com)"
 formFactors: []
 proteinSources: []
 attributes: [low-sugar, high-fiber]

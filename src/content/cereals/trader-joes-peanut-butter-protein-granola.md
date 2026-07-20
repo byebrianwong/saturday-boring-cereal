@@ -18,5 +18,8 @@ nutrition:
   dietaryFiber: 3
   protein: 11
   proteinDV: null
+boxImage: /images/cereals/trader-joes-peanut-butter-protein-granola.jpg
+imageSource: manufacturer
+imageCredit: "Image: Trader Joe's (traderjoes.com)"
 ---
 

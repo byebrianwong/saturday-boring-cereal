@@ -19,5 +19,8 @@ nutrition:
   dietaryFiber: 3
   protein: 4
   proteinDV: null
+boxImage: /images/cereals/michelles-granola-almond-butter.jpg
+imageSource: manufacturer
+imageCredit: "Image: Michele's Granola (michelesgranola.com)"
 ---
 

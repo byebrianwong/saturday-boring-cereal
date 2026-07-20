@@ -18,5 +18,8 @@ nutrition:
   dietaryFiber: 4
   protein: 10
   proteinDV: null
+boxImage: /images/cereals/kind-dark-chocolate-clusters.jpg
+imageSource: manufacturer
+imageCredit: "Image: KIND Snacks (kindsnacks.com)"
 ---
 

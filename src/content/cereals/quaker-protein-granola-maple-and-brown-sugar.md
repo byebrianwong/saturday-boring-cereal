@@ -8,8 +8,8 @@ emoji: '🍁'
 boxColor: "#d94f4f"
 barcode: '0030000576106'
 boxImage: /images/cereals/quaker-protein-granola-maple-and-brown-sugar.jpg
-imageSource: open_food_facts
-imageCredit: "Photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0030000576106"
+imageSource: manufacturer
+imageCredit: "Image: Quaker Oats / PepsiCo (quakeroats.com)"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [high-protein]

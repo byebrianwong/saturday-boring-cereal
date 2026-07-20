@@ -19,5 +19,8 @@ nutrition:
   dietaryFiber: 7
   protein: 17
   proteinDV: null
+boxImage: /images/cereals/kodiak-protein-packed-cookie-butter-granola.jpg
+imageSource: manufacturer
+imageCredit: "Image: Kodiak Cakes (kodiakcakes.com)"
 ---
 

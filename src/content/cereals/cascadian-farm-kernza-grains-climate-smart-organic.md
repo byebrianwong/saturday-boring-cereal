@@ -19,5 +19,8 @@ nutrition:
   dietaryFiber: 5
   protein: 5
   proteinDV: null
+boxImage: /images/cereals/cascadian-farm-kernza-grains-climate-smart-organic.jpg
+imageSource: other
+imageCredit: "Image: General Mills (Cascadian Farm), via Amazon listing"
 ---
 

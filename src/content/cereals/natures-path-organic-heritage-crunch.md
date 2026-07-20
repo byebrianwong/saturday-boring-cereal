@@ -18,5 +18,8 @@ nutrition:
   dietaryFiber: 6
   protein: 6
   proteinDV: null
+boxImage: /images/cereals/natures-path-organic-heritage-crunch.jpg
+imageSource: manufacturer
+imageCredit: "Image: Nature's Path (naturespath.com)"
 ---
 

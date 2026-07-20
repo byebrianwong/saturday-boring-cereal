@@ -8,7 +8,7 @@ boxColor: "#b02525"
 barcode: '0038000254505'
 boxImage: /images/cereals/special-k-zero-cinnamon.jpg
 imageSource: open_food_facts
-imageCredit: "Photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0038000254505"
+imageCredit: "Photo: Open Food Facts contributors, CC-BY-SA; product © WK Kellogg Co"
 formFactors: [flakes]
 proteinSources: []
 attributes: [high-protein, low-sugar]

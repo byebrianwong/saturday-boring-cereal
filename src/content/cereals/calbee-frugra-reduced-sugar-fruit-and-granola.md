@@ -19,5 +19,8 @@ nutrition:
   dietaryFiber: 6
   protein: 10
   proteinDV: null
+boxImage: /images/cereals/calbee-frugra-reduced-sugar-fruit-and-granola.jpg
+imageSource: other
+imageCredit: "Image: Calbee, via Amazon listing"
 ---
 

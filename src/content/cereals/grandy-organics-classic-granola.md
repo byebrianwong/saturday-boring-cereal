@@ -7,8 +7,8 @@ emoji: '🥣'
 boxColor: "#d6c26f"
 boxImage: /images/cereals/grandy-organics-classic-granola.jpg
 barcode: '0648960015018'
-imageSource: open_food_facts
-imageCredit: "Photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0648960015018"
+imageSource: manufacturer
+imageCredit: "Image: Grandy Organics (grandyorganics.com)"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [organic]

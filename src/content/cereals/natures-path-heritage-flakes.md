@@ -7,8 +7,8 @@ emoji: '🌾'
 boxColor: "#6fae57"
 barcode: '0058449770206'
 boxImage: /images/cereals/natures-path-heritage-flakes.jpg
-imageSource: open_food_facts
-imageCredit: "Photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0058449770206"
+imageSource: manufacturer
+imageCredit: "Image: Nature's Path (naturespath.com)"
 formFactors: [flakes]
 proteinSources: []
 attributes: [organic, low-sugar]

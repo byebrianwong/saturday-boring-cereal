@@ -18,5 +18,8 @@ nutrition:
   dietaryFiber: 4
   protein: 5
   proteinDV: null
+boxImage: /images/cereals/kind-soft-baked-granola-dark-chocolate-peanut-butter.jpg
+imageSource: manufacturer
+imageCredit: "Image: KIND Snacks (kindsnacks.com)"
 ---
 

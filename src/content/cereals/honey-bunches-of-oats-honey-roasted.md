@@ -18,5 +18,8 @@ nutrition:
   dietaryFiber: 2
   protein: 3
   proteinDV: null
+boxImage: /images/cereals/honey-bunches-of-oats-honey-roasted.jpg
+imageSource: other
+imageCredit: "Image: Post Consumer Brands, via Kroger"
 ---
 
