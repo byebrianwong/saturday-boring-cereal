@@ -9,6 +9,8 @@
     "preview": "astro preview",
     "check": "astro check",
     "add": "node scripts/add.mjs",
+    "rate": "node scripts/rate.mjs",
+    "image": "node scripts/image.mjs",
     "enrich": "node scripts/enrich.mjs",
     "enrich:apply": "node scripts/enrich.mjs --apply"
   },
@@ -24,6 +26,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
     "@types/node": "^26.1.0",
+    "sharp": "^0.35.3",
     "typescript": "^5.9.3"
   }
 }

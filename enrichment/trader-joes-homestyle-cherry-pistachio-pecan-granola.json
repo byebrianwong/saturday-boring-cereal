@@ -8,7 +8,8 @@
   },
   "confidence": "LOW",
   "nameMatch": true,
-  "approved": true,
+  "formMismatch": null,
+  "approved": false,
   "draft": {
     "source": "open_food_facts",
     "matchedName": "Homestyle Cherry Pistachio Pecan Granola",
@@ -29,6 +30,5 @@
       "calories 1400 implausible (23.3 kcal/g) — dropped",
       "addedSugars 60 > recorded total 14 — dropped"
     ]
-  },
-  "reviewNote": "Manually approved: exact product, plausible surviving values."
+  }
 }

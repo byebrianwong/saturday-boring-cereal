@@ -8,23 +8,27 @@
   },
   "confidence": "LOW",
   "nameMatch": true,
+  "formMismatch": null,
   "approved": false,
   "draft": {
     "source": "usda_fdc",
-    "matchedName": "TRADER JOE'S, CRUNCHY UNSALTED ORGANIC PEANUT BUTTER",
-    "matchedBrand": "TRADER JOE'S",
-    "barcode": "00507318",
-    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/357456/nutrients",
+    "matchedName": "TRADER JOE'S, CREAMY ALMOND BUTTER",
+    "matchedBrand": "Holiday Designs Inc.",
+    "barcode": "00514354",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/1861938/nutrients",
     "image": null,
-    "calories": null,
-    "saturatedFat": null,
-    "transFat": null,
-    "polyunsaturatedFat": null,
-    "monounsaturatedFat": null,
+    "basis": "label",
+    "calories": 355,
+    "saturatedFat": 3,
+    "transFat": 0,
+    "polyunsaturatedFat": 7.5,
+    "monounsaturatedFat": 18.5,
     "addedSugars": null,
     "sodium": null,
-    "score": 999,
-    "comparedFields": 0,
-    "flags": []
+    "score": 3.3433333333333337,
+    "comparedFields": 3,
+    "flags": [
+      "sodium 0mg implausibly low — dropped"
+    ]
   }
 }

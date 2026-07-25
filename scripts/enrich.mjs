@@ -16,7 +16,13 @@
 //
 // It NEVER overwrites your recorded fields (protein/sugar/fiber/serving/rating)
 // and only fills what's currently blank (calories, sat/trans/poly/mono fat,
-// added sugars, sodium) plus barcode + a CC-BY-SA image credit.
+// added sugars, sodium) plus a barcode.
+//
+// This tool does NOT touch box images. OFF photos are crowdsourced snapshots
+// (tilted, on tables, hand-held) and the 3D box needs a flat straight-on front
+// — use `npm run image <slug> <url>` for those. `--with-off-image` opts back in
+// where a photo is better than nothing; cereals marked `noAutoImage: true` are
+// skipped even then.
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -26,6 +32,7 @@ const USE_USDA = !process.argv.includes('--no-usda');
 const FDC_KEY = process.env.FDC_API_KEY || 'DEMO_KEY';
 const APPLY = process.argv.includes('--apply');
 const AUTO = process.argv.includes('--auto-approve');
+const WITH_IMAGE = process.argv.includes('--with-off-image');
 
 mkdirSync(DRAFTS, { recursive: true });
 const files = readdirSync(CEREALS).filter((f) => f.endsWith('.md'));
@@ -38,9 +45,9 @@ if (APPLY) {
     if (!existsSync(p)) continue;
     const j = JSON.parse(readFileSync(p, 'utf8'));
     if (j.approved === true && j.draft) {
-      await applyDraft(cereal, j.draft);
+      const { filledImage } = await applyDraft(cereal, j.draft, { withImage: WITH_IMAGE });
       applied++;
-      console.log(`applied: ${cereal.slug} (${j.draft.source})`);
+      console.log(`applied: ${cereal.slug} (${j.draft.source})${filledImage ? ' +photo' : ''}`);
     }
   }
   console.log(`\nApplied ${applied} approved draft(s).`);
@@ -49,7 +56,7 @@ if (APPLY) {
   let usdaRateLimited = false;
   for (const file of files) {
     const cereal = readCereal(file);
-    const { primary, conf, meetsBar, usdaRateLimited: hit } = await enrichCereal(cereal, {
+    const { primary, conf, meetsBar, formIssue, usdaRateLimited: hit } = await enrichCereal(cereal, {
       fdcKey: FDC_KEY,
       useUsda: USE_USDA && !usdaRateLimited,
     });
@@ -66,6 +73,7 @@ if (APPLY) {
           recorded: { protein: cereal.protein, totalSugars: cereal.totalSugars, dietaryFiber: cereal.dietaryFiber, servingSize: cereal.servingSize },
           confidence: conf,
           nameMatch: primary ? nameMatch(cereal, primary) : false,
+          formMismatch: formIssue,
           approved,
           draft: primary,
         },
@@ -73,8 +81,9 @@ if (APPLY) {
         2
       )
     );
-    rows.push({ slug: cereal.slug, conf, approved, draft: primary });
-    console.log(`${(approved ? 'APPROVE' : conf).padEnd(7)} ${cereal.slug} -> ${primary ? `[${primary.source}] ${primary.matchedName}` : 'no match'}`);
+    rows.push({ slug: cereal.slug, conf, approved, formIssue, draft: primary });
+    const why = formIssue ? ` (form: ${formIssue})` : '';
+    console.log(`${(approved ? 'APPROVE' : conf).padEnd(7)} ${cereal.slug} -> ${primary ? `[${primary.source}] ${primary.matchedName}` : 'no match'}${why}`);
     await sleep(300);
   }
 
@@ -91,7 +100,7 @@ if (APPLY) {
     ...rows.map((r) => {
       const d = r.draft;
       if (!d) return `| — | ${r.slug} | | no match | | | | | |`;
-      const state = r.approved ? '✅ approved' : r.conf === 'HIGH' ? '☑︎ high' : '⚠️ low';
+      const state = r.approved ? '✅ approved' : r.formIssue ? `⛔️ form: ${r.formIssue}` : r.conf === 'HIGH' ? '☑︎ high' : '⚠️ low';
       const src = d.source === 'usda_fdc' ? 'USDA' : 'OFF';
       return `| ${state} | ${r.slug} | ${src} | [${d.matchedName || '?'}](${d.url}) | ${d.calories ?? ''} | ${d.saturatedFat ?? ''} | ${d.addedSugars ?? ''} | ${d.sodium ?? ''} | ${d.image ? 'y' : ''} |`;
     }),

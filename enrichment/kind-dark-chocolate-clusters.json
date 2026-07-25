@@ -8,23 +8,27 @@
   },
   "confidence": "LOW",
   "nameMatch": true,
+  "formMismatch": null,
   "approved": false,
   "draft": {
-    "source": "open_food_facts",
-    "matchedName": "Be kind nut clusters dark chocolate nuts and sea salt",
-    "matchedBrand": "Be kind",
-    "barcode": "5000159553162",
-    "url": "https://world.openfoodfacts.org/product/5000159553162",
-    "image": "https://images.openfoodfacts.org/images/products/500/015/955/3162/front_en.7.400.jpg",
-    "calories": 365,
+    "source": "usda_fdc",
+    "matchedName": "DARK CHOCOLATE PEANUT CLUSTERS, DARK CHOCOLATE",
+    "matchedBrand": "Nature's World LLC",
+    "barcode": "015953709962",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2495456/nutrients",
+    "image": null,
+    "basis": "label",
+    "calories": 160,
     "saturatedFat": 4,
-    "transFat": null,
+    "transFat": 0,
     "polyunsaturatedFat": null,
     "monounsaturatedFat": null,
     "addedSugars": null,
-    "sodium": 172,
-    "score": 2.9666666666666663,
+    "sodium": 120,
+    "score": 4.736666666666667,
     "comparedFields": 3,
-    "flags": []
+    "flags": [
+      "addedSugars 9 > recorded total 7 — dropped"
+    ]
   }
 }

@@ -7,9 +7,13 @@
 // It scaffolds src/content/cereals/<slug>.md from what you enter, then looks the
 // product up on Open Food Facts + USDA and, when the match is confident (macros
 // cross-check AND product name overlaps), fills in the blanks — calories, added
-// sugars, sodium, sat/trans fat — and downloads a real box photo. Anything it
-// isn't sure about is left for you to confirm (a draft in enrichment/<slug>.json,
-// same review flow as `npm run enrich`); nothing wrong ever gets written.
+// sugars, sodium, sat/trans fat. Anything it isn't sure about is left for you to
+// confirm (a draft in enrichment/<slug>.json, same review flow as
+// `npm run enrich`); nothing wrong ever gets written.
+//
+// Box art starts as the emoji placeholder — the 3D box needs a flat straight-on
+// package front, which the databases rarely have. Add one with
+// `npm run image <slug> <url>`.
 //
 // Your recorded numbers (protein / sugar / fiber / serving / rating) are never
 // overwritten — only blank fields get filled. Flags:
@@ -229,13 +233,15 @@ if (!primary) {
 
 const srcLabel = primary.source === 'usda_fdc' ? 'USDA' : 'Open Food Facts';
 if (meetsBar && !REVIEW) {
-  const { filledImage } = await applyDraft(cereal, primary);
+  await applyDraft(cereal, primary);
   console.log(`\n✓ Auto-filled from ${srcLabel}: “${primary.matchedName}”`);
   const filled = ['calories', 'saturatedFat', 'transFat', 'addedSugars', 'sodium']
     .filter((k) => primary[k] != null)
     .map((k) => `${k}=${primary[k]}`);
   if (filled.length) console.log(`  ${filled.join('  ')}`);
-  console.log(`  box photo: ${filledImage ? 'downloaded ✓' : 'none available'}`);
+  console.log(`\n  Box art: using the ${emoji} placeholder. For a real photo, find a flat,`);
+  console.log('  straight-on package front (manufacturer sites are best) and run:');
+  console.log(`    npm run image ${slug} <image-url>`);
   console.log('\nDone. Review it in Keystatic (npm run dev) or the markdown file if you like.');
 } else {
   // Not confident enough to auto-apply — leave a draft for the confirm step.

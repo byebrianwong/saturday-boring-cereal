@@ -8,6 +8,7 @@
   },
   "confidence": "HIGH",
   "nameMatch": true,
+  "formMismatch": null,
   "approved": true,
   "draft": {
     "source": "open_food_facts",

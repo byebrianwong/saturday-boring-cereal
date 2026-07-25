@@ -17,10 +17,12 @@ nutrition:
   calories: 160
   totalFat: null
   saturatedFat: 0
+  transFat: 0
   totalSugars: 5
   addedSugars: 5
   dietaryFiber: 7
   protein: 5
   proteinDV: null
+  sodium: 170
 ---
 
