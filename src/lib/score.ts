@@ -118,10 +118,11 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
 }
 
 // Tier-list bands (S is the top, above A) on the 0–100 overall. Deliberately
-// hard at the top — in keeping with store policy, S is a blue ribbon nothing has
-// earned yet. Uniform 10-wide steps so the cutoffs are easy to retune.
+// hard at the top: S is the blue ribbon for the single best box on the shelf, so
+// its cutoff sits just under the current top score (~78) and above the runner-up
+// (~76) — one box earns it, and A holds the rest of the top shelf. Retune here.
 const BANDS: Array<[number, string]> = [
-  [85, 'S'],
+  [77, 'S'],
   [75, 'A'],
   [65, 'B'],
   [55, 'C'],
