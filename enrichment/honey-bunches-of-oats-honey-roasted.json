@@ -6,27 +6,28 @@
     "dietaryFiber": 2,
     "servingSize": 30
   },
-  "confidence": "LOW",
+  "confidence": "HIGH",
   "nameMatch": true,
+  "formMismatch": "biscuits",
   "approved": false,
   "draft": {
-    "source": "open_food_facts",
-    "matchedName": "Honey Bunches of Oats Granola Honey Roasted",
-    "matchedBrand": "Post",
-    "barcode": "0884912003416",
-    "url": "https://world.openfoodfacts.org/product/0884912003416",
-    "image": "https://images.openfoodfacts.org/images/products/088/491/200/3416/front_en.19.400.jpg",
-    "calories": 130,
-    "saturatedFat": 0.5,
-    "transFat": null,
-    "polyunsaturatedFat": null,
-    "monounsaturatedFat": null,
-    "addedSugars": 7,
-    "sodium": null,
-    "score": 1.0817610062893046,
+    "source": "usda_fdc",
+    "matchedName": "POST, HONEY BUNCHES OF OATS, HONEY ROASTED BREAKFAST BISCUITS",
+    "matchedBrand": "Post Consumer Brands, LLC",
+    "barcode": "884912005717",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2289898/nutrients",
+    "image": "https://images.openfoodfacts.org/images/products/088/491/200/3416/front_en.33.400.jpg",
+    "basis": "label",
+    "calories": 140,
+    "saturatedFat": 1,
+    "transFat": 0,
+    "polyunsaturatedFat": 1,
+    "monounsaturatedFat": 2.5,
+    "addedSugars": null,
+    "sodium": 72,
+    "score": 0.9333333333333335,
     "comparedFields": 3,
-    "flags": [
-      "sodium 3mg implausibly low — dropped"
-    ]
+    "flags": [],
+    "imageUrl": "https://world.openfoodfacts.org/product/0884912003416"
   }
 }

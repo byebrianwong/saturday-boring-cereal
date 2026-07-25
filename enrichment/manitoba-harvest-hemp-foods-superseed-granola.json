@@ -8,23 +8,27 @@
   },
   "confidence": "LOW",
   "nameMatch": true,
+  "formMismatch": null,
   "approved": false,
   "draft": {
     "source": "usda_fdc",
-    "matchedName": "MANITOBA HARVEST HEMP FOODS, RAW SHELLED HEMP SEEDS",
-    "matchedBrand": "The Harrell Sisters",
-    "barcode": "697658101076",
-    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2665901/nutrients",
+    "matchedName": "SPROUTED HONEY HEMP GRANOLA, HONEY HEMP",
+    "matchedBrand": "Morgan Wholesale Building Material, Co.",
+    "barcode": "675625360060",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2472857/nutrients",
     "image": null,
-    "calories": null,
-    "saturatedFat": null,
-    "transFat": null,
-    "polyunsaturatedFat": null,
-    "monounsaturatedFat": null,
+    "basis": "label",
+    "calories": 260,
+    "saturatedFat": 1,
+    "transFat": 0,
+    "polyunsaturatedFat": 3,
+    "monounsaturatedFat": 2.5,
     "addedSugars": null,
-    "sodium": null,
-    "score": 999,
-    "comparedFields": 0,
-    "flags": []
+    "sodium": 89,
+    "score": 2.5733333333333333,
+    "comparedFields": 3,
+    "flags": [
+      "addedSugars 11 > recorded total 9 — dropped"
+    ]
   }
 }

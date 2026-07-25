@@ -6,19 +6,22 @@ shortNote: Has a medium grainy taste to it, like slightly thicker darker wheat f
 dateReviewed: 2025-02-11
 emoji: '🌾'
 boxColor: "#6fa8d6"
+barcode: '00021908123813'
 formFactors: [flakes]
 proteinSources: []
 attributes: [organic]
 nutrition:
   servingSize: 56
-  calories: null
+  calories: 230
   totalFat: null
-  saturatedFat: null
+  saturatedFat: 0
+  transFat: 0
   totalSugars: 9
-  addedSugars: null
+  addedSugars: 9
   dietaryFiber: 5
   protein: 5
   proteinDV: null
+  sodium: 200
 boxImage: /images/cereals/cascadian-farm-kernza-grains-climate-smart-organic.jpg
 imageSource: other
 imageCredit: "Image: General Mills (Cascadian Farm), via Amazon listing"

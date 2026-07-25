@@ -20,6 +20,7 @@ nutrition:
   dietaryFiber: 4
   protein: 5
   proteinDV: null
+  sodium: 70
 boxImage: /images/cereals/cascadian-farm-blueberry-vanilla-no-sugar-added-granola.jpg
 imageSource: manufacturer
 imageCredit: "Image: Cascadian Farm / General Mills (cascadianfarm.com)"

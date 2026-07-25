@@ -5,6 +5,7 @@ rating: 5
 dateReviewed: 2025-02-11
 emoji: '🥜'
 boxColor: "#7b4fb0"
+noAutoImage: true
 barcode: '0850002887464'
 formFactors: [os]
 proteinSources: [milk-protein]

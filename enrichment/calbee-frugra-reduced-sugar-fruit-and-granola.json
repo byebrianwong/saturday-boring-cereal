@@ -8,25 +8,28 @@
   },
   "confidence": "LOW",
   "nameMatch": true,
+  "formMismatch": null,
   "approved": false,
   "draft": {
-    "source": "open_food_facts",
-    "matchedName": "Fruit Granola Reduced Sugar",
-    "matchedBrand": "Calbee Frugra",
-    "barcode": "4901330748470",
-    "url": "https://world.openfoodfacts.org/product/4901330748470",
+    "source": "usda_fdc",
+    "matchedName": "Nature Valley Reduced Sugar Vanilla Almond Granola",
+    "matchedBrand": "GENERAL MILLS SALES INC.",
+    "barcode": "00016000188914",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2758489/nutrients",
     "image": "https://images.openfoodfacts.org/images/products/490/133/074/8470/front_en.3.400.jpg",
-    "calories": null,
-    "saturatedFat": 3,
-    "transFat": null,
-    "polyunsaturatedFat": null,
-    "monounsaturatedFat": null,
+    "basis": "label",
+    "calories": 260,
+    "saturatedFat": 1,
+    "transFat": 0,
+    "polyunsaturatedFat": 1.5,
+    "monounsaturatedFat": 4.5,
     "addedSugars": null,
-    "sodium": 128,
-    "score": 17.39999999999999,
-    "comparedFields": 2,
+    "sodium": 150,
+    "score": 2.8746666666666667,
+    "comparedFields": 3,
     "flags": [
-      "calories 510 implausible (9.1 kcal/g) — dropped"
-    ]
+      "addedSugars 7 > recorded total 4 — dropped"
+    ],
+    "imageUrl": "https://world.openfoodfacts.org/product/4901330748470"
   }
 }

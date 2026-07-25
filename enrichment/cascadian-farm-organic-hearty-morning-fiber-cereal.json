@@ -6,28 +6,27 @@
     "dietaryFiber": 10,
     "servingSize": 64
   },
-  "confidence": "LOW",
+  "confidence": "HIGH",
   "nameMatch": true,
+  "formMismatch": null,
   "approved": true,
   "draft": {
-    "source": "open_food_facts",
-    "matchedName": "HEARTY MORNING FIBER CEREAL",
-    "matchedBrand": "CASCADIAN FARM",
-    "barcode": "0021908455525",
-    "url": "https://world.openfoodfacts.org/product/0021908455525",
-    "image": "https://images.openfoodfacts.org/images/products/002/190/845/5525/front_en.22.400.jpg",
+    "source": "usda_fdc",
+    "matchedName": "Cascadian Farm Organic Hearty Morning Fiber Breakfast Cereal",
+    "matchedBrand": "GENERAL MILLS SALES INC.",
+    "barcode": "00021908455525",
+    "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2752131/nutrients",
+    "image": null,
+    "basis": "label",
     "calories": 220,
-    "saturatedFat": 0.5,
+    "saturatedFat": 0,
     "transFat": 0,
     "polyunsaturatedFat": 0.5,
     "monounsaturatedFat": 1.5,
-    "addedSugars": null,
+    "addedSugars": 10,
     "sodium": 180,
-    "score": 0,
+    "score": 0.34239999999999987,
     "comparedFields": 3,
-    "flags": [
-      "addedSugars 16 > recorded total 10 — dropped"
-    ]
-  },
-  "reviewNote": "Manually approved: exact product, plausible surviving values."
+    "flags": []
+  }
 }

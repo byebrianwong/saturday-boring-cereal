@@ -6,18 +6,22 @@ shortNote: Slight artificial strawberry flavor; fairly sweet
 dateReviewed: 2025-06-15
 emoji: '🍓'
 boxColor: "#f0b429"
+barcode: '0016000226357'
+noAutoImage: true
 formFactors: [os]
 proteinSources: []
 attributes: []
 nutrition:
   servingSize: 37
-  calories: null
+  calories: 150
   totalFat: null
-  saturatedFat: null
+  saturatedFat: 0
+  transFat: 0
   totalSugars: 12
-  addedSugars: null
+  addedSugars: 7
   dietaryFiber: 2
   protein: 8
   proteinDV: null
+  sodium: 210
 ---
 

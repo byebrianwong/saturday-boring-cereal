@@ -22,5 +22,6 @@ nutrition:
   dietaryFiber: 8
   protein: 7
   proteinDV: null
+  sodium: 162
 ---
 

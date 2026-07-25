@@ -6,19 +6,24 @@ shortNote: Pretty average granola taste, nothing special
 dateReviewed: 2025-06-15
 emoji: '🫐'
 boxColor: "#4e8a5c"
+barcode: '697658692239'
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [organic, high-protein]
 nutrition:
   servingSize: 60
-  calories: null
+  calories: 275
   totalFat: null
-  saturatedFat: null
+  saturatedFat: 5.5
+  transFat: 0
+  polyunsaturatedFat: 4.5
+  monounsaturatedFat: 2
   totalSugars: 10
-  addedSugars: null
+  addedSugars: 9
   dietaryFiber: 4
   protein: 11
   proteinDV: null
+  sodium: 153
 boxImage: /images/cereals/manitoba-harvest-organic-superseed-granola-blueberry.jpg
 imageSource: other
 imageCredit: "Image: Manitoba Harvest, via Kroger"

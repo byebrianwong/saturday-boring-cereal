@@ -5,12 +5,13 @@ rating: 8
 dateReviewed: 2026-01-06
 emoji: '🥜'
 boxColor: "#e07ba3"
+barcode: '0005909583340'
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [high-protein]
 nutrition:
   servingSize: 60
-  calories: null
+  calories: 280
   totalFat: 12
   saturatedFat: 2
   totalSugars: 9

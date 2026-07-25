@@ -6,8 +6,9 @@
     "dietaryFiber": 6,
     "servingSize": 55
   },
-  "confidence": "LOW",
+  "confidence": "HIGH",
   "nameMatch": true,
+  "formMismatch": "bites",
   "approved": false,
   "draft": {
     "source": "usda_fdc",
@@ -16,15 +17,16 @@
     "barcode": "058449220008",
     "url": "https://fdc.nal.usda.gov/fdc-app.html#/food-details/2015800/nutrients",
     "image": null,
-    "calories": null,
-    "saturatedFat": null,
-    "transFat": null,
+    "basis": "label",
+    "calories": 200,
+    "saturatedFat": 0,
+    "transFat": 0,
     "polyunsaturatedFat": null,
     "monounsaturatedFat": null,
     "addedSugars": null,
-    "sodium": null,
-    "score": 999,
-    "comparedFields": 0,
+    "sodium": 275,
+    "score": 1.7283333333333335,
+    "comparedFields": 3,
     "flags": []
   }
 }
