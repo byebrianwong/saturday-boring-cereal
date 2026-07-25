@@ -104,6 +104,10 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
   } else if (taste != null) {
     overall = taste;
   }
+  // Round once so the letter grade and the displayed x.x/10 are derived from the
+  // same number and can never straddle a band boundary (e.g. a 54.6 that shows
+  // "5.5" but grades D).
+  if (overall != null) overall = Math.round(overall);
 
   return {
     overall,
@@ -113,18 +117,15 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
   };
 }
 
-// Grade bands on the 0–100 overall. Deliberately hard at the top — in keeping
-// with store policy, nothing gets an easy A.
+// Tier-list bands (S is the top, above A) on the 0–100 overall. Deliberately
+// hard at the top — in keeping with store policy, S is a blue ribbon nothing has
+// earned yet. Uniform 10-wide steps so the cutoffs are easy to retune.
 const BANDS: Array<[number, string]> = [
-  [85, 'A'],
-  [80, 'A-'],
-  [75, 'B+'],
-  [70, 'B'],
-  [65, 'B-'],
-  [60, 'C+'],
+  [85, 'S'],
+  [75, 'A'],
+  [65, 'B'],
   [55, 'C'],
-  [50, 'C-'],
-  [40, 'D'],
+  [45, 'D'],
   [0, 'F'],
 ];
 
@@ -133,11 +134,29 @@ export function gradeFor(overall: number): string {
   return 'F';
 }
 
-/** Good→bad tier for coloring a stamp or a bar. */
+/** Good→bad tier for coloring a subscore bar by its raw 0–100 value. */
 export function scoreTier(score: number): 'good' | 'mid' | 'bad' {
   if (score >= 75) return 'good';
   if (score >= 55) return 'mid';
   return 'bad';
+}
+
+/**
+ * Colour tier for a letter grade's stamp. S gets its own "blue ribbon" look;
+ * the rest ramp green→amber→red so the seal's colour matches its letter.
+ */
+export function gradeColorTier(grade: string): 'elite' | 'good' | 'mid' | 'bad' {
+  switch (grade) {
+    case 'S':
+      return 'elite';
+    case 'A':
+    case 'B':
+      return 'good';
+    case 'C':
+      return 'mid';
+    default:
+      return 'bad'; // D, F
+  }
 }
 
 /** Overall shown on the site-wide 0–10 scale (Taste's scale), one decimal. */

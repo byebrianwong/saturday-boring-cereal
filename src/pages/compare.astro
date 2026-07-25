@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import { scoreCereal, scoreTier, overallOutOfTen } from '../lib/score';
+import { scoreCereal, gradeColorTier, overallOutOfTen } from '../lib/score';
 import { u } from '../lib/url';
 
 const cereals = await getCollection('cereals');
@@ -22,7 +22,7 @@ const items = ranked.map((c) => {
   // Overall grade, precomputed so the client table can stamp it per column.
   overall: s.overall,
   grade: s.grade,
-  tier: s.overall == null ? 'na' : scoreTier(s.overall),
+  tier: s.grade == null ? 'na' : gradeColorTier(s.grade),
   out10: s.overall == null ? null : overallOutOfTen(s.overall),
   n: {
     servingSize: c.data.nutrition.servingSize,
@@ -463,6 +463,9 @@ const items = ranked.map((c) => {
     font-variant-numeric: tabular-nums;
   }
 
+  .board :global(.gstamp.elite) {
+    background: linear-gradient(var(--store-blue), var(--store-blue-dark));
+  }
   .board :global(.gstamp.good) {
     background: linear-gradient(var(--score-good), var(--score-good-dark));
   }
