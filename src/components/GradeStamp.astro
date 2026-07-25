@@ -1,5 +1,5 @@
 ---
-import { scoreTier, overallOutOfTen } from '../lib/score';
+import { gradeColorTier, overallOutOfTen } from '../lib/score';
 
 interface Props {
   grade: string | null;
@@ -8,7 +8,7 @@ interface Props {
 }
 
 const { grade, overall, size = 'lg' } = Astro.props;
-const tier = overall == null ? 'na' : scoreTier(overall);
+const tier = grade == null ? 'na' : gradeColorTier(grade);
 const out10 = overall == null ? null : overallOutOfTen(overall);
 ---
 
@@ -30,6 +30,10 @@ const out10 = overall == null ? null : overallOutOfTen(overall);
   }
 
   /* --- colour by tier --- */
+  .stamp.elite {
+    --seal: var(--store-blue);
+    --seal-dark: var(--store-blue-dark);
+  }
   .stamp.good {
     --seal: var(--score-good);
     --seal-dark: var(--score-good-dark);
