@@ -42,7 +42,20 @@ edits in Keystatic.
 
 ## Adding / editing cereals
 
-Three ways, same files:
+**The short version:**
+
+```bash
+npm run add                          # new cereal + auto-pulled nutrition
+npm run rate <slug> 8.5              # change a taste score
+npm run image <slug> <image-url>     # set the box photo
+npm run enrich && npm run enrich:apply   # backfill nutrition across the catalog
+```
+
+Every command takes a partial slug, so `npm run rate "heritage flakes" 8.5` works;
+ambiguous input lists the matches instead of guessing. Add `--dry-run` to any of
+`rate` / `image` to see the change without writing it.
+
+Three ways in, same files:
 
 1. **One-step add (auto-pulls nutrition)** — the fastest way to add a new one:
 
@@ -52,10 +65,11 @@ Three ways, same files:
 
    It scaffolds `src/content/cereals/<slug>.md` from what you type, then **looks the
    product up on Open Food Facts + USDA in the same step** and fills in the blanks
-   (calories, added sugars, sodium, sat/trans fat) plus a real box photo — but only
-   when the match is confident (its macros cross-check against the numbers you entered
-   **and** the product name overlaps). Anything it isn't sure about is left for you to
-   confirm instead of guessed. Your recorded numbers are never overwritten.
+   (calories, added sugars, sodium, sat/trans fat) — but only when the match is
+   confident (its macros cross-check against the numbers you entered **and** the
+   product name overlaps). Anything it isn't sure about is left for you to confirm
+   instead of guessed. Your recorded numbers are never overwritten. Box art starts as
+   the emoji placeholder; add a real photo with `npm run image` (below).
 
    Prefer flags over prompts (or to script it):
 
@@ -71,11 +85,36 @@ Three ways, same files:
    `--no-usda`, `--serving-desc`, `--note`, `--emoji`, `--color`. Set `FDC_API_KEY` for a
    personal USDA key ([free](https://fdc.nal.usda.gov/api-key-signup)).
 
-2. **Admin UI** — run `npm run dev`, open [http://localhost:4321/keystatic](http://localhost:4321/keystatic).
+2. **Change a rating** — [scripts/rate.mjs](scripts/rate.mjs):
+
+   ```bash
+   npm run rate natures-path-heritage-flakes 8.5
+   npm run rate "heritage flakes" 8.5 --note "Better than I remembered."
+   npm run rate magic-spoon --unrated        # clear the score entirely
+   ```
+
+   Validates the 0–10 scale, stamps `dateUpdated` (leaving `dateReviewed` as the
+   original review date), and optionally replaces the tasting note.
+
+3. **Set a box photo** — [scripts/image.mjs](scripts/image.mjs):
+
+   ```bash
+   npm run image natures-path-heritage-flakes https://…/front.png --source manufacturer
+   npm run image kodiak ./downloads/box.png --fit contain
+   npm run image magic-spoon --none          # no clean front exists anywhere
+   ```
+
+   Downloads (or reads a local file), trims the margins, flattens onto white, fits
+   it to the 240×320 box-face ratio at 900px, writes
+   `public/images/cereals/<slug>.jpg`, and sets `boxImage` / `imageSource` /
+   `imageCredit`. See [Box images](#box-images) for why the source has to be a flat,
+   straight-on front and where to find one.
+
+4. **Admin UI** — run `npm run dev`, open [http://localhost:4321/keystatic](http://localhost:4321/keystatic).
    Full CRUD with pickers for form factors, protein sources, attributes, and every
    nutrition field. Saves write straight to `src/content/cereals/*.md`. (Nutrition is
    entered by hand here — to auto-pull it, use `npm run add` above or `npm run enrich`.)
-3. **By hand** — edit the markdown files in [src/content/cereals/](src/content/cereals/).
+5. **By hand** — edit the markdown files in [src/content/cereals/](src/content/cereals/).
    Frontmatter schema lives in [src/content.config.ts](src/content.config.ts) (Zod) and is
    mirrored in [keystatic.config.ts](keystatic.config.ts).
 
@@ -85,9 +124,9 @@ Rules encoded in the schema:
 - Nutrition fields are nullable on purpose. Leave a value blank when the box doesn't
   list it — the UI renders “not listed” instead of inventing numbers (protein %DV
   especially: FDA only requires it when a protein claim is made).
-- `emoji` + `boxColor` are placeholder box art until real photos exist. When photos
-  arrive, add `boxImage`, `imageSource`, and `imageCredit` (already in the schema) and
-  swap the art block in `MiniBox.astro`.
+- `emoji` + `boxColor` are the placeholder box art, used whenever `boxImage` is unset.
+- `noAutoImage: true` marks a product with no usable flat front anywhere, so enrichment
+  can't put an angled one back. `npm run image <slug> --none` sets it.
 
 ## Why Keystatic only runs in dev
 
@@ -136,40 +175,93 @@ FDC_API_KEY=xxxx npm run enrich     # also query USDA FoodData Central (free key
 
 It pulls from Open Food Facts (free, no key) and — with `FDC_API_KEY` — USDA, then scores
 each match by comparing the source's protein/sugar/fiber against Brian's recorded numbers.
+USDA needs two calls: `foods/search` ranks candidates on its per-100g `foodNutrients`,
+then `food/{fdcId}` supplies the `labelNutrients` actually printed on the box. (Search
+results carry no `labelNutrients` at all — reading it there returned `undefined` for every
+field, scoring every USDA candidate 999 with zero compared fields, which quietly kept USDA
+out of the running entirely until it was fixed.)
 Sanity guards drop implausible values (OFF sometimes stores per-container, not per-serving,
 data). Everything defaults to `approved: false`; nothing is written until you confirm,
-and `--apply` only fills blank fields — your verified numbers are never overwritten. Applied
-entries gain a `barcode`, `imageSource: open_food_facts`, and a CC-BY-SA `imageCredit` line.
+and `--apply` only fills blank fields — your verified numbers are never overwritten. A
+nutrition key that's *missing* from a file counts as blank too: `--apply` inserts it in
+schema order. (It used to only rewrite existing `key: null` lines, which meant sodium —
+absent from every migrated file — was fetched, sanity-checked, and then silently dropped
+for the entire catalog.) Applied entries also gain a `barcode`.
+
 Why not "approve in Keystatic" directly? Keeping drafts out of the content model avoids
 polluting it; once applied, the values show up in Keystatic for any further editing.
 
-Caveats seen in practice: OFF search is non-deterministic (matches vary run to run) and
-mis-matches plenty (a "KIND Dark Chocolate Clusters" search hit a dipped-cluster snack) —
-which is exactly why the confirm step exists. Box images from OFF are CC-BY-SA: the applied
-`imageCredit` attributes contributors and links back to the product page.
+Two gates run before anything can auto-approve. **Name overlap** requires ≥2 shared
+significant tokens. **Product form** rejects a candidate whose name claims a form ours
+never mentions — the granola *bar*, breakfast *biscuits*, hot *oatmeal*, Bircher *muesli*
+and Heritage *Bites* matches all cleared the macro check and were caught here. It's
+one-way, so "butter" in their name is fine when ours is a Peanut Butter granola.
+
+Neither gate can catch a *flavour* or *brand* swap, so those still need eyes. Both search
+APIs are non-deterministic — the same query returns different winners run to run — and
+USDA's `brandOwner` field is frequently junk ("The Harrell Sisters" for Manitoba Harvest,
+"Mr. Beverages Old Time Cocktail Mixes" for Magic Spoon), so it can't be used to verify a
+brand. The reliable check is the **barcode**: look it up on Open Food Facts and see what
+comes back. That's what caught an "ALMOND BUTTER GRANOLA" match for Michele's whose UPC
+resolves to Udi's Gluten Free, and what confirmed the Manitoba Harvest match that USDA had
+attributed to the wrong company.
+
+### Box images
+
+`boxImage` renders as the **front face of a CSS 3D box** that already applies its own
+`rotateY(-20deg)`. So the source must be a flat, straight-on, dead-center package front.
+A 3/4 "packshot" render reads as a box inside a box; an Open Food Facts user snapshot
+drags in table edges, fingers and tilt.
+
+That's why **enrichment no longer touches box images** — `npm run image` is the way in.
+`npm run enrich --with-off-image` opts back in where a photo beats nothing, and cereals
+marked `noAutoImage: true` are skipped even then.
+
+Sourcing that works: manufacturer sites are best, and most run Shopify, so
+`…/cdn/shop/files/<name>.png?width=2000` gives a transparent flat front. Retailer
+fallbacks: Kroger `product/images/xlarge/front/<upc>`, Amazon `_SL1600_`. Avoid Target's
+main image (angled). Tall bags lose their top and bottom to the default center crop —
+`npm run image` warns when it discards ≥25% and suggests `--fit contain`, which pads onto
+white instead.
 
 ### What's already enriched
 
-**12 of 25** cereals have been enriched and verified — calories / added sugars / sodium
-back-filled from Open Food Facts (USDA cross-checked with a personal key), plus **12 real
-box photos** downloaded into `public/images/cereals/` and rendered on the shelf and detail
-pages with CC-BY-SA credit. Every applied value passed a macro cross-check against Brian's
-recorded numbers and a product-name-overlap gate; two exact-product matches that just missed
-the auto threshold were promoted by hand after inspection.
+**17 of 25** cereals have calories, **16** have added sugars, **14** carry sodium
+(previously none could — see the writer note above), and **22** have real flat-front box
+photos. Every applied value passed the macro cross-check plus both gates above, and the
+brand-ambiguous ones were confirmed by barcode.
 
-The other 13 stayed on emoji art + "not listed" because the source matched the wrong product
-(granola *bars* for Kodiak/KIND, peanut *butter* spread for a Trader Joe's search, wrong
-flavor variants) or had no usable data. Those are honest gaps, not guesses. Guards in
-`enrich.mjs` dropped bad per-container values before they landed (e.g. a 1400 kcal / 60g
-added-sugar Trader Joe's OFF record).
+The remaining 8 stay on "not listed" because the source matched the wrong product or had
+no usable data — honest gaps, not guesses:
+
+| cereal | why |
+|---|---|
+| Kodiak Cookie Butter Granola | no record; search lands on wheat bread / a protein pack |
+| KIND Soft Baked Granola | only the granola **bar** exists in USDA |
+| KIND Dark Chocolate Clusters | matches a dipped-cluster snack, not the cereal |
+| Michele's Almond Butter | best match's UPC resolves to Udi's Gluten Free |
+| Manitoba Harvest Superseed | only the plain hemp seeds / other brands' granola |
+| Trader Joe's Cherry Pistachio | search returns cherry *juice* and cornichons |
+| Calbee Frugra | OFF record is per-container (510 kcal/56g — guard dropped it) |
+| Magic Spoon Peanut Butter | matches the **Cocoa** Peanut Butter flavour, identical macros |
+
+Three products — Magic Spoon Peanut Butter, Cheerios Strawberry Protein, Cascadian Farm
+Hearty Morning — have no flat front at any source and are marked `noAutoImage: true`.
+Cheerios and Hearty Morning did gain full nutrition this round; they just keep emoji art.
 
 To fill more later: re-run `FDC_API_KEY=… node scripts/enrich.mjs --auto-approve`, verify
-new matches in `enrichment/REVIEW.md`, and `--apply`. Free USDA key:
-https://fdc.nal.usda.gov/api-key-signup
+new matches in `enrichment/REVIEW.md`, and `--apply`. Because both APIs are
+non-deterministic, a repeat run surfaces different candidates — it's worth re-running
+occasionally. Applying is safe to repeat: it only ever fills blanks.
+
+Free USDA key: https://fdc.nal.usda.gov/api-key-signup — worth setting, since `DEMO_KEY`
+is shared and rate-limits about ten cereals into a sweep. Keep it in the environment
+(`.env` is gitignored), never in a tracked file.
 
 ## Still to do (from the build plan)
 
-- Enrich the remaining 13 (need better source matches — often the exact SKU isn't in OFF/USDA).
+- Enrich the remaining 8 (table above). None carry a barcode, so there's no direct lookup
+  — most would need the number off the physical box.
 
 Phase-2 items from the plan are now built: comparison view (`/compare`) and `/tags/[tag]`
 landing pages (one per form factor / attribute / protein source).

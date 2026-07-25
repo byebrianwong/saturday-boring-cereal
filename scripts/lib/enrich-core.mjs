@@ -10,7 +10,14 @@
 //
 // It NEVER overwrites your recorded fields (protein/sugar/fiber/serving/rating)
 // and only fills what's currently blank (calories, sat/trans/poly/mono fat,
-// added sugars, sodium) plus barcode + a CC-BY-SA image credit.
+// added sugars, sodium) plus a barcode.
+//
+// Box images are NOT pulled from Open Food Facts by default. OFF photos are
+// crowdsourced snapshots — tilted, shot on tables, sometimes hand-held — and
+// the site renders boxImage as the flat front face of a CSS 3D box that already
+// applies its own rotateY perspective, so an angled photo reads as a box inside
+// a box. Use `npm run image <slug> <url>` to set a proper flat front instead.
+// Pass `withImage: true` to opt back in to the old OFF download.
 
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -39,6 +46,8 @@ export function readCereal(file) {
     slug: file.replace(/\.md$/, ''),
     brand: unquote(get('brand')),
     name: unquote(get('name')),
+    // Opt-out marker for products with no flat, straight-on front anywhere.
+    noAutoImage: get('noAutoImage') === 'true',
     servingSize: nut('servingSize'),
     protein: nut('protein'),
     totalSugars: nut('totalSugars'),
@@ -135,6 +144,44 @@ export async function offSearch(cereal) {
 }
 
 // --- USDA FoodData Central (Branded) ------------------------------------------
+// Two endpoints, two different shapes, and only one of them carries the label:
+//   foods/search  -> foodNutrients[]  , keyed by nutrient id, per 100g
+//   food/{fdcId}  -> labelNutrients{} , per the product's own serving, as printed
+// Search results do NOT include labelNutrients. Reading it there yields undefined
+// for every field, which scores every candidate at 999/0-compared and silently
+// removes USDA from the running — so rank on the per-100g numbers from search,
+// then fetch the winner's detail record for label-accurate values.
+const USDA_NUTRIENT_ID = {
+  calories: 1008,
+  protein: 1003,
+  sugars: 2000,
+  fiber: 1079,
+  sodium: 1093,
+  saturatedFat: 1258,
+  transFat: 1257,
+  addedSugars: 1235,
+  polyunsaturatedFat: 1293,
+  monounsaturatedFat: 1292,
+};
+
+// Per-100g values out of a search hit's foodNutrients array.
+function usdaPer100(food) {
+  const by = new Map((food.foodNutrients || []).map((n) => [n.nutrientId, n.value]));
+  const out = {};
+  for (const [key, id] of Object.entries(USDA_NUTRIENT_ID)) {
+    const v = by.get(id);
+    out[key] = v == null ? null : v;
+  }
+  return out;
+}
+
+async function usdaDetail(fdcId, fdcKey) {
+  const res = await fetch(`https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=${fdcKey}`);
+  if (res.status === 429) throw new Error('USDA rate limit');
+  if (!res.ok) return null;
+  return res.json();
+}
+
 export async function usdaSearch(cereal, { fdcKey = 'DEMO_KEY' } = {}) {
   const q = encodeURIComponent(`${cereal.brand} ${cereal.name}`);
   const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${fdcKey}&query=${q}&dataType=Branded&pageSize=5`;
@@ -145,19 +192,40 @@ export async function usdaSearch(cereal, { fdcKey = 'DEMO_KEY' } = {}) {
   if (!foods.length) return null;
   const s = cereal.servingSize || 100;
   const val = (o) => (o && o.value != null ? o.value : null);
+
+  // Rank on per-100g search values, scaled to the serving size Brian recorded.
   const scored = foods
     .map((f) => {
-      const ss = f.servingSizeUnit === 'g' ? f.servingSize || null : null;
-      const ln = f.labelNutrients || {};
-      const sc = (v) => (v == null ? null : ss ? (v * s) / ss : v); // USDA label is per its serving
-      const m = macroScore(cereal, { protein: sc(val(ln.protein)), sugars: sc(val(ln.sugars)), fiber: sc(val(ln.fiber)) });
-      return { f, ln, ss, ...m };
+      const per100 = usdaPer100(f);
+      const scale = (v) => (v == null ? null : (v * s) / 100);
+      const m = macroScore(cereal, {
+        protein: scale(per100.protein),
+        sugars: scale(per100.sugars),
+        fiber: scale(per100.fiber),
+      });
+      return { f, per100, ...m };
     })
     .sort((a, b) => a.score - b.score);
   const best = scored[0];
-  const ln = best.ln;
-  const ss = best.ss;
-  const sc = (v) => (v == null ? null : ss ? (v * s) / ss : v);
+
+  // Prefer the printed label for the winner; fall back to its per-100g figures.
+  let ln = null;
+  let ss = null;
+  try {
+    const detail = await usdaDetail(best.f.fdcId, fdcKey);
+    if (detail?.labelNutrients) {
+      ln = detail.labelNutrients;
+      ss = detail.servingSizeUnit === 'g' ? detail.servingSize || null : null;
+    }
+  } catch (e) {
+    if (/rate limit/.test(e.message)) throw e;
+  }
+  // Label values are per the product's serving; per-100g values are per 100g.
+  const scale100 = (v) => (v == null ? null : (v * s) / 100);
+  const sc = ln ? (v) => (v == null ? null : ss ? (v * s) / ss : v) : scale100;
+  const pick = (labelKey, per100Key) =>
+    ln ? val(ln[labelKey]) : best.per100[per100Key ?? labelKey];
+
   return guard(
     {
       source: 'usda_fdc',
@@ -166,15 +234,18 @@ export async function usdaSearch(cereal, { fdcKey = 'DEMO_KEY' } = {}) {
       barcode: best.f.gtinUpc || null,
       url: `https://fdc.nal.usda.gov/fdc-app.html#/food-details/${best.f.fdcId}/nutrients`,
       image: null,
-      calories: round(sc(val(ln.calories)), 5),
-      saturatedFat: round(sc(val(ln.saturatedFat)), 0.5),
-      transFat: round(sc(val(ln.transFat)), 0.5),
-      polyunsaturatedFat: null,
-      monounsaturatedFat: null,
-      addedSugars: round(sc(val(ln.addedSugar ?? ln.addedSugars)), 1),
+      basis: ln ? 'label' : 'per100g',
+      calories: round(sc(pick('calories')), 5),
+      saturatedFat: round(sc(pick('saturatedFat')), 0.5),
+      transFat: round(sc(pick('transFat')), 0.5),
+      // Poly/mono fat are never on a Nutrition Facts panel, so they only ever
+      // come from the per-100g data regardless of which basis won above.
+      polyunsaturatedFat: round(scale100(best.per100.polyunsaturatedFat), 0.5),
+      monounsaturatedFat: round(scale100(best.per100.monounsaturatedFat), 0.5),
+      addedSugars: round(sc(ln ? val(ln.addedSugar ?? ln.addedSugars) : best.per100.addedSugars), 1),
       sodium: (() => {
-        const v = sc(val(ln.sodium));
-        return v == null ? null : Math.round(v); // USDA sodium label is mg
+        const v = sc(pick('sodium'));
+        return v == null ? null : Math.round(v); // sodium is mg in both shapes
       })(),
       score: best.score,
       comparedFields: best.compared,
@@ -190,6 +261,26 @@ export function nameMatch(cereal, draft) {
   const got = norm(`${draft.matchedName} ${draft.matchedBrand}`);
   const overlap = got.filter((w) => want.has(w)).length;
   return overlap >= 2;
+}
+
+// --- product-form gate --------------------------------------------------------
+// The macro check can't tell a granola *bar* from granola, or breakfast
+// *biscuits* from the cereal — same ingredients, same numbers, different SKU.
+// So if a candidate's name claims a product form ours never mentions, treat it
+// as a different product no matter how well the macros line up. Only one-way:
+// "butter" in theirs is fine when ours is a Peanut Butter granola.
+const FORM_WORDS = [
+  'bar', 'bars', 'biscuit', 'biscuits', 'oatmeal', 'muesli', 'bread', 'juice',
+  'drink', 'concentrate', 'spread', 'cup', 'cups', 'snack', 'bites', 'cookie',
+  'cookies', 'yogurt', 'smoothie', 'seeds', 'oil', 'flour', 'shake',
+];
+export function formMismatch(cereal, draft) {
+  if (!draft) return null;
+  const words = (s) => new Set((s || '').toLowerCase().match(/[a-z]+/g) || []);
+  const ours = words(`${cereal.brand} ${cereal.name}`);
+  const theirs = words(`${draft.matchedName} ${draft.matchedBrand}`);
+  const claimed = FORM_WORDS.filter((w) => theirs.has(w) && !ours.has(w));
+  return claimed.length ? claimed.join('/') : null;
 }
 
 export function confidence(draft) {
@@ -235,28 +326,76 @@ export async function enrichCereal(cereal, { fdcKey = 'DEMO_KEY', useUsda = true
   }
   const primary = pickPrimary(cereal, off, usda);
   const conf = confidence(primary);
-  const meetsBar = conf === 'HIGH' && !!primary && nameMatch(cereal, primary);
-  return { off, usda, primary, conf, meetsBar, usdaRateLimited };
+  const formIssue = formMismatch(cereal, primary);
+  const meetsBar = conf === 'HIGH' && !!primary && nameMatch(cereal, primary) && !formIssue;
+  return { off, usda, primary, conf, meetsBar, formIssue, usdaRateLimited };
 }
 
-// --- apply an approved draft (fill null fields only) --------------------------
-export async function applyDraft(cereal, d) {
-  let out = cereal.raw;
-  const setNull = (key, val) => {
-    if (val == null) return;
-    out = out.replace(new RegExp(`^(\\s+${key}:)\\s*null\\s*$`, 'm'), `$1 ${val}`);
-  };
-  setNull('calories', d.calories);
-  setNull('saturatedFat', d.saturatedFat);
-  setNull('transFat', d.transFat);
-  setNull('polyunsaturatedFat', d.polyunsaturatedFat);
-  setNull('monounsaturatedFat', d.monounsaturatedFat);
-  setNull('addedSugars', d.addedSugars);
-  setNull('sodium', d.sodium);
+// --- nutrition block writer ---------------------------------------------------
+// Field order from the Zod schema in src/content.config.ts, so an inserted key
+// lands where it belongs on the label rather than at the end of the block.
+const NUTRITION_ORDER = [
+  'servingSize', 'servingDescription', 'calories', 'totalFat', 'saturatedFat',
+  'transFat', 'polyunsaturatedFat', 'monounsaturatedFat', 'totalCarbs',
+  'dietaryFiber', 'totalSugars', 'addedSugars', 'protein', 'proteinDV', 'sodium',
+];
+
+// Fill blank nutrition values, never overwriting one that's already recorded.
+// A key that's simply absent from the file counts as blank and gets inserted —
+// the migrated entries omit sodium/transFat/carbs entirely, and treating those
+// as "nothing to fill" silently threw away every value the sources returned.
+export function upsertNutrition(raw, values) {
+  const lines = raw.split('\n');
+  const start = lines.findIndex((l) => /^nutrition:\s*$/.test(l));
+  if (start === -1) return raw; // no block to write into; leave the file alone
+  let end = start + 1;
+  while (end < lines.length && /^\s+\S/.test(lines[end])) end++;
+
+  const indent = (lines[start + 1] || '  x').match(/^\s*/)[0] || '  ';
+  const keyAt = (i) => (lines[i].match(/^\s+([A-Za-z]+):/) || [])[1];
+
+  for (const [key, val] of Object.entries(values)) {
+    if (val == null) continue;
+    const at = lines.slice(start + 1, end).findIndex((l) => new RegExp(`^\\s+${key}:`).test(l));
+    if (at !== -1) {
+      const i = start + 1 + at;
+      // Only a null placeholder is ours to fill; a real value is Brian's.
+      if (/:\s*null\s*$/.test(lines[i])) lines[i] = `${indent}${key}: ${val}`;
+      continue;
+    }
+    // Absent — insert after the last present key that precedes it in the schema.
+    const rank = NUTRITION_ORDER.indexOf(key);
+    let insertAt = start + 1;
+    for (let i = start + 1; i < end; i++) {
+      const k = keyAt(i);
+      const r = k ? NUTRITION_ORDER.indexOf(k) : -1;
+      if (r !== -1 && r < rank) insertAt = i + 1;
+    }
+    lines.splice(insertAt, 0, `${indent}${key}: ${val}`);
+    end++;
+  }
+  return lines.join('\n');
+}
+
+// --- apply an approved draft (fill blank fields only) -------------------------
+// `withImage` opts in to downloading the Open Food Facts photo. It stays off by
+// default: OFF images are crowdsourced snapshots and the 3D box needs a flat
+// front (see the header note). `noAutoImage: true` on the cereal vetoes it even
+// when the caller asks.
+export async function applyDraft(cereal, d, { withImage = false } = {}) {
+  let out = upsertNutrition(cereal.raw, {
+    calories: d.calories,
+    saturatedFat: d.saturatedFat,
+    transFat: d.transFat,
+    polyunsaturatedFat: d.polyunsaturatedFat,
+    monounsaturatedFat: d.monounsaturatedFat,
+    addedSugars: d.addedSugars,
+    sodium: d.sodium,
+  });
 
   // Download the box photo into the repo (static-host friendly; no remote dep).
   let localImg = null;
-  if (d.image) {
+  if (d.image && withImage && !cereal.noAutoImage) {
     const dir = join(ROOT, 'public', 'images', 'cereals');
     mkdirSync(dir, { recursive: true });
     try {

@@ -74,6 +74,12 @@ export default config({
           defaultValue: '#c98d4e',
         }),
         barcode: fields.text({ label: 'Barcode (UPC)', description: 'For USDA / Open Food Facts lookups.' }),
+        noAutoImage: fields.checkbox({
+          label: 'No auto box image',
+          description:
+            'Tick when no flat, straight-on package front exists for this product. Keeps the emoji placeholder and stops `npm run enrich` adding an angled one.',
+          defaultValue: false,
+        }),
         formFactors: fields.multiselect({ label: 'Form factors', options: formFactorOptions }),
         proteinSources: fields.multiselect({ label: 'Protein sources', options: proteinSourceOptions }),
         attributes: fields.multiselect({ label: 'Attributes', options: attributeOptions }),

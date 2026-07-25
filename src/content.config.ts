@@ -52,6 +52,11 @@ const cereals = defineCollection({
     boxImage: z.string().optional(),
     imageSource: z.enum(['own_photo', 'open_food_facts', 'manufacturer', 'other']).optional(),
     imageCredit: z.string().optional(),
+    // Box art must be a flat, straight-on package front (the 3D box already
+    // applies its own rotateY perspective). Set this on products where no such
+    // front exists anywhere — the emoji placeholder beats an angled or
+    // crowdsourced snapshot, and this stops enrichment re-adding one.
+    noAutoImage: z.boolean().optional(),
     barcode: z.string().optional(),
     purchaseLocation: z.string().optional(),
     price: z.number().optional(),
