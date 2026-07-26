@@ -8,6 +8,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "check": "astro check",
+    "find": "node scripts/find.mjs",
     "add": "node scripts/add.mjs",
     "rate": "node scripts/rate.mjs",
     "image": "node scripts/image.mjs",

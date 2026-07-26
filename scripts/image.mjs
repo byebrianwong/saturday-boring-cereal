@@ -30,13 +30,9 @@
 
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, unlinkSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import sharp from 'sharp';
-import { ROOT, CEREALS, UA } from './lib/enrich-core.mjs';
+import { ROOT, CEREALS } from './lib/enrich-core.mjs';
+import { loadImage, normalizeBoxImage, OUT_WIDTH, OUT_HEIGHT } from './lib/image-core.mjs';
 
-// The box face is 240x320 in the design; 900px wide keeps it crisp on retina.
-const FACE_RATIO = 240 / 320;
-const OUT_WIDTH = 900;
-const OUT_HEIGHT = Math.round(OUT_WIDTH / FACE_RATIO);
 const IMAGES = join(ROOT, 'public', 'images', 'cereals');
 
 // --- args ---------------------------------------------------------------------
@@ -128,42 +124,9 @@ if (CLEAR) {
   process.exit(0);
 }
 
-// --- fetch --------------------------------------------------------------------
-async function load(src) {
-  if (/^https?:\/\//.test(src)) {
-    const res = await fetch(src, { headers: { 'User-Agent': UA } });
-    if (!res.ok) fail(`fetch failed: ${res.status} ${res.statusText} — ${src}`);
-    const type = res.headers.get('content-type') || '';
-    if (!/^image\//.test(type)) fail(`that URL returned ${type || 'no content-type'}, not an image — ${src}`);
-    return Buffer.from(await res.arrayBuffer());
-  }
-  if (!existsSync(src)) fail(`no such file: ${src}`);
-  return readFileSync(src);
-}
-
-const input = await load(srcArg);
-
-// --- normalize ----------------------------------------------------------------
-let pipe = sharp(input);
-const before = await pipe.metadata();
-if (TRIM) pipe = pipe.trim();
-// Flatten first: trimming a transparent PNG then flattening keeps the margins
-// tight, and JPEG can't carry alpha anyway.
-pipe = pipe.flatten({ background: '#ffffff' });
-
-const trimmed = await pipe.toBuffer({ resolveWithObject: true });
-const t = trimmed.info;
-
-// How much would a cover crop discard? A tall bag loses its top and bottom.
-const srcRatio = t.width / t.height;
-const lost = srcRatio > FACE_RATIO
-  ? { axis: 'sides', pct: Math.round((1 - FACE_RATIO / srcRatio) * 100) }
-  : { axis: 'top and bottom', pct: Math.round((1 - srcRatio / FACE_RATIO) * 100) };
-
-const out = await sharp(trimmed.data)
-  .resize(OUT_WIDTH, OUT_HEIGHT, { fit: FIT, position: 'center', background: '#ffffff' })
-  .jpeg({ quality: 88, mozjpeg: true })
-  .toBuffer();
+// --- fetch + normalize --------------------------------------------------------
+const input = await loadImage(srcArg).catch((e) => fail(e.message));
+const { out, before, trimmed: t, lost } = await normalizeBoxImage(input, { trim: TRIM, fit: FIT });
 
 // --- credit -------------------------------------------------------------------
 const host = /^https?:\/\//.test(srcArg) ? new URL(srcArg).hostname.replace(/^www\./, '') : null;

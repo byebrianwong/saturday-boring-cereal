@@ -45,7 +45,8 @@ edits in Keystatic.
 **The short version:**
 
 ```bash
-npm run add                          # new cereal + auto-pulled nutrition
+npm run find "magic spoon peanut butter"  # search by name, pick it, done
+npm run add                          # type the label yourself (databases don't have it)
 npm run rate <slug> 8.5              # change a taste score
 npm run image <slug> <image-url>     # set the box photo
 npm run enrich && npm run enrich:apply   # backfill nutrition across the catalog
@@ -53,11 +54,44 @@ npm run enrich && npm run enrich:apply   # backfill nutrition across the catalog
 
 Every command takes a partial slug, so `npm run rate "heritage flakes" 8.5` works;
 ambiguous input lists the matches instead of guessing. Add `--dry-run` to any of
-`rate` / `image` to see the change without writing it.
+`find` / `rate` / `image` to see the change without writing it.
 
-Three ways in, same files:
+Four ways in, same files:
 
-1. **One-step add (auto-pulls nutrition)** — the fastest way to add a new one:
+1. **Search by name** — [scripts/find.mjs](scripts/find.mjs), the fastest way in when the
+   product exists in the databases:
+
+   ```bash
+   npm run find "magic spoon peanut butter"
+   ```
+
+   It searches Open Food Facts + USDA, shows what came back with each candidate's serving
+   size and macros, and you pick the right one off the list. Then it fills in **the whole
+   label** — serving size, calories, all the fats, carbs, fiber, sugars, added sugars,
+   protein, sodium — pulls the box photo if the record has one, guesses the
+   form-factor/attribute/protein-source tags from the name and ingredients, and asks you
+   for the only two things it can't know: the taste score and the tasting note.
+
+   **Why this one can fill in the macros when `npm run add` can't.** The batch enrichment
+   path has to verify an unattended match, so it cross-checks the source's
+   protein/sugar/fiber against numbers you already recorded — which is why `add` makes you
+   type them first. Here *you* confirm the product by picking it out of the search
+   results, so eyeballing the match is the safety gate and the macros are free to come
+   down from the source. The per-container sanity guards still run, a record with no
+   serving size is refused rather than guessed (the label is per-serving and meaningless
+   without one), and `proteinDV` is still never invented.
+
+   Useful flags: `--pick <n>` (skip the prompt — scriptable), `--rating` / `--note`,
+   `--brand` / `--name` to override the brand/product split it guesses from the match,
+   `--no-image`, `--no-usda`, `--no-infer` (don't guess tags), `--fit contain`,
+   `--dry-run`.
+
+   The guessed tags and the photo are the two things worth a glance afterwards — both are
+   printed in the summary. Box photos come from Open Food Facts, which is crowdsourced, so
+   see [Box images](#box-images): if it's angled, `npm run image <slug> <url>` replaces it.
+
+2. **One-step add (auto-pulls nutrition)** — for a box in your hand that the databases
+   don't have (small and store brands, mostly):
 
    ```bash
    npm run add          # interactive: asks brand, product, score, serving, macros
@@ -85,7 +119,7 @@ Three ways in, same files:
    `--no-usda`, `--serving-desc`, `--note`, `--emoji`, `--color`. Set `FDC_API_KEY` for a
    personal USDA key ([free](https://fdc.nal.usda.gov/api-key-signup)).
 
-2. **Change a rating** — [scripts/rate.mjs](scripts/rate.mjs):
+3. **Change a rating** — [scripts/rate.mjs](scripts/rate.mjs):
 
    ```bash
    npm run rate natures-path-heritage-flakes 8.5
@@ -96,7 +130,7 @@ Three ways in, same files:
    Validates the 0–10 scale, stamps `dateUpdated` (leaving `dateReviewed` as the
    original review date), and optionally replaces the tasting note.
 
-3. **Set a box photo** — [scripts/image.mjs](scripts/image.mjs):
+4. **Set a box photo** — [scripts/image.mjs](scripts/image.mjs):
 
    ```bash
    npm run image natures-path-heritage-flakes https://…/front.png --source manufacturer
@@ -110,11 +144,11 @@ Three ways in, same files:
    `imageCredit`. See [Box images](#box-images) for why the source has to be a flat,
    straight-on front and where to find one.
 
-4. **Admin UI** — run `npm run dev`, open [http://localhost:4321/keystatic](http://localhost:4321/keystatic).
+5. **Admin UI** — run `npm run dev`, open [http://localhost:4321/keystatic](http://localhost:4321/keystatic).
    Full CRUD with pickers for form factors, protein sources, attributes, and every
    nutrition field. Saves write straight to `src/content/cereals/*.md`. (Nutrition is
    entered by hand here — to auto-pull it, use `npm run add` above or `npm run enrich`.)
-5. **By hand** — edit the markdown files in [src/content/cereals/](src/content/cereals/).
+6. **By hand** — edit the markdown files in [src/content/cereals/](src/content/cereals/).
    Frontmatter schema lives in [src/content.config.ts](src/content.config.ts) (Zod) and is
    mirrored in [keystatic.config.ts](keystatic.config.ts).
 
@@ -159,8 +193,9 @@ Migrated entries carry exactly what Brian recorded in Notion: serving size, tast
 tasting notes. Everything he didn't record — calories, added sugars, trans/poly/mono fat,
 protein %DV — renders as **"not listed"** rather than a guess.
 
-For a **single new cereal**, `npm run add` already pulls this in the same step (see
-above). To **backfill the existing catalog in bulk**, use the batch tool
+For a **single new cereal**, `npm run find` pulls the whole label in one step and
+`npm run add` fills the blanks around what you typed (see above). To **backfill the
+existing catalog in bulk**, use the batch tool
 [scripts/enrich.mjs](scripts/enrich.mjs) — both share the same lookup + safety code in
 [scripts/lib/enrich-core.mjs](scripts/lib/enrich-core.mjs), so they behave identically:
 
@@ -216,6 +251,11 @@ drags in table edges, fingers and tilt.
 That's why **enrichment no longer touches box images** — `npm run image` is the way in.
 `npm run enrich --with-off-image` opts back in where a photo beats nothing, and cereals
 marked `noAutoImage: true` are skipped even then.
+
+`npm run find` is the one exception that pulls a photo by default, because it's the one
+place you've just seen the product you picked: it reports the photo it wrote and what the
+crop discarded, so an angled one is obvious immediately and `npm run image <slug> <url>`
+replaces it. `--no-image` keeps the emoji placeholder instead.
 
 Sourcing that works: manufacturer sites are best, and most run Shopify, so
 `…/cdn/shop/files/<name>.png?width=2000` gives a transparent flat front. Retailer
