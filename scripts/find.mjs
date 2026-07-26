@@ -27,17 +27,14 @@
 //   --dry-run        show what it would write, write nothing
 //   --yes            never prompt (needs --pick; for scripts)
 
-import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
+import { searchCandidates, usdaUpgradeToLabel } from './lib/enrich-core.mjs';
 import {
-  ROOT, CEREALS, readTaxonomy, searchCandidates, usdaUpgradeToLabel, guard,
-} from './lib/enrich-core.mjs';
-import { loadImage, normalizeBoxImage, OUT_WIDTH, OUT_HEIGHT } from './lib/image-core.mjs';
-
-const { FORM_FACTORS, PROTEIN_SOURCES, ATTRIBUTES } = readTaxonomy();
-const IMAGES = join(ROOT, 'public', 'images', 'cereals');
+  splitBrandName, inferTags, slugify, cerealExists, cerealMarkdown,
+  sanitize, prepareImage, writeCereal, nutritionFrom,
+} from './lib/compose-core.mjs';
+import { OUT_WIDTH, OUT_HEIGHT } from './lib/image-core.mjs';
 
 // --- args ---------------------------------------------------------------------
 const argv = process.argv.slice(2);
@@ -159,10 +156,10 @@ if (picked.source === 'usda_fdc') {
 // The same sanity guards the unattended path uses: OFF sometimes stores
 // per-container rather than per-serving values, and picking the right product
 // doesn't make those numbers right.
-guard(picked, { servingSize: picked.servingSize, totalSugars: picked.totalSugars });
-if (picked.flags?.length) {
+const dropped = sanitize(picked);
+if (dropped.length) {
   console.log('\n  Dropped as implausible:');
-  for (const f of picked.flags) console.log(`    · ${f}`);
+  for (const f of dropped) console.log(`    · ${f}`);
 }
 
 if (picked.servingSize == null) {
@@ -174,40 +171,7 @@ if (picked.servingSize == null) {
 }
 
 // --- 5. brand / product split -------------------------------------------------
-// OFF puts the brand in its own field but often repeats it in the product name
-// ("Magic Spoon Peanut Butter"); USDA jams both into one uppercase description.
-// Split it here so the site's brand line and box label read properly.
-// Short all-caps tokens are acronyms the catalog keeps as-is (KIND, IKEA);
-// longer shouty ones are just USDA's formatting.
-function titleCase(s) {
-  return s.replace(/[\w’']+/g, (w) =>
-    (w === w.toUpperCase() && w.length <= 4 ? w : w[0].toUpperCase() + w.slice(1).toLowerCase())
-  );
-}
-const LEGAL_SUFFIX = /[\s,]+(llc|l\.l\.c\.|inc|inc\.|incorporated|corp|corp\.|corporation|co|co\.|company|ltd|ltd\.|limited|plc|gmbh|s\.a\.)$/i;
-
-let brandGuess = (picked.matchedBrand || '').split(',')[0].trim();
-while (LEGAL_SUFFIX.test(brandGuess)) brandGuess = brandGuess.replace(LEGAL_SUFFIX, '').trim();
-if (brandGuess === brandGuess.toUpperCase()) brandGuess = titleCase(brandGuess);
-
-let nameGuess = picked.matchedName;
-if (nameGuess === nameGuess.toUpperCase()) nameGuess = titleCase(nameGuess);
-// USDA writes descriptions as "BRAND, PRODUCT NAME" — drop that leading segment
-// when it's the brand rather than part of the product's actual name.
-const brandWords = new Set(brandGuess.toLowerCase().match(/[a-z0-9]+/g) || []);
-const comma = nameGuess.indexOf(',');
-if (comma > 0) {
-  const head = nameGuess.slice(0, comma).toLowerCase().match(/[a-z0-9]+/g) || [];
-  if (head.length && head.every((w) => brandWords.has(w))) nameGuess = nameGuess.slice(comma + 1).trim();
-}
-if (brandGuess) {
-  // strip a plain leading brand repeat ("Magic Spoon Peanut Butter")
-  nameGuess = nameGuess.replace(new RegExp(`^${brandGuess.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s,-]+`, 'i'), '').trim();
-}
-// Every product here is a cereal, and the catalog names read "Peanut Butter",
-// not "Peanut Butter Cereal" — drop the redundant tail unless it's the whole name.
-nameGuess = nameGuess.replace(/\s+cereal\s*$/i, '').trim() || nameGuess;
-nameGuess = nameGuess.replace(/\s*,\s*$/, '').replace(/\s+/g, ' ').trim() || picked.matchedName;
+const { brand: brandGuess, name: nameGuess } = splitBrandName(picked);
 
 console.log('');
 const brand = flag('brand') || (await ask('Brand', brandGuess)) || brandGuess;
@@ -229,109 +193,18 @@ rl?.close();
 
 // --- 7. infer the tags --------------------------------------------------------
 // Best-effort only, and printed back so a wrong guess is obvious and editable.
-const keep = (vals, allowed) => (allowed ? vals.filter((v) => allowed.includes(v)) : vals);
-const haystack = `${brand} ${name} ${picked.ingredients || ''} ${(picked.labels || []).join(' ')}`.toLowerCase();
-const hasLabel = (frag) => (picked.labels || []).some((l) => l.includes(frag));
+const { formFactors, proteinSources, attributes } = INFER
+  ? inferTags(picked, brand, name)
+  : { formFactors: [], proteinSources: [], attributes: [] };
 
-function inferForms() {
-  const map = {
-    granola: /granola/, flakes: /flake/, clusters: /cluster/, puffs: /puff/,
-    squares: /square/, shredded: /shredded/, biscuits: /biscuit/, muesli: /muesli/,
-    oats: /\boat(meal|s)?\b/, crisps: /crisp/, os: /\b(o's|os|cheerio|loops|rings)\b/,
-  };
-  return keep(Object.entries(map).filter(([, re]) => re.test(haystack)).map(([k]) => k), FORM_FACTORS);
-}
-function inferProteinSources() {
-  const out = [];
-  if (/pea protein/.test(haystack)) out.push('pea-protein');
-  if (/milk protein|casein/.test(haystack)) out.push('milk-protein');
-  if (/whey/.test(haystack)) out.push('whey');
-  if (/soy protein/.test(haystack)) out.push('soy');
-  if (/almond|peanut|cashew|pecan|walnut|hemp|chia|flax|pumpkin seed|sunflower seed/.test(haystack)) out.push('nut-seed');
-  return keep(out, PROTEIN_SOURCES);
-}
-function inferAttributes() {
-  const out = [];
-  const n = picked;
-  if (n.protein != null && n.protein >= 10) out.push('high-protein');
-  if (n.dietaryFiber != null && n.dietaryFiber >= 5) out.push('high-fiber');
-  if (n.totalSugars != null && n.totalSugars <= 5) out.push('low-sugar');
-  if (n.addedSugars === 0 || /no added sugar/.test(haystack)) out.push('no-added-sugar');
-  if (/\borganic\b/.test(haystack) || hasLabel('organic')) out.push('organic');
-  if (/gluten[\s-]?free/.test(haystack) || hasLabel('gluten-free')) out.push('gluten-free');
-  if (hasLabel('vegan')) out.push('vegan');
-  if (/grain[\s-]?free/.test(haystack)) out.push('grain-free');
-  if (/\bketo\b/.test(haystack)) out.push('keto');
-  return keep([...new Set(out)], ATTRIBUTES);
-}
-const formFactors = INFER ? inferForms() : [];
-const proteinSources = INFER ? inferProteinSources() : [];
-const attributes = INFER ? inferAttributes() : [];
-
-// --- 8. write it --------------------------------------------------------------
-// Same slug rule as add.mjs / migrate-notion.mjs, so filenames stay consistent.
-function slugify(b, n) {
-  return `${b} ${n}`
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[’']/g, '')
-    .replace(/&/g, 'and')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-function q(s) {
-  const str = String(s);
-  if (/^[\u{1F000}-\u{1FFFF}☀-➿]/u.test(str)) return `'${str}'`;
-  if (/[:#'"[\]{}&*!|>%@`]/.test(str) || /^\s|\s$/.test(str) || str === '') return JSON.stringify(str);
-  return str;
-}
-
+// --- 8. compose ---------------------------------------------------------------
 const slug = slugify(brand, name);
 if (!slug) fail(`could not derive a filename from "${brand} ${name}"`);
 const file = `${slug}.md`;
-if (existsSync(join(CEREALS, file))) {
-  fail(`${file} already exists — edit it in Keystatic, or delete it first`);
-}
+if (cerealExists(slug)) fail(`${file} already exists — edit it in Keystatic, or delete it first`);
 
-const today = new Date().toISOString().slice(0, 10);
-const emoji = flag('emoji') || '🥣';
+const emoji = flag('emoji') || '\u{1F963}';
 const boxColor = flag('color') || '#c98d4e';
-
-const lines = ['---'];
-lines.push(`name: ${q(name)}`);
-lines.push(`brand: ${q(brand)}`);
-lines.push(`rating: ${rating == null ? 'null' : rating}`);
-if (note) lines.push(`shortNote: ${q(note)}`);
-lines.push(`dateReviewed: ${today}`);
-lines.push(`emoji: ${q(emoji)}`);
-lines.push(`boxColor: ${q(boxColor)}`);
-if (picked.barcode) lines.push(`barcode: '${picked.barcode}'`);
-lines.push(`formFactors: [${formFactors.join(', ')}]`);
-lines.push(`proteinSources: [${proteinSources.join(', ')}]`);
-lines.push(`attributes: [${attributes.join(', ')}]`);
-lines.push('nutrition:');
-lines.push(`  servingSize: ${picked.servingSize}`);
-if (picked.servingDescription) lines.push(`  servingDescription: ${q(picked.servingDescription)}`);
-const nutRows = {
-  calories: picked.calories,
-  totalFat: picked.totalFat,
-  saturatedFat: picked.saturatedFat,
-  transFat: picked.transFat,
-  polyunsaturatedFat: picked.polyunsaturatedFat,
-  monounsaturatedFat: picked.monounsaturatedFat,
-  totalCarbs: picked.totalCarbs,
-  dietaryFiber: picked.dietaryFiber,
-  totalSugars: picked.totalSugars,
-  addedSugars: picked.addedSugars,
-  protein: picked.protein,
-  // proteinDV is only on a label when a protein claim is made — never inferred.
-  proteinDV: null,
-  sodium: picked.sodium,
-};
-for (const [k, v] of Object.entries(nutRows)) lines.push(`  ${k}: ${v == null ? 'null' : v}`);
-lines.push('---');
-lines.push('');
 
 // --- 9. the box photo ---------------------------------------------------------
 // Off by default everywhere else in this repo, because OFF photos are
@@ -342,25 +215,20 @@ lines.push('');
 let imageResult = null;
 if (!NO_IMAGE && picked.image) {
   try {
-    const input = await loadImage(picked.image);
-    const { out, before, trimmed, lost } = await normalizeBoxImage(input, { trim: true, fit: FIT });
-    imageResult = { out, before, trimmed, lost };
+    imageResult = await prepareImage(picked.image, { fit: FIT });
   } catch (e) {
     console.log(`\n  (photo download failed: ${e.message} — keeping the ${emoji} placeholder)`);
   }
 }
-if (imageResult) {
-  // Anchor on formFactors so the image keys land after barcode, matching the
-  // order the rest of the catalog uses (boxColor, barcode, boxImage, …).
-  const at = lines.findIndex((l) => l.startsWith('formFactors:'));
-  lines.splice(at, 0,
-    `boxImage: /images/cereals/${slug}.jpg`,
-    'imageSource: open_food_facts',
-    `imageCredit: ${JSON.stringify(`Photo: Open Food Facts contributors, CC-BY-SA — ${picked.url}`)}`
-  );
-}
 
-const md = lines.join('\n') + '\n';
+const md = cerealMarkdown({
+  brand, name, rating, note, picked, slug,
+  formFactors, proteinSources, attributes, emoji, boxColor,
+  hasImage: !!imageResult,
+  imageSource: 'open_food_facts',
+  imageCredit: `Photo: Open Food Facts contributors, CC-BY-SA — ${picked.url}`,
+});
+const nutRows = nutritionFrom(picked);
 
 if (DRY) {
   console.log(`\n[dry-run] would write src/content/cereals/${file}\n`);
@@ -373,12 +241,7 @@ if (DRY) {
   process.exit(0);
 }
 
-mkdirSync(CEREALS, { recursive: true });
-writeFileSync(join(CEREALS, file), md);
-if (imageResult) {
-  mkdirSync(IMAGES, { recursive: true });
-  writeFileSync(join(IMAGES, `${slug}.jpg`), imageResult.out);
-}
+writeCereal({ slug, markdown: md, imageBuffer: imageResult?.out });
 
 // --- 10. report ---------------------------------------------------------------
 const filled = Object.entries(nutRows).filter(([, v]) => v != null).length;

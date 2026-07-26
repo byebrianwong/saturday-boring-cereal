@@ -10,7 +10,7 @@ Astro static site + Keystatic admin, no database, no server.
 
 ```bash
 npm install
-npm run dev        # site at http://localhost:4321, admin at /keystatic
+npm run dev        # site at http://localhost:4321; admin at /admin + /keystatic
 npm run build      # static output in dist/ (admin excluded — see below)
 npm run preview    # serve the built site
 ```
@@ -56,7 +56,7 @@ Every command takes a partial slug, so `npm run rate "heritage flakes" 8.5` work
 ambiguous input lists the matches instead of guessing. Add `--dry-run` to any of
 `find` / `rate` / `image` to see the change without writing it.
 
-Four ways in, same files:
+Five ways in, same files:
 
 1. **Search by name** — [scripts/find.mjs](scripts/find.mjs), the fastest way in when the
    product exists in the databases:
@@ -144,11 +144,16 @@ Four ways in, same files:
    `imageCredit`. See [Box images](#box-images) for why the source has to be a flat,
    straight-on front and where to find one.
 
-5. **Admin UI** — run `npm run dev`, open [http://localhost:4321/keystatic](http://localhost:4321/keystatic).
+5. **The Stock Room** — `npm run dev`, then [http://localhost:4321/admin](http://localhost:4321/admin).
+   `npm run find` with a browser on it: search, pick the product off a list, pick its box
+   photo out of a gallery, type the score and the note, save. See
+   [Web admin](#web-admin-the-stock-room) below — including why it's dev-only.
+
+6. **Keystatic** — run `npm run dev`, open [http://localhost:4321/keystatic](http://localhost:4321/keystatic).
    Full CRUD with pickers for form factors, protein sources, attributes, and every
    nutrition field. Saves write straight to `src/content/cereals/*.md`. (Nutrition is
    entered by hand here — to auto-pull it, use `npm run add` above or `npm run enrich`.)
-6. **By hand** — edit the markdown files in [src/content/cereals/](src/content/cereals/).
+7. **By hand** — edit the markdown files in [src/content/cereals/](src/content/cereals/).
    Frontmatter schema lives in [src/content.config.ts](src/content.config.ts) (Zod) and is
    mirrored in [keystatic.config.ts](keystatic.config.ts).
 
@@ -161,6 +166,49 @@ Rules encoded in the schema:
 - `emoji` + `boxColor` are the placeholder box art, used whenever `boxImage` is unset.
 - `noAutoImage: true` marks a product with no usable flat front anywhere, so enrichment
   can't put an angled one back. `npm run image <slug> --none` sets it.
+
+## Web admin (the Stock Room)
+
+`npm run dev` → **[localhost:4321/admin](http://localhost:4321/admin)**. It's `npm run
+find` with a browser on it, for when you'd rather not be in a terminal:
+
+1. **Search** a name. Both sources, same lookup code the CLI uses.
+2. **Pick the product** from the results — each one shows its serving size and macros, and
+   is marked if it's already in the aisle or unusable (no serving size). Those aren't
+   selectable.
+3. **Pick the photo.** Every front shot across *all* the matching records, pooled into one
+   gallery — the same product often has several OFF entries with different photos, and
+   this is the one step where seeing them side by side actually beats the CLI. Ingredient
+   and nutrition panels are filtered out; width variants of the same shot are collapsed.
+   Paste your own URL to override, or choose "No photo" to keep the emoji placeholder.
+4. **Score it and write the note.** Tags come pre-checked from the guess; fix what's wrong.
+5. **Preview file** shows the exact markdown before anything is written. **Add to the
+   aisle** writes it.
+
+It writes the same files as the CLI, so it's `git status` and a commit afterwards, same as
+always.
+
+### Why it's dev-only
+
+Same reason as Keystatic: it needs server routes *and* a writable
+`src/content/cereals/` — a static build on a static host has neither. Its pages live in
+`src/admin/` rather than `src/pages/`, so `astro build` can't pick them up even by
+accident; a small integration in `astro.config.mjs` injects them as routes during
+`astro dev` (or with `ADMIN=1`). `dist/` stays purely static, and neither the admin nor
+its auth code appears in a production build.
+
+The password (`ADMIN_PASSWORD` in `.env`, default `cereal`) is there to stop someone else
+on your network — or a stray tab — from writing to your content directory. It is **not**
+built to face the public internet.
+
+**If you ever want this on the live Vercel site**, know what changes: serverless has no
+writable disk, so saving has to commit to GitHub through the API, which means a token with
+write access to this repo sitting in the deploy env — and that password becomes the only
+thing standing between the internet and it. That needs a real secret, rate limiting, and
+ideally proper auth (an OAuth provider, or Vercel's own access protection) rather than a
+shared password. It also means adding `@astrojs/vercel` and switching off `output:
+'static'`, which changes how the whole site deploys. Worth doing deliberately, not by
+extending this.
 
 ## Why Keystatic only runs in dev
 
@@ -183,7 +231,17 @@ src/
     cereals/[slug].astro detail: big box, Nutrition Facts panel, tasting note
     reviews.astro      all reviews as one long receipt
     about.astro        methodology, written as store policy
+  admin/               the Stock Room — dev-only, injected as routes, never built
+    index.astro        search → pick product → pick photo → score + note → save
+    api/               login / search / create endpoints
   lib/                 taxonomy labels + formatting helpers
+scripts/
+  find.mjs             search by name and add (CLI)
+  add.mjs  rate.mjs  image.mjs  enrich.mjs
+  lib/
+    enrich-core.mjs    lookup + scoring + the safety gates
+    compose-core.mjs   picked result → brand/name split, tags, markdown, write
+    image-core.mjs     download → trim → flatten → fit the 3D box face
 ```
 
 ## Nutrition completeness

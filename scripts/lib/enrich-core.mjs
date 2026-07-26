@@ -389,10 +389,35 @@ function offServing(p) {
   return { grams: Number.isFinite(grams) && grams > 0 ? grams : null, description: p.serving_size || null };
 }
 
+// Every distinct front photo on an OFF product: the default one plus each
+// language's selected front. Deliberately only "front" — ingredient and
+// nutrition panels are photos too, and neither belongs on a box face.
+function frontImagesOf(p) {
+  const urls = [];
+  if (p.image_front_url) urls.push(p.image_front_url);
+  const sel = p.selected_images?.front || {};
+  for (const bySize of Object.values(sel)) {
+    for (const url of Object.values(bySize || {})) {
+      if (typeof url === 'string' && /^https?:\/\//.test(url)) urls.push(url);
+    }
+  }
+  // Same photo at several widths collapses to one entry; the writer upgrades
+  // whichever survives to the full-size original anyway.
+  const seen = new Map();
+  for (const url of urls) {
+    const key = url.replace(/\.(\d+)\.(?:\d+|full)\.jpg$/i, '.$1.').replace(/^https?:/, '');
+    if (!seen.has(key)) seen.set(key, url);
+  }
+  return [...seen.values()];
+}
+
 export async function offCandidates(query, { limit = 8 } = {}) {
   const fields = [
     'product_name', 'brands', 'code', 'nutriments', 'image_front_url',
     'serving_size', 'serving_quantity', 'ingredients_text', 'labels_tags', 'quantity',
+    // Per-language front shots. One product often carries several, and the
+    // admin's image picker wants every one of them to choose between.
+    'selected_images',
   ].join(',');
   const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}` +
     `&search_simple=1&action=process&json=1&page_size=${limit}&fields=${fields}`;
@@ -423,6 +448,7 @@ export async function offCandidates(query, { limit = 8 } = {}) {
         barcode: p.code || null,
         url: `https://world.openfoodfacts.org/product/${p.code}`,
         image: p.image_front_url || null,
+        frontImages: frontImagesOf(p),
         servingSize: grams,
         servingDescription: description,
         calories: round(per('energy-kcal'), 5),
@@ -464,6 +490,7 @@ export async function usdaCandidates(query, { fdcKey = 'DEMO_KEY', limit = 8 } =
       barcode: f.gtinUpc || null,
       url: `https://fdc.nal.usda.gov/fdc-app.html#/food-details/${f.fdcId}/nutrients`,
       image: null, // USDA carries no product photography
+      frontImages: [],
       servingSize: grams,
       servingDescription: f.householdServingFullText || null,
       calories: round(per(per100.calories), 5),
@@ -546,6 +573,7 @@ export async function searchCandidates(query, { fdcKey = 'DEMO_KEY', useUsda = t
       const keep = nameRelevance(query, prev) >= nameRelevance(query, c) ? prev : c;
       const other = keep === prev ? c : prev;
       keep.image = keep.image || other.image;
+      keep.frontImages = [...new Set([...(keep.frontImages || []), ...(other.frontImages || [])])];
       keep.alsoIn = other.sourceLabel;
       seen.set(key, keep);
     }
