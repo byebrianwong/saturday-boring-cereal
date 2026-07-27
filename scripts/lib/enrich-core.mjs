@@ -31,6 +31,29 @@ export const UA = 'SaturdayBoringCereal/0.1 (beamer408@gmail.com)';
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const round = (v, step) => (v == null || Number.isNaN(v) ? null : Math.round(v / step) * step);
 
+// --- taxonomy -----------------------------------------------------------------
+// The allowed form factors / protein sources / attributes live in
+// src/content.config.ts (the Zod schema, single source of truth). It's a
+// TypeScript file that imports the virtual `astro:content` module, so we can't
+// `import` it from plain Node — read the enum arrays out of its text instead.
+// If that ever fails to parse, callers skip validation rather than block a add.
+export function readTaxonomy() {
+  const grab = (src, constName) => {
+    const m = src.match(new RegExp(`export const ${constName} = \\[([\\s\\S]*?)\\]`));
+    return m ? [...m[1].matchAll(/['"]([^'"]+)['"]/g)].map((x) => x[1]) : null;
+  };
+  try {
+    const src = readFileSync(join(ROOT, 'src', 'content.config.ts'), 'utf8');
+    return {
+      FORM_FACTORS: grab(src, 'FORM_FACTORS'),
+      PROTEIN_SOURCES: grab(src, 'PROTEIN_SOURCES'),
+      ATTRIBUTES: grab(src, 'ATTRIBUTES'),
+    };
+  } catch {
+    return { FORM_FACTORS: null, PROTEIN_SOURCES: null, ATTRIBUTES: null };
+  }
+}
+
 // --- minimal frontmatter read (we control the format) -------------------------
 export function readCereal(file) {
   const raw = readFileSync(join(CEREALS, file), 'utf8');
@@ -162,6 +185,10 @@ const USDA_NUTRIENT_ID = {
   addedSugars: 1235,
   polyunsaturatedFat: 1293,
   monounsaturatedFat: 1292,
+  // Only the search-by-name flow reads these two — the macro-verified path
+  // never fills totalFat/totalCarbs, since those come off the box by hand.
+  totalFat: 1004,
+  totalCarbs: 1005,
 };
 
 // Per-100g values out of a search hit's foodNutrients array.
@@ -175,7 +202,7 @@ function usdaPer100(food) {
   return out;
 }
 
-async function usdaDetail(fdcId, fdcKey) {
+export async function usdaDetail(fdcId, fdcKey) {
   const res = await fetch(`https://api.nal.usda.gov/fdc/v1/food/${fdcId}?api_key=${fdcKey}`);
   if (res.status === 429) throw new Error('USDA rate limit');
   if (!res.ok) return null;
@@ -331,10 +358,240 @@ export async function enrichCereal(cereal, { fdcKey = 'DEMO_KEY', useUsda = true
   return { off, usda, primary, conf, meetsBar, formIssue, usdaRateLimited };
 }
 
+// --- search by name (the `npm run find` flow) ---------------------------------
+// Everything above scores candidates against macros you already recorded. That
+// gate is what makes an unattended auto-apply safe — but it means you can't
+// look a product up until you've typed its numbers in.
+//
+// This path inverts it: search by name, show what came back, and let a person
+// pick. Confirming the identity by eye IS the gate, which is why these
+// candidates carry the full label (serving size, protein, sugars, fiber and
+// all) rather than only the fields the macro path is allowed to fill.
+
+// Rank on how much of the query the product name actually accounts for. With
+// no recorded macros there's nothing else to sort on, so a candidate that also
+// carries more of the label wins ties — an empty record is never the best hit.
+function nameRelevance(query, cand) {
+  const norm = (s) => (s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter((w) => w.length > 2);
+  const want = norm(query);
+  const got = new Set(norm(`${cand.matchedBrand} ${cand.matchedName}`));
+  const hits = want.filter((w) => got.has(w)).length;
+  const filled = ['calories', 'protein', 'totalSugars', 'dietaryFiber', 'sodium'].filter((k) => cand[k] != null).length;
+  return hits + filled / 100;
+}
+
+// OFF stores serving size as both a number and a label ("36 g", "3/4 cup").
+function offServing(p) {
+  const q = p.serving_quantity == null ? null : Number(p.serving_quantity);
+  if (Number.isFinite(q) && q > 0) return { grams: q, description: p.serving_size || null };
+  const m = String(p.serving_size || '').match(/([\d.]+)\s*g/i);
+  const grams = m ? Number(m[1]) : null;
+  return { grams: Number.isFinite(grams) && grams > 0 ? grams : null, description: p.serving_size || null };
+}
+
+// Every distinct front photo on an OFF product: the default one plus each
+// language's selected front. Deliberately only "front" — ingredient and
+// nutrition panels are photos too, and neither belongs on a box face.
+function frontImagesOf(p) {
+  const urls = [];
+  if (p.image_front_url) urls.push(p.image_front_url);
+  const sel = p.selected_images?.front || {};
+  for (const bySize of Object.values(sel)) {
+    for (const url of Object.values(bySize || {})) {
+      if (typeof url === 'string' && /^https?:\/\//.test(url)) urls.push(url);
+    }
+  }
+  // Same photo at several widths collapses to one entry; the writer upgrades
+  // whichever survives to the full-size original anyway.
+  const seen = new Map();
+  for (const url of urls) {
+    const key = url.replace(/\.(\d+)\.(?:\d+|full)\.jpg$/i, '.$1.').replace(/^https?:/, '');
+    if (!seen.has(key)) seen.set(key, url);
+  }
+  return [...seen.values()];
+}
+
+export async function offCandidates(query, { limit = 8 } = {}) {
+  const fields = [
+    'product_name', 'brands', 'code', 'nutriments', 'image_front_url',
+    'serving_size', 'serving_quantity', 'ingredients_text', 'labels_tags', 'quantity',
+    // Per-language front shots. One product often carries several, and the
+    // admin's image picker wants every one of them to choose between.
+    'selected_images',
+  ].join(',');
+  const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}` +
+    `&search_simple=1&action=process&json=1&page_size=${limit}&fields=${fields}`;
+  const res = await fetch(url, { headers: { 'User-Agent': UA } });
+  if (!res.ok) return [];
+  const products = (await res.json()).products || [];
+
+  return products
+    .filter((p) => p.product_name)
+    .map((p) => {
+      const n = p.nutriments || {};
+      const { grams, description } = offServing(p);
+      // Prefer OFF's own per-serving figures; fall back to scaling per-100g.
+      const per = (key) => {
+        const s = n[`${key}_serving`];
+        if (s != null) return Number(s);
+        const h = n[`${key}_100g`];
+        return h == null || !grams ? null : (Number(h) * grams) / 100;
+      };
+      const sodiumG = per('sodium');
+      const saltG = per('salt');
+      const sodium = sodiumG != null ? sodiumG * 1000 : saltG != null ? (saltG / 2.5) * 1000 : null;
+      return {
+        source: 'open_food_facts',
+        sourceLabel: 'Open Food Facts',
+        matchedName: p.product_name,
+        matchedBrand: p.brands || '',
+        barcode: p.code || null,
+        url: `https://world.openfoodfacts.org/product/${p.code}`,
+        image: p.image_front_url || null,
+        frontImages: frontImagesOf(p),
+        servingSize: grams,
+        servingDescription: description,
+        calories: round(per('energy-kcal'), 5),
+        totalFat: round(per('fat'), 0.5),
+        saturatedFat: round(per('saturated-fat'), 0.5),
+        transFat: round(per('trans-fat'), 0.5),
+        polyunsaturatedFat: round(per('polyunsaturated-fat'), 0.5),
+        monounsaturatedFat: round(per('monounsaturated-fat'), 0.5),
+        totalCarbs: round(per('carbohydrates'), 0.5),
+        dietaryFiber: round(per('fiber'), 0.5),
+        totalSugars: round(per('sugars'), 0.5),
+        addedSugars: round(per('added-sugars'), 1),
+        protein: round(per('proteins'), 0.5),
+        sodium: sodium == null ? null : Math.round(sodium),
+        ingredients: p.ingredients_text || null,
+        labels: p.labels_tags || [],
+      };
+    });
+}
+
+export async function usdaCandidates(query, { fdcKey = 'DEMO_KEY', limit = 8 } = {}) {
+  const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${fdcKey}` +
+    `&query=${encodeURIComponent(query)}&dataType=Branded&pageSize=${limit}`;
+  const res = await fetch(url);
+  if (res.status === 429) throw new Error('USDA rate limit');
+  if (!res.ok) return [];
+  const foods = (await res.json()).foods || [];
+
+  return foods.map((f) => {
+    const per100 = usdaPer100(f);
+    const grams = f.servingSizeUnit === 'g' && f.servingSize > 0 ? f.servingSize : null;
+    const per = (v) => (v == null || !grams ? null : (v * grams) / 100);
+    return {
+      source: 'usda_fdc',
+      sourceLabel: 'USDA',
+      fdcId: f.fdcId,
+      matchedName: f.description,
+      matchedBrand: f.brandOwner || f.brandName || '',
+      barcode: f.gtinUpc || null,
+      url: `https://fdc.nal.usda.gov/fdc-app.html#/food-details/${f.fdcId}/nutrients`,
+      image: null, // USDA carries no product photography
+      frontImages: [],
+      servingSize: grams,
+      servingDescription: f.householdServingFullText || null,
+      calories: round(per(per100.calories), 5),
+      totalFat: round(per(per100.totalFat), 0.5),
+      saturatedFat: round(per(per100.saturatedFat), 0.5),
+      transFat: round(per(per100.transFat), 0.5),
+      polyunsaturatedFat: round(per(per100.polyunsaturatedFat), 0.5),
+      monounsaturatedFat: round(per(per100.monounsaturatedFat), 0.5),
+      totalCarbs: round(per(per100.totalCarbs), 0.5),
+      dietaryFiber: round(per(per100.fiber), 0.5),
+      totalSugars: round(per(per100.sugars), 0.5),
+      addedSugars: round(per(per100.addedSugars), 1),
+      protein: round(per(per100.protein), 0.5),
+      sodium: per(per100.sodium) == null ? null : Math.round(per(per100.sodium)),
+      ingredients: f.ingredients || null,
+      labels: [],
+    };
+  });
+}
+
+// A USDA search hit carries per-100g data only; the printed label lives on the
+// detail record (the same split documented above usdaSearch). Once a candidate
+// is picked it's worth the extra call to show what's actually on the box.
+export async function usdaUpgradeToLabel(cand, { fdcKey = 'DEMO_KEY' } = {}) {
+  if (cand.source !== 'usda_fdc' || !cand.fdcId) return cand;
+  let detail = null;
+  try {
+    detail = await usdaDetail(cand.fdcId, fdcKey);
+  } catch {
+    return cand; // rate-limited or unreachable — the per-100g figures still stand
+  }
+  const ln = detail?.labelNutrients;
+  if (!ln) return cand;
+  const val = (o) => (o && o.value != null ? o.value : null);
+  const grams = detail.servingSizeUnit === 'g' && detail.servingSize > 0 ? detail.servingSize : cand.servingSize;
+  return {
+    ...cand,
+    basis: 'label',
+    servingSize: grams,
+    servingDescription: detail.householdServingFullText || cand.servingDescription,
+    calories: round(val(ln.calories), 5) ?? cand.calories,
+    totalFat: round(val(ln.fat), 0.5) ?? cand.totalFat,
+    saturatedFat: round(val(ln.saturatedFat), 0.5) ?? cand.saturatedFat,
+    transFat: round(val(ln.transFat), 0.5) ?? cand.transFat,
+    totalCarbs: round(val(ln.carbohydrates), 0.5) ?? cand.totalCarbs,
+    dietaryFiber: round(val(ln.fiber), 0.5) ?? cand.dietaryFiber,
+    totalSugars: round(val(ln.sugars), 0.5) ?? cand.totalSugars,
+    addedSugars: round(val(ln.addedSugar ?? ln.addedSugars), 1) ?? cand.addedSugars,
+    protein: round(val(ln.protein), 0.5) ?? cand.protein,
+    sodium: val(ln.sodium) == null ? cand.sodium : Math.round(val(ln.sodium)),
+  };
+}
+
+// Search both sources by name and return candidates, best name match first.
+// Returns { candidates, errors } — a source being down degrades the list
+// instead of failing the search.
+export async function searchCandidates(query, { fdcKey = 'DEMO_KEY', useUsda = true, limit = 8 } = {}) {
+  const errors = [];
+  const [off, usda] = await Promise.all([
+    offCandidates(query, { limit }).catch((e) => {
+      errors.push(`Open Food Facts: ${e.message}`);
+      return [];
+    }),
+    useUsda
+      ? usdaCandidates(query, { fdcKey, limit }).catch((e) => {
+          errors.push(`USDA: ${e.message}`);
+          return [];
+        })
+      : Promise.resolve([]),
+  ]);
+
+  // Same product from both sources: keep the richer record, prefer the one with
+  // a photo, and remember that the other source agreed.
+  const seen = new Map();
+  for (const c of [...off, ...usda]) {
+    const key = (c.barcode || `${c.matchedBrand} ${c.matchedName}`).toLowerCase().replace(/[^a-z0-9]/g, '');
+    const prev = seen.get(key);
+    if (!prev) seen.set(key, c);
+    else {
+      const keep = nameRelevance(query, prev) >= nameRelevance(query, c) ? prev : c;
+      const other = keep === prev ? c : prev;
+      keep.image = keep.image || other.image;
+      keep.frontImages = [...new Set([...(keep.frontImages || []), ...(other.frontImages || [])])];
+      keep.alsoIn = other.sourceLabel;
+      seen.set(key, keep);
+    }
+  }
+
+  const candidates = [...seen.values()]
+    .map((c) => ({ ...c, relevance: nameRelevance(query, c) }))
+    .filter((c) => c.relevance >= 1) // nothing in common with the query isn't a hit
+    .sort((a, b) => b.relevance - a.relevance)
+    .slice(0, limit);
+
+  return { candidates, errors };
+}
+
 // --- nutrition block writer ---------------------------------------------------
 // Field order from the Zod schema in src/content.config.ts, so an inserted key
 // lands where it belongs on the label rather than at the end of the block.
-const NUTRITION_ORDER = [
+export const NUTRITION_ORDER = [
   'servingSize', 'servingDescription', 'calories', 'totalFat', 'saturatedFat',
   'transFat', 'polyunsaturatedFat', 'monounsaturatedFat', 'totalCarbs',
   'dietaryFiber', 'totalSugars', 'addedSugars', 'protein', 'proteinDV', 'sodium',

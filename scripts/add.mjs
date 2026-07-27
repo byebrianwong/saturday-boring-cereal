@@ -22,33 +22,12 @@
 //   --no-usda     skip USDA (Open Food Facts only)
 //   --yes         don't prompt for anything missing (fail instead) — for scripts
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
-import { ROOT, CEREALS, DRAFTS, readCereal, nameMatch, applyDraft, enrichCereal } from './lib/enrich-core.mjs';
+import { CEREALS, DRAFTS, readCereal, readTaxonomy, nameMatch, applyDraft, enrichCereal } from './lib/enrich-core.mjs';
 
-// The allowed form factors / protein sources / attributes live in
-// src/content.config.ts (the Zod schema, single source of truth). It's a
-// TypeScript file that imports the virtual `astro:content` module, so we can't
-// `import` it from plain Node — read the enum arrays out of its text instead.
-// If that ever fails to parse, we simply skip validation rather than block a add.
-function readTaxonomy() {
-  const grab = (src, constName) => {
-    const m = src.match(new RegExp(`export const ${constName} = \\[([\\s\\S]*?)\\]`));
-    return m ? [...m[1].matchAll(/['"]([^'"]+)['"]/g)].map((x) => x[1]) : null;
-  };
-  try {
-    const src = readFileSync(join(ROOT, 'src', 'content.config.ts'), 'utf8');
-    return {
-      FORM_FACTORS: grab(src, 'FORM_FACTORS'),
-      PROTEIN_SOURCES: grab(src, 'PROTEIN_SOURCES'),
-      ATTRIBUTES: grab(src, 'ATTRIBUTES'),
-    };
-  } catch {
-    return { FORM_FACTORS: null, PROTEIN_SOURCES: null, ATTRIBUTES: null };
-  }
-}
 const { FORM_FACTORS, PROTEIN_SOURCES, ATTRIBUTES } = readTaxonomy();
 
 // --- args ---------------------------------------------------------------------
