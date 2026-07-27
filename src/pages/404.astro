@@ -1,106 +1,121 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import PageHeader from '../components/PageHeader.astro';
 import { u } from '../lib/url';
 ---
 
 <Layout title="Aisle Not Found — Saturday Boring Cereal">
-  <div class="light"></div>
-  <div class="wrap oops">
-    <div class="sign">
-      <small>AISLE</small>
-      <span>404</span>
+  <PageHeader
+    kicker="Not sold in stores · Not sold anywhere"
+    title="We Don't "
+    accent="Stock That"
+    lede="You've wandered into an aisle that doesn't exist. It happens. The shelves here are finite, the milk is warm, and a stock clerk (one man) has been notified. The two links below go somewhere real."
+  />
+
+  <!-- The punchline: after all that shouting, a small sign and two plain links. -->
+  <section class="oops">
+    <div class="wrap oops-in">
+      <div class="burst starburst" aria-hidden="true">
+        <span class="in">
+          Aisle
+          <b>404</b>
+          <em>Empty</em>
+        </span>
+      </div>
+
+      <div class="panel oops-panel">
+        <div class="panel-head">Somewhere that exists</div>
+        <p class="plain">
+          Nothing is broken at your end. The address just doesn't match anything on the shelf.
+        </p>
+        <div class="links">
+          <a class="btn-ink" href={u('/')}>← Back to the front</a>
+          <a class="btn-turq" href={u('/cereals/')}>Walk the aisle</a>
+        </div>
+      </div>
+
+      <div class="rowlabel">Status 404 · Nothing was reserved, charged, or restocked</div>
     </div>
-    <h1>WE DON'T STOCK THAT</h1>
-    <p>
-      You've wandered into an aisle that doesn't exist. It happens. The shelves here are
-      finite, the milk is warm, and a stock clerk (one man) has been notified.
-    </p>
-    <div class="links">
-      <a class="cta" href={u('/')}>← BACK TO THE FRONT</a>
-      <a class="cta ghost" href={u('/cereals/')}>WALK THE AISLE</a>
-    </div>
-    <div class="shelfbar"></div>
-  </div>
+  </section>
 </Layout>
 
 <style>
   .oops {
-    max-width: 620px;
+    padding: 52px 0 68px;
+      margin-bottom: 70px;
+  }
+
+  .oops-in {
+    max-width: 660px;
     text-align: center;
-    padding-top: 30px;
   }
 
-  .sign {
-    display: inline-block;
-    background: var(--store-blue);
-    color: #fff;
-    padding: 16px 44px 14px;
-    border-radius: 8px 8px 3px 3px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
-    margin-bottom: 26px;
+  /* The one loud object below the fold: a sold-out flash, tilted like a
+     sticker somebody slapped on the shelf edge. */
+  .burst {
+    width: 168px;
+    height: 168px;
+    margin: 0 auto 30px;
+    background: var(--yellow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(-9deg);
   }
 
-  .sign small {
+  .burst .in {
+    font-family: var(--fine);
+    font-size: 12px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+
+  .burst .in b {
     display: block;
-    font-size: 10px;
-    letter-spacing: 0.35em;
-    color: #bfe0ff;
+    font-family: var(--shout);
+    font-size: 52px;
+    font-weight: normal;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    color: var(--cherry);
+    margin: 4px 0 3px;
   }
 
-  .sign span {
-    font-size: 44px;
-    letter-spacing: 0.1em;
+  .burst .in em {
+    display: block;
+    font-style: normal;
+    font-size: 11px;
+    letter-spacing: 0.26em;
   }
 
-  h1 {
-    font-size: 30px;
-    color: var(--red);
-    letter-spacing: 0.04em;
+  .oops-panel {
+    text-align: center;
   }
 
-  p {
-    font-family: var(--font-body);
-    font-style: italic;
+  .oops-panel .panel-head {
+    text-align: left;
+  }
+
+  .oops-panel p {
     font-size: 15px;
-    line-height: 1.6;
-    color: #6b4a2a;
-    margin: 14px auto 26px;
-    max-width: 480px;
+    margin: 0 auto;
+    max-width: 460px;
   }
 
   .links {
+    margin-top: 24px;
     display: flex;
-    gap: 12px;
+    gap: 14px;
     justify-content: center;
     flex-wrap: wrap;
-    margin-bottom: 34px;
   }
 
-  .cta {
-    display: inline-block;
-    background: var(--red);
-    color: #fff;
-    text-decoration: none;
-    font-size: 12px;
-    letter-spacing: 0.12em;
-    padding: 11px 18px;
-    border-radius: 4px;
-    box-shadow: 0 4px 0 var(--brown);
-  }
-
-  .cta.ghost {
-    background: #fff;
-    color: var(--red);
-    border: 2px solid var(--red);
-    box-shadow: 0 4px 0 rgba(211, 47, 47, 0.3);
-  }
-
-  .cta:hover {
-    transform: translateY(-2px);
-  }
-
-  .oops .shelfbar {
-    max-width: 360px;
-    margin: 0 auto;
+  @media (max-width: 560px) {
+    .oops { padding: 36px 0 48px; }
+    .burst { width: 138px; height: 138px; }
+    .burst .in b { font-size: 42px; }
+    .links a { font-size: 18px; padding: 12px 22px 10px; }
   }
 </style>

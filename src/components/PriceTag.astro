@@ -10,18 +10,47 @@ const { rating, macros } = Astro.props;
 ---
 
 <div class="ptag">
-  {
-    rating == null ? (
-      <div class="p unrated">—<small>unrated</small></div>
-    ) : (
-      <div class="p">{fmtRating(rating)}<small>/10</small></div>
-    )
-  }
-  <div class="macros">{macros}</div>
+  <div class:list={['p', { unrated: rating == null }]}>
+    {rating == null ? <>—<small>unrated</small></> : <>{fmtRating(rating)}<small>/10</small></>}
+  </div>
+  <!-- Macros stay deliberately plain: the one thing on the card that never
+       exaggerates. Named .mline, not .macros — the latter is the global card
+       macro strip and would style this as a yellow three-up flex row. -->
+  <div class="mline">{macros}</div>
 </div>
 
 <style>
-  .p.unrated {
-    color: var(--tag-gray);
+  .ptag {
+    background: var(--white);
+    border: 3px solid var(--ink);
+    border-top: 0;
+    text-align: center;
+    padding: 5px 4px 5px;
+  }
+
+  .p {
+    font-family: var(--shout);
+    font-size: 22px;
+    line-height: 1;
+    color: var(--cherry);
+  }
+
+  .p small {
+    font-family: var(--fine);
+    font-size: 9px;
+    color: var(--muted);
+    margin-left: 1px;
+  }
+
+  .p.unrated { color: var(--muted); }
+  .p.unrated small { font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+  .mline {
+    font-family: var(--fine);
+    font-size: 9px;
+    line-height: 1.35;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+    margin-top: 3px;
   }
 </style>

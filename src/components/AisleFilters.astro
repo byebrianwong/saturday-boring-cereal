@@ -28,3 +28,59 @@ const { mode = 'links', active = 'all' } = Astro.props;
     )
   }
 </div>
+
+<style>
+  /* Was a row of hanging supermarket aisle signs; now a strip of ad buttons.
+     Class names and the data-filter hooks are unchanged — the filter script on
+     /cereals/ selects on [data-filter-bar] [data-filter]. */
+  .aisles {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 34px 0 8px;
+  }
+
+  .aisles a,
+  .aisles button {
+    font-family: var(--shout);
+    background: var(--white);
+    color: var(--ink);
+    text-decoration: none;
+    border: 3px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    cursor: pointer;
+    font-size: 14px;
+    letter-spacing: 0.08em;
+    padding: 8px 15px 6px;
+    text-transform: uppercase;
+    transition: transform 0.08s, box-shadow 0.08s;
+    line-height: 1.05;
+  }
+
+  .aisles a:hover,
+  .aisles button:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 1px 1px 0 var(--ink);
+  }
+
+  .aisles a.on,
+  .aisles button.on {
+    background: var(--cherry);
+    color: var(--white);
+    transform: translate(3px, 3px);
+    box-shadow: 0 0 0 var(--ink);
+  }
+
+  .aisles small {
+    display: block;
+    font-family: var(--fine);
+    font-size: 8px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .aisles a.on small,
+  .aisles button.on small { color: rgba(255, 255, 255, 0.8); }
+</style>

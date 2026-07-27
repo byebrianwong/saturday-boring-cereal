@@ -1,0 +1,105 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { u } from '../lib/url';
+import { rating } from '../lib/format';
+
+interface Props {
+  cereal: CollectionEntry<'cereals'>;
+  rank: number;
+  /** Tier 2 cards are wider; tier 3 fill the lower rows. */
+  size?: 'big' | 'sm';
+}
+
+const { cereal, rank, size = 'sm' } = Astro.props;
+const d = cereal.data;
+const n = d.nutrition;
+
+// Macros are the one place on the page that never exaggerates: only print a
+// value the label actually lists.
+const macros = [
+  { v: n.protein, k: 'Protein' },
+  { v: n.totalSugars, k: 'Sugar' },
+  { v: n.servingSize, k: 'Serving' },
+].filter((m) => m.v != null);
+---
+
+<a class={`cd ${size}`} href={u(`/cereals/${cereal.id}/`)}>
+  <span class="rank-chip">{rank}</span>
+
+  <span class={`score starburst${d.rating == null ? ' unrated' : ''}`}>
+    <span class="sv">{rating(d.rating)}</span>
+    <span class="so">{d.rating == null ? 'Unrated' : 'Out of 10'}</span>
+  </span>
+
+  <span class="box">
+    {d.boxImage ? (
+      <img src={u(d.boxImage)} alt={`${d.brand} ${d.name} box`} loading="lazy" />
+    ) : (
+      <span class="fallback" style={`background:${d.boxColor}`}>
+        <span class="em">{d.emoji}</span>
+        <span class="lb">No image on file</span>
+      </span>
+    )}
+  </span>
+
+  <span class="brand">{d.brand}</span>
+  <span class="name">{d.name}</span>
+
+  <span class="macros">
+    {macros.map((m) => (
+      <span>
+        <span class="mv">{m.v}g</span>
+        <span class="mk">{m.k}</span>
+      </span>
+    ))}
+  </span>
+</a>
+
+<style>
+  .cd {
+    display: block;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+
+  .cd:hover {
+    transform: translate(3px, 3px);
+    box-shadow: 5px 5px 0 var(--ink);
+  }
+
+  .cd .brand,
+  .cd .name { display: block; }
+
+  .macros { display: flex; }
+  .macros > span { flex: 1; padding: 7px 2px 6px; border-right: 3px solid var(--ink); }
+  .macros > span:last-child { border-right: 0; }
+  .macros .mv,
+  .macros .mk { display: block; }
+
+  .score { text-align: center; }
+  .score .sv,
+  .score .so { display: block; }
+  .score.unrated { background: var(--muted); }
+
+  /* ---- tier 2 ---- */
+  .cd.big { width: 400px; }
+  .cd.big .box { height: 236px; }
+  .cd.big .name { font-size: 31px; min-height: 56px; }
+  .cd.big .score { width: 118px; height: 118px; right: -26px; top: -26px; }
+  .cd.big .score .sv { font-size: 42px; }
+  .cd.big .score .so { font-size: 8.5px; margin-top: 4px; }
+
+  /* ---- tier 3 ---- */
+  .cd.sm { width: 340px; }
+  .cd.sm .box { height: 180px; }
+  .cd.sm .name { font-size: 24px; min-height: 44px; }
+  .cd.sm .score { width: 96px; height: 96px; right: -20px; top: -20px; }
+  .cd.sm .score .sv { font-size: 33px; }
+  .cd.sm .score .so { font-size: 7.5px; margin-top: 3px; }
+  .cd.sm .rank-chip { width: 46px; height: 46px; font-size: 23px; top: -16px; left: -16px; }
+  .cd.sm .macros .mv { font-size: 20px; }
+
+  @media (max-width: 860px) {
+    .cd.big,
+    .cd.sm { width: min(340px, 88vw); }
+  }
+</style>

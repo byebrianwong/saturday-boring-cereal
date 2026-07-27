@@ -1,0 +1,120 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { legaleseFor } from '../lib/legalese';
+import { u } from '../lib/url';
+
+interface Props {
+  cereals: CollectionEntry<'cereals'>[];
+  title?: string;
+  sub?: string;
+  /** Hide the "read all receipts" button on the receipts page itself. */
+  showCta?: boolean;
+}
+
+const {
+  cereals,
+  title = 'Receipts',
+  sub = 'Recent reviews · Please read at normal speed',
+  showCta = true,
+} = Astro.props;
+
+const entries = cereals.map((c, i) => ({ cereal: c, parts: legaleseFor(c, i) }));
+---
+
+<section class="legal">
+  <div class="wrap">
+    <div class="legal-head">★ Important information ★</div>
+    <h2 class="legal-title">The <em>{title}</em></h2>
+    <div class="legal-sub">{sub}</div>
+
+    <div class="fineprint">
+      {entries.map(({ cereal, parts }) => (
+        <p>
+          <a class="rev" href={u(`/cereals/${cereal.id}/`)}>{parts.heading}</a>{' '}
+          {parts.score ? (
+            <>Score <span class="sc">{parts.score}</span>. </>
+          ) : (
+            <>Unrated at time of writing. </>
+          )}
+          {parts.note ? (
+            <>Verbatim finding of the tasting panel, which consisted of one (1) person:{' '}
+              <span class="quote">“{parts.note}”</span>. </>
+          ) : (
+            <span class="nil">No tasting note was recorded for this box. The field is empty. Nothing has been invented to fill it. </span>
+          )}
+          {parts.figures} {parts.closer}
+        </p>
+      ))}
+
+      <p class="general">
+        General: scores are one person’s opinion expressed to one decimal place, which is one more
+        decimal place than the opinion deserves. Nutrition figures are transcribed from the packaging
+        panel at time of purchase and may be reformulated without warning or apology. Prices change.
+        Recipes change. The aisle does not. Now fortified with opinions.
+      </p>
+    </div>
+
+    <div class="legal-foot">
+      Saturday Boring Cereal · A single-person regulatory body · No sponsors, no samples, no mascots
+    </div>
+
+    {showCta && (
+      <a class="btn-turq legal-cta" href={u('/reviews/')}>Read all receipts →</a>
+    )}
+  </div>
+</section>
+
+<style>
+  .legal {
+    background: var(--white);
+    padding: 54px 0 52px;
+    text-align: center;
+  }
+
+  .legal-head {
+    display: inline-block;
+    font-family: var(--shout);
+    font-size: 15px;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--ink);
+    border-bottom: 3px solid var(--ink);
+    padding-bottom: 5px;
+  }
+
+  .legal-title {
+    font-family: var(--shout);
+    font-size: clamp(30px, 4vw, 46px);
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 14px 0 4px;
+    line-height: 0.9;
+  }
+
+  .legal-title em { font-style: normal; color: var(--turq); }
+
+  .legal-sub {
+    font-family: var(--fine);
+    font-size: 12px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--muted-light);
+  }
+
+  .fineprint .rev { text-decoration: none; }
+  .fineprint .rev:hover { background: var(--yellow); }
+  .general { break-inside: avoid; }
+
+  .legal-foot {
+    margin: 18px auto 0;
+    max-width: 1080px;
+    text-align: left;
+    font-family: var(--fine);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #a3947f;
+  }
+
+  .legal-cta { margin-top: 26px; }
+</style>

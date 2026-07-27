@@ -1,17 +1,18 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import AisleFilters from '../components/AisleFilters.astro';
-import MiniBox from '../components/MiniBox.astro';
-import PriceTag from '../components/PriceTag.astro';
-import Receipt from '../components/Receipt.astro';
-import { macroLine, byRatingDesc } from '../lib/macros';
+import RankCard from '../components/RankCard.astro';
+import ChampCard from '../components/ChampCard.astro';
+import Disclaimer from '../components/Disclaimer.astro';
+import BreakfastStrip from '../components/BreakfastStrip.astro';
+import { byRatingDesc } from '../lib/macros';
 import { label } from '../lib/taxonomy';
 import { u } from '../lib/url';
 
 const cereals = await getCollection('cereals');
-// Unrated (null) cereals sort last.
 const ranked = [...cereals].sort(byRatingDesc);
+const champ = ranked[0];
+const runnersUp = ranked.slice(1, 9);
 
 // Tag counts for the "browse the aisles" section (form factors + attributes).
 const tagCounts = new Map<string, number>();
@@ -21,362 +22,440 @@ for (const c of cereals) {
   }
 }
 const browseTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]);
-const shelves: (typeof ranked)[] = [];
-for (let i = 0; i < Math.min(ranked.length, 6); i += 3) {
-  shelves.push(ranked.slice(i, i + 3));
-}
+
+// The "but wait, there's less" stats. Every one is derived from the real shelf
+// so the boast is technically accurate, which is the joke.
+const rated = cereals.filter((c) => c.data.rating != null);
+const sugars = cereals.map((c) => c.data.nutrition.totalSugars).filter((v): v is number => v != null);
+const proteins = cereals.map((c) => c.data.nutrition.protein).filter((v): v is number => v != null);
+const topScore = Math.max(...rated.map((c) => c.data.rating as number));
+const stats = [
+  { n: String(cereals.length), k: 'Boxes on the record' },
+  { n: sugars.length ? `${Math.min(...sugars)}g` : '—', k: 'Lowest sugar found' },
+  { n: proteins.length ? `${Math.max(...proteins)}g` : '—', k: 'Highest protein found' },
+  { n: topScore.toFixed(1), k: 'Top score awarded' },
+];
 
 const recent = [...cereals]
   .sort((a, b) => b.data.dateReviewed.getTime() - a.data.dateReviewed.getTime())
-  .slice(0, 3)
-  .map((c) => ({
-    title: `${c.data.brand} ${c.data.name}`,
-    rating: c.data.rating,
-    note: c.data.shortNote ?? '',
-    href: `/cereals/${c.id}/`,
-  }));
+  .slice(0, 6);
+
+// Tag chips cycle through the ad palette rather than encoding meaning.
+const tagColour = ['y', 'o', 't', 'r', 'w'];
 ---
 
 <Layout>
-  <div class="light"></div>
+  <!-- ============ HERO — the ad spot ============ -->
+  <section class="hero">
+    <div class="rays rays-spin"></div>
+    <div class="rays-fine"></div>
 
-  <div class="scene wrap">
-    <div class="box3d">
-      <div class="face front">
-        <div class="oval">
-          <small>SATURDAY</small>
-          <h1>BORING<br />CEREAL</h1>
-        </div>
-        <div class="bowl">🥣</div>
-        <div class="claim">NOW FORTIFIED WITH OPINIONS</div>
+    <div class="wrap hero-inner">
+      <div class="flash-eyebrow">★ As seen Saturday mornings ★</div>
+
+      <div class="logo-lockup">
+        <div class="l1">It’s the all-new</div>
+        <div class="l2">Boring<br />Cereal</div>
+        <div class="l3">Review-a-thon!</div>
       </div>
-      <div class="face side">
-        <h4>Nutrition Facts</h4>
-        <div class="nf">
-          <div><span><b>Cereals ranked</b></span><span>{cereals.length}</span></div>
-          <div><span>Taste scale</span><span>0–10</span></div>
-          <div><span>Mascots</span><span>0g</span></div>
-          <div><span>Honesty</span><span>110%</span></div>
-        </div>
-        <div class="upc"></div>
-      </div>
-    </div>
-    <div class="herotext">
-      <div class="sticker">SHELVED FRESH EVERY SATURDAY</div>
-      <h2>THE ONLY AISLE<br />WHERE <em>BORING</em><br />IS A BRAG</h2>
-      <p>
-        One man walks the healthy-cereal aisle so you don't have to. Every box tasted, weighed,
-        and priced in cold, hard macros.
+
+      <div class="tagline">“The only aisle where boring is a brag.”</div>
+
+      <p class="subcopy">
+        One man walks the healthy-cereal aisle so you don’t have to. Every box tasted, weighed, and
+        priced in <strong>cold, hard macros.</strong> {cereals.length} boxes scored out of ten. A new
+        one every Saturday, whether anybody asked or not.
       </p>
-      <a class="cta" href={u('/cereals/')}>WALK THE AISLE →</a>
-    </div>
-  </div>
-  <div class="shelf-hero"></div>
 
-  <AisleFilters mode="links" />
-
-  <h3 class="rowlabel">— TOP SHELF · RANKED LEFT TO RIGHT —</h3>
-  <div class="shelfrow wrap">
-    {
-      shelves.map((row) => (
-        <>
-          <div class="boxes">
-            {row.map((c) => (
-              <MiniBox
-                emoji={c.data.emoji}
-                brand={c.data.brand}
-                name={c.data.name}
-                boxColor={c.data.boxColor}
-                boxImage={c.data.boxImage}
-                href={`/cereals/${c.id}/`}
-              />
-            ))}
-          </div>
-          <div class="shelfbar" />
-          <div class="pricetags">
-            {row.map((c) => (
-              <PriceTag rating={c.data.rating} macros={macroLine(c)} />
-            ))}
-          </div>
-        </>
-      ))
-    }
-  </div>
-
-  <h3 class="rowlabel">— BROWSE THE AISLES —</h3>
-  <div class="browse wrap">
-    {
-      browseTags.map(([tag, n]) => (
-        <a class="browsetag" href={u(`/tags/${tag}/`)}>
-          {label(tag)}<span class="bn">{n}</span>
+      <div class="cta-row">
+        <a class="cta" href="#rankings">
+          See all {cereals.length} scores
+          <small>No spoon required</small>
         </a>
-      ))
-    }
-  </div>
+        <div class="offer-flash starburst">
+          <div class="in">
+            But wait<br />there’s<br />less!
+            <em>Sugar, that is</em>
+          </div>
+        </div>
+      </div>
+    </div>
 
-  <div class="checkout wrap">
-    <Receipt lines={recent} />
-  </div>
+    <svg class="milk-splash" viewBox="0 0 1280 88" preserveAspectRatio="none" aria-hidden="true">
+      <path
+        fill="#ffffff"
+        d="M0,44 C40,20 74,64 112,50 C150,36 168,72 210,60 C252,48 268,22 314,36
+          C360,50 372,74 418,62 C464,50 480,26 528,38 C576,50 592,76 640,64 C688,52 700,24 748,36
+          C796,48 812,74 860,62 C908,50 924,28 970,40 C1016,52 1032,76 1080,64 C1128,52 1146,26 1190,38
+          C1226,48 1250,64 1280,50 L1280,88 L0,88 Z"
+      />
+      <circle cx="176" cy="30" r="9" fill="#fff" />
+      <circle cx="392" cy="22" r="7" fill="#fff" />
+      <circle cx="604" cy="28" r="10" fill="#fff" />
+      <circle cx="836" cy="20" r="6.5" fill="#fff" />
+      <circle cx="1048" cy="27" r="8.5" fill="#fff" />
+      <circle cx="1232" cy="24" r="6" fill="#fff" />
+    </svg>
+
+    <BreakfastStrip />
+  </section>
+
+  <!-- ============ BUT WAIT, THERE'S LESS ============ -->
+  <section class="butwait">
+    <div class="rayband"></div>
+    <div class="wrap butwait-in">
+      <h2>But wait — there’s less!</h2>
+      <p>
+        Less sugar. Less marketing. Less pretending a 60-gram serving is 30 grams. Every box on this
+        site is re-weighed on a kitchen scale and re-typed by hand, because the panel on the front of
+        the box is an advert and the panel on the side is the truth.
+      </p>
+      <div class="lessgrid">
+        {stats.map((s) => (
+          <div class="lesscard">
+            <div class="n">{s.n}</div>
+            <div class="k">{s.k}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RANKINGS ============ -->
+  <section class="section" id="rankings">
+    <div class="wrap">
+      <div class="section-kicker">Now showing · The top {runnersUp.length + 1}</div>
+      <h2 class="section-title">The <em>Scoreboard</em></h2>
+      <p class="section-lede">
+        Ranked #1 to #{runnersUp.length + 1} out of {cereals.length}. Score out of ten. Protein, sugar
+        and serving size taken off the actual side panel — not off the front.
+      </p>
+
+      <div class="ranks">
+        <ChampCard cereal={champ} />
+
+        <div class="rank-row">
+          {runnersUp.slice(0, 2).map((c, i) => <RankCard cereal={c} rank={i + 2} size="big" />)}
+        </div>
+
+        <div class="rank-row">
+          {runnersUp.slice(2, 5).map((c, i) => <RankCard cereal={c} rank={i + 4} size="sm" />)}
+        </div>
+
+        <div class="rank-row">
+          {runnersUp.slice(5, 8).map((c, i) => <RankCard cereal={c} rank={i + 7} size="sm" />)}
+        </div>
+      </div>
+
+      <a class="btn-ink rank-more" href={u('/top/')}>See the full ranking →</a>
+    </div>
+  </section>
+
+  <!-- ============ TAG AISLE ============ -->
+  <section class="section section-dark">
+    <div class="rayband"></div>
+    <div class="wrap section-inner">
+      <div class="section-kicker">Free with any visit</div>
+      <h2 class="section-title">Browse the <em>aisles</em></h2>
+      <p class="section-lede">Every box is filed under everything it honestly is. Nothing is filed under anything it isn’t.</p>
+
+      <div class="tags">
+        {browseTags.map(([tag, n], i) => (
+          <a class={`tag ${tagColour[i % tagColour.length]}`} href={u(`/tags/${tag}/`)}>
+            <span class="tc">{n}</span>
+            <span class="tn">{label(tag)}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RECENT REVIEWS, AS ADVERT LEGALESE ============ -->
+  <Disclaimer cereals={recent} />
+
+  <!-- ============ SIGN-OFF ============ -->
+  <section class="signoff">
+    <div class="rays"></div>
+    <div class="wrap signoff-in">
+      <h2>New box every Saturday</h2>
+      <p class="sub">
+        No sponsors, no samples, no mascots. Just one person, one aisle, and a kitchen scale that has
+        never once been asked to lie.
+      </p>
+      <a class="cta signoff-cta" href={u('/cereals/')}>
+        Walk the aisle
+        <small>Open 24/7 · Aisle 4 only</small>
+      </a>
+    </div>
+  </section>
 </Layout>
 
 <style>
-  /* hero: the big 3D box */
-  .scene {
+  /* ---- hero ---- */
+  .hero {
+    position: relative;
+    background: var(--orange);
+    border-bottom: 6px solid var(--ink);
+    overflow: hidden;
+    padding: 64px 0 0;
+    text-align: center;
+  }
+
+  .hero-inner { position: relative; z-index: 3; }
+
+  .flash-eyebrow {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--yellow);
+    font-family: var(--shout);
+    font-size: clamp(14px, 2vw, 20px);
+    letter-spacing: 0.3em;
+    padding: 9px 26px 7px;
+    text-transform: uppercase;
+    transform: rotate(-1.2deg);
+    animation: flashy 1.6s steps(1, end) infinite;
+  }
+
+  @keyframes flashy {
+    0%, 60% { color: var(--yellow); }
+    61%, 100% { color: var(--white); }
+  }
+
+  .logo-lockup { margin: 22px 0 0; }
+
+  .logo-lockup .l1 {
+    font-family: var(--shout);
+    font-size: clamp(34px, 5.8vw, 74px);
+    letter-spacing: 0.02em;
+    color: var(--white);
+    text-transform: uppercase;
+    line-height: 0.82;
+    text-shadow: 5px 5px 0 var(--ink);
+  }
+
+  .logo-lockup .l2 {
+    font-family: var(--shout);
+    font-size: clamp(64px, 12.4vw, 158px);
+    line-height: 0.78;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+    color: var(--yellow);
+    text-shadow: 6px 6px 0 var(--cherry), 12px 12px 0 var(--ink);
+    -webkit-text-stroke: 3px var(--ink);
+    margin: 6px 0 0;
+  }
+
+  .logo-lockup .l3 {
+    font-family: var(--shout);
+    font-size: clamp(34px, 5.8vw, 74px);
+    letter-spacing: 0.06em;
+    color: var(--white);
+    text-transform: uppercase;
+    line-height: 0.9;
+    text-shadow: 5px 5px 0 var(--ink);
+    margin-top: 4px;
+  }
+
+  .tagline {
+    margin: 26px auto 0;
+    display: inline-block;
+    background: var(--turq);
+    border: 5px solid var(--ink);
+    box-shadow: 8px 8px 0 rgba(27, 18, 6, 0.85);
+    color: var(--white);
+    font-family: var(--shout);
+    font-size: clamp(20px, 2.8vw, 33px);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    padding: 13px 30px 10px;
+    transform: rotate(-0.8deg);
+  }
+
+  /* Body copy stays plain — the design shouts, the writing doesn't. */
+  .subcopy {
+    max-width: 760px;
+    margin: 26px auto 0;
+    font-family: var(--fine);
+    font-size: clamp(16px, 1.6vw, 19px);
+    line-height: 1.5;
+    color: var(--ink);
+    background: rgba(255, 248, 234, 0.92);
+    border: 3px solid var(--ink);
+    padding: 14px 22px;
+  }
+
+  .subcopy strong { font-weight: bold; }
+
+  .cta-row {
+    margin: 30px 0 0;
     display: flex;
     justify-content: center;
-    gap: 60px;
-    align-items: flex-end;
-    perspective: 1100px;
-    padding-top: 40px;
+    align-items: center;
+    gap: 26px;
     flex-wrap: wrap;
   }
 
-  .box3d {
+  .offer-flash {
+    width: 168px;
+    height: 168px;
+    background: var(--yellow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform: rotate(-13deg);
+    flex: none;
+  }
+
+  .offer-flash .in {
+    font-family: var(--shout);
+    font-size: 25px;
+    line-height: 0.9;
+    color: var(--cherry);
+    text-transform: uppercase;
+    text-align: center;
+    padding: 0 10px;
+  }
+
+  .offer-flash .in em {
+    display: block;
+    font-style: normal;
+    font-size: 15px;
+    color: var(--ink);
+    letter-spacing: 0.08em;
+    margin-top: 6px;
+  }
+
+  .milk-splash {
     position: relative;
-    transform-style: preserve-3d;
-    transform: rotateY(-24deg) rotateX(2deg);
-    width: 300px;
-    height: 400px;
-    flex: 0 0 auto;
+    z-index: 3;
+    margin-top: 34px;
+    display: block;
+    width: 100%;
+    height: 88px;
   }
 
-  .face {
-    position: absolute;
-    inset: 0;
+  /* ---- but wait ---- */
+  .butwait {
+    background: var(--turq);
+    border-bottom: 6px solid var(--ink);
+    padding: 34px 0 32px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
   }
 
-  .front {
-    background: var(--red);
-    border: 5px solid var(--brown);
+  .butwait-in { position: relative; z-index: 2; }
+
+  .butwait h2 {
+    margin: 0;
+    font-family: var(--shout);
+    font-size: clamp(34px, 5vw, 64px);
+    line-height: 0.86;
+    text-transform: uppercase;
+    color: var(--yellow);
+    -webkit-text-stroke: 3px var(--ink);
+    text-shadow: 5px 5px 0 var(--ink);
+  }
+
+  .butwait p {
+    margin: 16px auto 0;
+    max-width: 800px;
+    font-family: var(--fine);
+    font-size: 17px;
+    line-height: 1.5;
+    color: #052f36;
+    background: rgba(255, 255, 255, 0.9);
+    border: 3px solid var(--ink);
+    padding: 11px 20px;
+  }
+
+  .lessgrid {
+    margin: 24px auto 0;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .lesscard {
+    background: var(--white);
+    border: 4px solid var(--ink);
+    box-shadow: 5px 5px 0 var(--ink);
+    padding: 14px 22px 12px;
+    min-width: 184px;
+  }
+
+  .lesscard .n { font-family: var(--shout); font-size: 46px; line-height: 1; color: var(--cherry); }
+  .lesscard .k {
+    font-family: var(--fine);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #7c6c56;
+    margin-top: 5px;
+  }
+
+  /* ---- rankings ---- */
+  .ranks {
+    margin-top: 46px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    text-align: center;
-    background-image: repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.06) 0 18px, transparent 18px 36px);
+    gap: 34px;
   }
 
-  .front .oval {
-    background: var(--cream);
-    border: 4px solid var(--brown);
-    border-radius: 50%;
-    padding: 26px 34px;
-    transform: rotate(-3deg);
-  }
-
-  .front .oval small {
-    display: block;
-    font-size: 11px;
-    letter-spacing: 0.3em;
-    color: var(--red);
-  }
-
-  .front .oval h1 {
-    font-size: 34px;
-    line-height: 0.95;
-    color: var(--red);
-    text-shadow: 2px 2px 0 var(--yellow);
-  }
-
-  .front .bowl {
-    font-size: 64px;
-    margin-top: 14px;
-    filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.3));
-  }
-
-  .front .claim {
-    background: var(--yellow);
-    color: var(--red);
-    font-size: 10px;
-    padding: 5px 12px;
-    border-radius: 999px;
-    margin-top: 10px;
-    transform: rotate(-2deg);
-  }
-
-  .side {
-    width: 110px;
-    transform: rotateY(90deg) translateZ(-55px) translateX(55px);
-    left: auto;
-    right: -110px;
-    background: var(--red-dark);
-    border: 5px solid var(--brown);
-    border-left: 0;
-    padding: 12px 10px;
-    color: var(--cream);
-  }
-
-  .side h4 {
-    background: #fff;
-    color: #000;
-    font-family: var(--font-label);
-    font-size: 13px;
-    padding: 3px 5px;
-    border: 2px solid #000;
-    margin-bottom: 6px;
-  }
-
-  .side .nf {
-    background: #fff;
-    color: #000;
-    font-family: var(--font-label);
-    font-size: 8.5px;
-    padding: 5px;
-    border: 2px solid #000;
-    line-height: 1.5;
-  }
-
-  .side .nf div {
-    border-bottom: 1px solid #000;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .side .nf div:last-child {
-    border-bottom: 0;
-  }
-
-  .side .upc {
-    margin-top: 8px;
-    height: 34px;
-    background: repeating-linear-gradient(90deg, #000 0 2px, #fff 2px 5px, #000 5px 6px, #fff 6px 10px);
-  }
-
-  .herotext {
-    max-width: 330px;
-    padding-bottom: 30px;
-  }
-
-  .herotext .sticker {
-    margin-bottom: 12px;
-  }
-
-  .herotext h2 {
-    font-size: 30px;
-    line-height: 1.05;
-  }
-
-  .herotext h2 em {
-    font-style: normal;
-    color: var(--red);
-  }
-
-  .herotext p {
-    font-family: var(--font-body);
-    font-size: 13.5px;
-    line-height: 1.55;
-    margin-top: 10px;
-    font-style: italic;
-    color: #6b4a2a;
-  }
-
-  .cta {
-    display: inline-block;
-    margin-top: 16px;
-    background: var(--red);
-    color: #fff;
-    text-decoration: none;
-    font-size: 12px;
-    letter-spacing: 0.12em;
-    padding: 10px 16px;
-    border-radius: 4px;
-    box-shadow: 0 4px 0 var(--brown);
-  }
-
-  .cta:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 0 var(--brown);
-  }
-
-  .shelf-hero {
-    max-width: 900px;
-    margin: -6px auto 0;
-    height: 26px;
-    background: linear-gradient(var(--shelfwood-light), var(--shelfwood));
-    border-radius: 3px;
-    box-shadow: 0 14px 22px rgba(0, 0, 0, 0.28);
-  }
-
-  /* shelves */
-  .shelfrow {
-    max-width: 980px;
-  }
-
-  .boxes {
+  .rank-row {
     display: flex;
     justify-content: center;
-    gap: 42px;
-    align-items: flex-end;
-    padding: 30px 0 0;
-    perspective: 900px;
-  }
-
-  .pricetags {
-    display: flex;
-    justify-content: center;
-    gap: 42px;
-    margin-top: -11px;
-  }
-
-  .pricetags > :global(.ptag) {
-    width: 118px;
-  }
-
-  .browse {
-    display: flex;
+    gap: 26px;
     flex-wrap: wrap;
-    gap: 8px;
-    justify-content: center;
-    max-width: 760px;
-    margin: 16px auto 0;
   }
 
-  .browsetag {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    background: #fff;
-    border: 2px solid var(--store-blue);
-    color: var(--store-blue-dark);
-    text-decoration: none;
-    font-size: 11px;
-    letter-spacing: 0.06em;
+  .rank-more { margin-top: 44px; }
+
+  /* ---- signoff ---- */
+  .signoff {
+    position: relative;
+    overflow: hidden;
+    background: var(--orange);
+    border-top: 6px solid var(--ink);
+    padding: 52px 0 46px;
+    text-align: center;
+  }
+
+  .signoff .rays { top: 50%; }
+  .signoff-in { position: relative; z-index: 3; }
+
+  .signoff h2 {
+    margin: 0;
+    font-family: var(--shout);
+    font-size: clamp(36px, 5.5vw, 70px);
+    line-height: 0.85;
     text-transform: uppercase;
-    padding: 7px 10px 7px 13px;
-    border-radius: 999px;
+    color: var(--white);
+    text-shadow: 5px 5px 0 var(--ink);
   }
 
-  .browsetag:hover {
-    background: var(--store-blue);
-    color: #fff;
+  .signoff .sub {
+    margin: 14px auto 0;
+    max-width: 620px;
+    font-family: var(--fine);
+    font-size: 16px;
+    line-height: 1.5;
+    background: rgba(255, 248, 234, 0.94);
+    border: 3px solid var(--ink);
+    padding: 11px 18px;
+    color: var(--ink);
   }
 
-  .browsetag .bn {
-    background: var(--floor);
-    color: var(--tag-gray);
-    font-size: 10px;
-    border-radius: 999px;
-    padding: 1px 7px;
-  }
+  .signoff-cta { margin-top: 28px; }
 
-  .browsetag:hover .bn {
-    background: rgba(255, 255, 255, 0.85);
-  }
-
-  .checkout {
-    display: flex;
-    justify-content: center;
-    padding: 46px 20px 10px;
-  }
-
-  @media (max-width: 760px) {
-    .scene {
-      gap: 30px;
-    }
-
-    .boxes,
-    .pricetags {
-      gap: 20px;
-    }
+  @media (max-width: 860px) {
+    .hero { padding: 40px 0 0; }
+    .offer-flash { width: 130px; height: 130px; }
+    .offer-flash .in { font-size: 19px; }
+    .offer-flash .in em { font-size: 12px; }
+    .lesscard { min-width: 140px; padding: 11px 16px 9px; }
+    .lesscard .n { font-size: 34px; }
   }
 </style>

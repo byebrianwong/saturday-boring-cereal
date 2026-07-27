@@ -1,0 +1,171 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { u } from '../lib/url';
+import { rating } from '../lib/format';
+
+interface Props {
+  cereal: CollectionEntry<'cereals'>;
+}
+
+const { cereal } = Astro.props;
+const d = cereal.data;
+const n = d.nutrition;
+
+const macros = [
+  { v: n.protein, k: 'Protein' },
+  { v: n.totalSugars, k: 'Sugar' },
+  { v: n.servingSize, k: 'Serving' },
+].filter((m) => m.v != null);
+---
+
+<a class="champ" href={u(`/cereals/${cereal.id}/`)}>
+  <span class="banner">★ #1 in the aisle · Grand prize box ★</span>
+
+  <span class="score starburst">
+    <span class="sv">{rating(d.rating)}</span>
+    <span class="so">Out of 10</span>
+  </span>
+
+  <span class="champ-body">
+    <span class="box">
+      {d.boxImage ? (
+        <img src={u(d.boxImage)} alt={`${d.brand} ${d.name} box`} />
+      ) : (
+        <span class="fallback" style={`background:${d.boxColor}`}>
+          <span class="em">{d.emoji}</span>
+          <span class="lb">No image on file</span>
+        </span>
+      )}
+    </span>
+
+    <span class="champ-copy">
+      <span class="brand">{d.brand}</span>
+      <span class="name">{d.name}</span>
+      {d.shortNote ? (
+        <span class="quip">“{d.shortNote}” — and it still won.</span>
+      ) : (
+        <span class="quip nil-note">No tasting note was recorded for this box. The field is empty. Nothing has been invented to fill it.</span>
+      )}
+      <span class="macros">
+        {macros.map((m) => (
+          <span>
+            <span class="mv">{m.v}g</span>
+            <span class="mk">{m.k}</span>
+          </span>
+        ))}
+      </span>
+    </span>
+  </span>
+</a>
+
+<style>
+  .champ {
+    display: block;
+    width: 820px;
+    max-width: 100%;
+    padding: 30px 34px 28px;
+    background: var(--yellow);
+    border: 6px solid var(--ink);
+    box-shadow: 12px 12px 0 var(--ink);
+    position: relative;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+
+  .champ:hover { transform: translate(4px, 4px); box-shadow: 8px 8px 0 var(--ink); }
+
+  .banner {
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%) rotate(-1deg);
+    background: var(--cherry);
+    color: var(--white);
+    font-family: var(--shout);
+    font-size: 23px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 9px 30px 7px;
+    border: 4px solid var(--ink);
+    white-space: nowrap;
+  }
+
+  .champ-body {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-top: 20px;
+  }
+
+  .champ .box {
+    width: 280px;
+    height: 280px;
+    flex: none;
+    background: var(--white);
+    border-width: 4px;
+  }
+
+  .champ-copy { flex: 1; text-align: left; }
+
+  .champ-copy .brand {
+    display: block;
+    font-family: var(--fine);
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #8a5a12;
+    font-weight: bold;
+  }
+
+  .champ-copy .name {
+    display: block;
+    font-family: var(--shout);
+    font-size: clamp(34px, 4.4vw, 56px);
+    line-height: 0.86;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-top: 8px;
+  }
+
+  /* Deadpan on purpose — the card shouts, the note doesn't. */
+  .champ-copy .quip {
+    display: block;
+    font-family: var(--fine);
+    font-size: 16px;
+    line-height: 1.45;
+    color: #4a3c26;
+    margin-top: 12px;
+    border-left: 5px solid var(--cherry);
+    padding-left: 12px;
+  }
+
+  .champ .macros { background: var(--white); margin-top: 16px; display: flex; }
+  .champ .macros > span { flex: 1; padding: 7px 2px 6px; border-right: 3px solid var(--ink); }
+  .champ .macros > span:last-child { border-right: 0; }
+  .champ .macros .mv,
+  .champ .macros .mk { display: block; }
+
+  .champ .score {
+    width: 170px;
+    height: 170px;
+    right: -34px;
+    top: -40px;
+    text-align: center;
+  }
+
+  .champ .score .sv,
+  .champ .score .so { display: block; }
+  .champ .score .sv { font-size: 62px; }
+  .champ .score .so { font-size: 11px; margin-top: 6px; }
+
+  @media (max-width: 860px) {
+    .champ { padding: 24px 18px 20px; }
+    .champ-body { flex-direction: column; gap: 18px; }
+    .champ .box { width: 100%; height: 260px; }
+    .champ-copy { text-align: center; }
+    .champ-copy .quip { text-align: left; }
+    .banner { font-size: 15px; white-space: normal; width: 90%; text-align: center; }
+    .champ .score { width: 110px; height: 110px; right: -12px; top: -22px; }
+    .champ .score .sv { font-size: 40px; }
+    .champ .score .so { font-size: 9px; }
+  }
+</style>
