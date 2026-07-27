@@ -1,49 +1,32 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import Receipt from '../components/Receipt.astro';
+import PageHeader from '../components/PageHeader.astro';
+import Disclaimer from '../components/Disclaimer.astro';
+import { shortDate } from '../lib/format';
 
 const cereals = await getCollection('cereals');
-const lines = [...cereals]
-  .sort((a, b) => b.data.dateReviewed.getTime() - a.data.dateReviewed.getTime())
-  .map((c) => ({
-    title: `${c.data.brand} ${c.data.name}`,
-    rating: c.data.rating,
-    note: c.data.shortNote ?? '',
-    href: `/cereals/${c.id}/`,
-    date: c.data.dateReviewed,
-  }));
+const newestFirst = [...cereals].sort(
+  (a, b) => b.data.dateReviewed.getTime() - a.data.dateReviewed.getTime()
+);
+const latest = newestFirst[0];
 ---
 
-<Layout title="Receipts — Saturday Boring Cereal">
-  <div class="light"></div>
-  <h1 class="pagetitle">RECEIPTS</h1>
-  <p class="pagesub">Every review, printed at lane 1. Keep for your records.</p>
-  <div class="checkout wrap">
-    <Receipt lines={lines} heading="*** ALL REVIEWS · NEWEST FIRST ***" showDates />
-  </div>
+<Layout
+  title="Receipts — Saturday Boring Cereal"
+  description="Every review on record, set as the small print nobody reads."
+>
+  <PageHeader
+    kicker="Keep this for your records"
+    title="The "
+    accent="Receipts"
+    lede="Every review on file, newest first, set as the small print nobody reads. Each entry lists what one person thought, and what the side panel actually said."
+  />
+
+  <Disclaimer
+    cereals={newestFirst}
+    title="Full record"
+    sub={`${cereals.length} boxes · Latest reviewed ${shortDate(latest.data.dateReviewed)}`}
+    showCta={false}
+  />
 </Layout>
-
-<style>
-  .pagetitle {
-    text-align: center;
-    font-size: 30px;
-    letter-spacing: 0.2em;
-    margin-top: 30px;
-  }
-
-  .pagesub {
-    text-align: center;
-    font-family: var(--font-body);
-    font-style: italic;
-    font-size: 13.5px;
-    color: #6b4a2a;
-    margin-top: 6px;
-  }
-
-  .checkout {
-    display: flex;
-    justify-content: center;
-    padding: 30px 20px 10px;
-  }
-</style>

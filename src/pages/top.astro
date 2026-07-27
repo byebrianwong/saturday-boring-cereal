@@ -5,6 +5,7 @@ import { byRatingDesc } from '../lib/macros';
 import { gramsShort } from '../lib/format';
 import { scoreCereal } from '../lib/score';
 import GradeStamp from '../components/GradeStamp.astro';
+import PageHeader from '../components/PageHeader.astro';
 import { u } from '../lib/url';
 
 const cereals = await getCollection('cereals');
@@ -21,16 +22,19 @@ const medal = ['gold', 'silver', 'bronze'];
   title="The Rankings — Saturday Boring Cereal"
   description="Every cereal, ranked worst to best by one man's Taste score. The official chart."
 >
-  <div class="light"></div>
-  <h1 class="pagetitle">THE RANKINGS</h1>
-  <p class="pagesub">Ranked by Taste — with each box's <b>Overall grade</b> (taste + macros) stamped alongside.</p>
+  <PageHeader
+    kicker="The official chart · Updated every Saturday"
+    title="The "
+    accent="Rankings"
+    lede="Ranked by Taste, with each box's Overall grade — taste plus macros — stamped alongside. Unrated boxes sit at the bottom without a grade, because we will not invent a taste we never had."
+  />
 
   <ol class="chart wrap">
     {
       rated.map((c, i) => (
         <li class:list={['row', { top: i < 3 }]}>
           <div class:list={['rank', medal[i]]}>{i + 1}</div>
-          <a class="box" href={u(`/cereals/${c.id}/`)} style={`--bc: ${c.data.boxColor}`}>
+          <a class="rowbox" href={u(`/cereals/${c.id}/`)} style={`--bc: ${c.data.boxColor}`}>
             {c.data.boxImage ? (
               <img src={u(c.data.boxImage)} alt={`${c.data.brand} ${c.data.name}`} loading="lazy" />
             ) : (
@@ -43,10 +47,10 @@ const medal = ['gold', 'silver', 'bronze'];
           </div>
           <div class="meter">
             <div class="bar" style={`width: ${(c.data.rating! / 10) * 100}%`}></div>
-            <span class="score">{c.data.rating!.toFixed(1)}</span>
+            <span class="rowscore">{c.data.rating!.toFixed(1)}</span>
           </div>
           <GradeStamp grade={scoreOf.get(c.id)!.grade} overall={scoreOf.get(c.id)!.overall} size="sm" />
-          <div class="macros">
+          <div class="rowmacros">
             {gramsShort(c.data.nutrition.protein) && <span><b>{gramsShort(c.data.nutrition.protein)}</b> pro</span>}
             {gramsShort(c.data.nutrition.totalSugars) && <span><b>{gramsShort(c.data.nutrition.totalSugars)}</b> sug</span>}
           </div>
@@ -57,7 +61,7 @@ const medal = ['gold', 'silver', 'bronze'];
       unrated.map((c) => (
         <li class="row unrated">
           <div class="rank">—</div>
-          <a class="box" href={u(`/cereals/${c.id}/`)} style={`--bc: ${c.data.boxColor}`}>
+          <a class="rowbox" href={u(`/cereals/${c.id}/`)} style={`--bc: ${c.data.boxColor}`}>
             {c.data.boxImage ? (
               <img src={u(c.data.boxImage)} alt={`${c.data.brand} ${c.data.name}`} loading="lazy" />
             ) : (
@@ -68,9 +72,9 @@ const medal = ['gold', 'silver', 'bronze'];
             <a href={u(`/cereals/${c.id}/`)}>{c.data.name}</a>
             <small>{c.data.brand}</small>
           </div>
-          <div class="meter"><span class="score na">unrated</span></div>
+          <div class="meter"><span class="rowscore na">unrated</span></div>
           <GradeStamp grade={scoreOf.get(c.id)!.grade} overall={scoreOf.get(c.id)!.overall} size="sm" />
-          <div class="macros"></div>
+          <div class="rowmacros"></div>
         </li>
       ))
     }
@@ -78,25 +82,10 @@ const medal = ['gold', 'silver', 'bronze'];
 </Layout>
 
 <style>
-  .pagetitle {
-    text-align: center;
-    font-size: 30px;
-    letter-spacing: 0.2em;
-    margin-top: 30px;
-  }
-
-  .pagesub {
-    text-align: center;
-    font-family: var(--font-body);
-    font-style: italic;
-    font-size: 13.5px;
-    color: #6b4a2a;
-    margin-top: 6px;
-  }
 
   .chart {
     max-width: 720px;
-    margin: 30px auto 0;
+    margin: 30px auto 60px;
     list-style: none;
     padding: 0;
     display: flex;
@@ -110,7 +99,7 @@ const medal = ['gold', 'silver', 'bronze'];
     align-items: center;
     gap: 14px;
     background: #fff;
-    border: 2px solid var(--brown);
+    border: 2px solid var(--ink);
     border-radius: 10px;
     padding: 10px 16px 10px 10px;
     box-shadow: 0 4px 0 rgba(91, 58, 30, 0.18);
@@ -122,7 +111,7 @@ const medal = ['gold', 'silver', 'bronze'];
   }
 
   .rank {
-    font-family: var(--font-display);
+    font-family: var(--shout);
     font-size: 26px;
     text-align: center;
     color: #b0a58c;
@@ -138,10 +127,10 @@ const medal = ['gold', 'silver', 'bronze'];
     color: #c17a3a;
   }
 
-  .box {
+  .rowbox {
     width: 44px;
     height: 56px;
-    border: 2px solid var(--brown);
+    border: 2px solid var(--ink);
     border-radius: 4px;
     overflow: hidden;
     display: flex;
@@ -150,27 +139,27 @@ const medal = ['gold', 'silver', 'bronze'];
     background: linear-gradient(145deg, var(--bc), color-mix(in srgb, var(--bc) 72%, #000));
   }
 
-  .box img {
+  .rowbox img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  .box .e {
+  .rowbox .e {
     font-size: 22px;
   }
 
   .who a {
-    font-family: var(--font-display);
+    font-family: var(--shout);
     font-size: 14px;
-    color: var(--brown);
+    color: var(--ink);
     text-decoration: none;
     display: block;
     line-height: 1.15;
   }
 
   .who a:hover {
-    color: var(--red);
+    color: var(--cherry);
   }
 
   .who small {
@@ -183,7 +172,7 @@ const medal = ['gold', 'silver', 'bronze'];
   .meter {
     position: relative;
     height: 22px;
-    background: var(--floor);
+    background: var(--cream);
     border-radius: 999px;
     display: flex;
     align-items: center;
@@ -194,42 +183,44 @@ const medal = ['gold', 'silver', 'bronze'];
     left: 0;
     top: 0;
     bottom: 0;
-    background: linear-gradient(90deg, #e0662c, var(--red));
+    background: linear-gradient(90deg, #e0662c, var(--cherry));
     border-radius: 999px;
     min-width: 20px;
   }
 
-  .score {
+  /* Sits at the right end of the track, which is pale — so it has to be dark
+     ink, not white. (It previously read as white-on-red only because the
+     global .score component was leaking a cherry background onto it.) */
+  .rowscore {
     position: relative;
     margin-left: auto;
     margin-right: 10px;
-    font-family: var(--font-display);
-    font-size: 13px;
-    color: #fff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+    font-family: var(--shout);
+    font-size: 14px;
+    color: var(--ink);
     z-index: 1;
   }
 
-  .score.na {
-    color: var(--tag-gray);
+  .rowscore.na {
+    color: var(--muted);
     text-shadow: none;
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-style: italic;
     font-size: 12px;
     margin-left: 12px;
   }
 
-  .macros {
+  .rowmacros {
     display: flex;
     gap: 8px;
-    font-family: var(--font-label);
+    font-family: var(--fine);
     font-size: 11px;
-    color: var(--tag-gray);
+    color: var(--muted);
     white-space: nowrap;
   }
 
-  .macros b {
-    color: var(--red);
+  .rowmacros b {
+    color: var(--cherry);
   }
 
   .row.unrated {

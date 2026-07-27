@@ -26,7 +26,6 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
   description={data.shortNote ?? `${data.brand} ${data.name}, ranked and measured.`}
   image={data.boxImage ? u(data.boxImage) : undefined}
 >
-  <div class="light"></div>
 
   <div class="crumb wrap">
     <a href={u('/cereals/')}>← BACK TO THE AISLE</a>
@@ -43,7 +42,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
               ) : (
                 <>
                   <div class="em">{data.emoji}</div>
-                  <div class="brand">{data.brand}</div>
+                  <div class="prodbrand">{data.brand}</div>
                   <h1>{data.name}</h1>
                 </>
               )
@@ -52,7 +51,6 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
           <div class="face side"></div>
         </div>
       </div>
-      <div class="shelfbar"></div>
       <div class="bigtag ptag">
         {
           data.rating == null ? (
@@ -61,10 +59,10 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
             <div class="p">{fmtRating(data.rating)}<small>/10</small></div>
           )
         }
-        <div class="macros">TASTE · RANKED {shortDate(data.dateReviewed).toUpperCase()}</div>
+        <div class="stampline">TASTE · RANKED {shortDate(data.dateReviewed).toUpperCase()}</div>
       </div>
 
-      <div class="tags">
+      <div class="taglist">
         {tags.map((t) => (
           <a href={u(`/tags/${t}/`)} class="tagchip">{label(t)}</a>
         ))}
@@ -105,7 +103,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
     font-size: 11px;
     letter-spacing: 0.15em;
     text-decoration: none;
-    color: var(--store-blue-dark);
+    color: var(--turq-deep);
   }
 
   .crumb a:hover {
@@ -128,7 +126,6 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
   }
 
   .scene {
-    perspective: 1000px;
     display: flex;
     justify-content: center;
     padding-top: 20px;
@@ -148,7 +145,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
   }
 
   .front {
-    border: 4px solid var(--brown);
+    border: 4px solid var(--ink);
     background: linear-gradient(145deg, var(--bc), color-mix(in srgb, var(--bc) 72%, #000));
     display: flex;
     flex-direction: column;
@@ -174,7 +171,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
     filter: drop-shadow(0 6px 4px rgba(0, 0, 0, 0.3));
   }
 
-  .brand {
+  .prodbrand {
     font-size: 11px;
     letter-spacing: 0.18em;
     color: #fff;
@@ -198,16 +195,12 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
     transform: rotateY(90deg) translateZ(-30px) translateX(30px);
     left: auto;
     right: -60px;
-    border: 4px solid var(--brown);
+    border: 4px solid var(--ink);
     border-left: 0;
     background: color-mix(in srgb, var(--bc) 60%, #000);
     opacity: 0.85;
   }
 
-  .left .shelfbar {
-    max-width: 360px;
-    margin: -4px auto 0;
-  }
 
   .bigtag {
     width: 200px;
@@ -219,17 +212,17 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
   }
 
   .bigtag .p.unrated {
-    color: var(--tag-gray);
+    color: var(--muted);
   }
 
   .empty {
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-style: italic;
     font-size: 14px;
     color: #7a6a4a;
   }
 
-  .tags {
+  .taglist {
     display: flex;
     gap: 8px;
     flex-wrap: wrap;
@@ -238,7 +231,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
   }
 
   .tagchip {
-    background: var(--store-blue);
+    background: var(--turq);
     color: #fff;
     font-size: 10px;
     letter-spacing: 0.12em;
@@ -249,7 +242,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
   }
 
   .tagchip:hover {
-    background: var(--red);
+    background: var(--cherry);
   }
 
   .tagchip.plain {
@@ -258,19 +251,21 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
 
   .credit {
     text-align: center;
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-style: italic;
     font-size: 11px;
     color: #6b4a2a;
     margin-top: 14px;
   }
 
+  /* Hard border and offset shadow to match the ad system; the note's own text
+     stays plain. margin-bottom keeps it off the footer. */
   .note {
     max-width: 720px;
-    margin-top: 50px;
-    background: #fffdf4;
-    border: 1px solid #e0d5b8;
-    box-shadow: 0 10px 26px rgba(0, 0, 0, 0.12);
+    margin: 50px auto 70px;
+    background: var(--white);
+    border: 4px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
     padding: 26px 30px 30px;
   }
 
@@ -279,7 +274,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
   }
 
   .short {
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-size: 17px;
     font-style: italic;
     color: #4a3418;
@@ -287,7 +282,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
   }
 
   .body {
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-size: 14.5px;
     line-height: 1.7;
     color: #3d2c15;
@@ -299,7 +294,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
 
   .body :global(h2),
   .body :global(h3) {
-    font-family: var(--font-display);
+    font-family: var(--shout);
     font-size: 14px;
     letter-spacing: 0.1em;
     margin: 18px 0 8px;

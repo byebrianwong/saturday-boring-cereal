@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
+import PageHeader from '../../components/PageHeader.astro';
 import MiniBox from '../../components/MiniBox.astro';
 import PriceTag from '../../components/PriceTag.astro';
 import { label } from '../../lib/taxonomy';
@@ -33,17 +34,15 @@ const title = label(tag);
   title={`${title} — Saturday Boring Cereal`}
   description={`Every ${title.toLowerCase()} cereal in the aisle, ranked.`}
 >
-  <div class="light"></div>
 
-  <div class="crumb wrap"><a href={u('/cereals/')}>← BACK TO THE FULL AISLE</a></div>
+  <PageHeader
+    kicker={`${kind} · ${list.length} box${list.length === 1 ? '' : 'es'} on file`}
+    title=""
+    accent={title}
+    lede={`Every ${title.toLowerCase()} box on record, ranked best first. Same figures as everywhere else on the site, taken off the side panel.`}
+  />
 
-  <div class="signrow wrap">
-    <div class="aislesign">
-      <small>{kind.toUpperCase()}</small>
-      <span>{title}</span>
-    </div>
-  </div>
-  <p class="count wrap">{list.length} box{list.length === 1 ? '' : 'es'} on this shelf, ranked best first.</p>
+  <div class="crumb wrap"><a href={u('/cereals/')}>← Back to the full aisle</a></div>
 
   <div class="aislegrid wrap">
     {
@@ -57,7 +56,6 @@ const title = label(tag);
             boxImage={c.data.boxImage}
             href={`/cereals/${c.id}/`}
           />
-          <div class="shelfbar" />
           <PriceTag rating={c.data.rating} macros={macroLine(c)} />
         </div>
       ))
@@ -74,68 +72,11 @@ const title = label(tag);
     font-size: 11px;
     letter-spacing: 0.15em;
     text-decoration: none;
-    color: var(--store-blue-dark);
+    color: var(--turq-deep);
   }
 
   .crumb a:hover {
     text-decoration: underline;
-  }
-
-  .signrow {
-    display: flex;
-    justify-content: center;
-    margin-top: 24px;
-  }
-
-  .aislesign {
-    background: var(--store-blue);
-    color: #fff;
-    text-align: center;
-    padding: 16px 40px 14px;
-    border-radius: 8px 8px 3px 3px;
-    position: relative;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.28);
-  }
-
-  .aislesign::before,
-  .aislesign::after {
-    content: '';
-    position: absolute;
-    top: -14px;
-    width: 3px;
-    height: 14px;
-    background: #90a4ae;
-  }
-
-  .aislesign::before {
-    left: 30%;
-  }
-
-  .aislesign::after {
-    right: 30%;
-  }
-
-  .aislesign small {
-    display: block;
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    color: #bfe0ff;
-    margin-bottom: 4px;
-  }
-
-  .aislesign span {
-    font-size: 26px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  .count {
-    text-align: center;
-    font-family: var(--font-body);
-    font-style: italic;
-    font-size: 13.5px;
-    color: #6b4a2a;
-    margin-top: 12px;
   }
 
   .aislegrid {
@@ -144,18 +85,13 @@ const title = label(tag);
     gap: 34px 18px;
     max-width: 980px;
     margin: 34px auto 0;
+      margin-bottom: 70px;
   }
 
   .cell {
     display: flex;
     flex-direction: column;
     align-items: center;
-    perspective: 900px;
-  }
-
-  .cell > :global(.shelfbar) {
-    width: 100%;
-    margin-top: -2px;
   }
 
   .cell > :global(.ptag) {

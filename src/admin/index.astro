@@ -797,7 +797,7 @@ const label = (v: string) =>
 
 <style>
   .sign {
-    background: var(--brown);
+    background: var(--ink);
     color: var(--cream);
     text-align: center;
     padding: 10px;
@@ -838,13 +838,13 @@ const label = (v: string) =>
     font-size: 10px;
     letter-spacing: 0.15em;
     margin-bottom: 6px;
-    color: var(--tag-gray);
+    color: var(--muted);
   }
 
   input,
   select,
   button {
-    font-family: var(--font-label);
+    font-family: var(--fine);
     font-size: 14px;
   }
 
@@ -856,13 +856,13 @@ const label = (v: string) =>
   select {
     width: 100%;
     padding: 8px 10px;
-    border: 2px solid var(--brown);
+    border: 2px solid var(--ink);
     background: #fff;
-    color: var(--tag-ink);
+    color: var(--ink);
   }
 
   button {
-    background: var(--store-blue);
+    background: var(--turq);
     color: #fff;
     border: none;
     padding: 9px 16px;
@@ -872,14 +872,14 @@ const label = (v: string) =>
     cursor: pointer;
   }
   button:hover:not(:disabled) {
-    background: var(--store-blue-dark);
+    background: var(--turq-deep);
   }
   button:disabled {
     opacity: 0.45;
     cursor: default;
   }
   button.secondary {
-    background: var(--tag-gray);
+    background: var(--muted);
   }
 
   .search {
@@ -890,7 +890,7 @@ const label = (v: string) =>
   }
   .usda {
     grid-column: 1 / -1;
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-size: 12px;
   }
   .usda input {
@@ -898,10 +898,10 @@ const label = (v: string) =>
   }
 
   .status {
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-size: 13px;
     margin: 10px 0;
-    color: var(--tag-gray);
+    color: var(--muted);
   }
 
   .hit {
@@ -911,8 +911,8 @@ const label = (v: string) =>
     text-transform: none;
     letter-spacing: normal;
     background: #fff;
-    color: var(--tag-ink);
-    border: 2px solid var(--brown);
+    color: var(--ink);
+    border: 2px solid var(--ink);
     padding: 10px 12px;
     margin-bottom: 8px;
     font-size: 14px;
@@ -921,30 +921,30 @@ const label = (v: string) =>
     background: var(--cream);
   }
   .hit.on {
-    border-color: var(--store-blue);
+    border-color: var(--turq);
     background: var(--cream);
-    box-shadow: inset 4px 0 0 var(--store-blue);
+    box-shadow: inset 4px 0 0 var(--turq);
   }
   .hit.off {
     opacity: 0.5;
   }
   .hit-name {
-    font-family: var(--font-display);
+    font-family: var(--shout);
     font-size: 14px;
   }
   .hit-tags,
   .hit-macros {
-    font-family: var(--font-receipt);
+    font-family: var(--mono);
     font-size: 11px;
-    color: var(--tag-gray);
+    color: var(--muted);
     margin-top: 3px;
   }
 
   .picked {
     background: var(--cream);
-    border-left: 4px solid var(--store-blue);
+    border-left: 4px solid var(--turq);
     padding: 10px 12px;
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-size: 13px;
     margin-bottom: 14px;
   }
@@ -970,14 +970,14 @@ const label = (v: string) =>
   .sub {
     text-transform: none;
     letter-spacing: normal;
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-style: italic;
-    color: var(--tag-gray);
+    color: var(--muted);
     font-size: 11px;
   }
 
   fieldset {
-    border: 2px solid var(--brown);
+    border: 2px solid var(--ink);
     padding: 12px;
     margin: 16px 0;
   }
@@ -988,9 +988,9 @@ const label = (v: string) =>
     text-transform: uppercase;
   }
   .note {
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-size: 12px;
-    color: var(--tag-gray);
+    color: var(--muted);
     margin-bottom: 10px;
   }
 
@@ -1002,7 +1002,7 @@ const label = (v: string) =>
   .chk {
     text-transform: none;
     letter-spacing: normal;
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-size: 13px;
     margin-bottom: 3px;
   }
@@ -1018,7 +1018,7 @@ const label = (v: string) =>
   }
   .shot {
     background: #fff;
-    border: 2px solid var(--brown);
+    border: 2px solid var(--ink);
     padding: 4px;
     display: flex;
     flex-direction: column;
@@ -1028,7 +1028,7 @@ const label = (v: string) =>
     letter-spacing: normal;
   }
   .shot.on {
-    border-color: var(--store-blue);
+    border-color: var(--turq);
     box-shadow: 0 0 0 3px var(--yellow);
   }
   .shot img {
@@ -1038,9 +1038,9 @@ const label = (v: string) =>
     background: #fff;
   }
   .shot small {
-    font-family: var(--font-receipt);
+    font-family: var(--mono);
     font-size: 9px;
-    color: var(--tag-gray);
+    color: var(--muted);
     text-align: center;
     line-height: 1.2;
     max-height: 24px;
@@ -1049,13 +1049,13 @@ const label = (v: string) =>
   .none-shot {
     justify-content: center;
     min-height: 130px;
-    color: var(--tag-gray);
+    color: var(--muted);
     font-size: 11px;
   }
   .none {
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-size: 13px;
-    color: var(--tag-gray);
+    color: var(--muted);
   }
 
   .imgrow {
@@ -1072,9 +1072,9 @@ const label = (v: string) =>
   }
 
   .preview {
-    background: var(--tag-ink);
+    background: var(--ink);
     color: #e8f0f4;
-    font-family: var(--font-receipt);
+    font-family: var(--mono);
     font-size: 12px;
     padding: 14px;
     overflow-x: auto;
@@ -1086,7 +1086,7 @@ const label = (v: string) =>
     background: #f2fbf3;
     padding: 14px;
     margin-top: 16px;
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-size: 14px;
   }
   .done h2 {
@@ -1098,8 +1098,8 @@ const label = (v: string) =>
   }
 
   .err {
-    color: var(--red-dark);
-    font-family: var(--font-body);
+    color: var(--cherry-deep);
+    font-family: var(--fine);
     font-size: 13px;
     margin-top: 8px;
   }
@@ -1107,9 +1107,9 @@ const label = (v: string) =>
     color: var(--score-mid-dark);
   }
   .hint {
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-size: 12px;
-    color: var(--tag-gray);
+    color: var(--muted);
     margin-top: 10px;
   }
 
@@ -1118,30 +1118,30 @@ const label = (v: string) =>
     display: flex;
     gap: 6px;
     margin-bottom: 18px;
-    border-bottom: 2px solid var(--brown);
+    border-bottom: 2px solid var(--ink);
   }
   .tab {
     background: transparent;
-    color: var(--tag-gray);
+    color: var(--muted);
     border: 2px solid transparent;
     border-bottom: none;
     margin-bottom: -2px;
   }
   .tab.on {
     background: var(--cream);
-    color: var(--brown);
-    border-color: var(--brown);
+    color: var(--ink);
+    border-color: var(--ink);
   }
   .tab:hover:not(.on) {
     background: transparent;
-    color: var(--brown);
+    color: var(--ink);
   }
 
   /* --- catalog list --- */
   .catalog {
     max-height: 420px;
     overflow-y: auto;
-    border: 2px solid var(--brown);
+    border: 2px solid var(--ink);
     background: #fff;
   }
   .row {
@@ -1153,7 +1153,7 @@ const label = (v: string) =>
     text-transform: none;
     letter-spacing: normal;
     background: #fff;
-    color: var(--tag-ink);
+    color: var(--ink);
     border: none;
     border-bottom: 1px solid #e0e0e0;
     padding: 7px 10px;
@@ -1164,7 +1164,7 @@ const label = (v: string) =>
   }
   .row.on {
     background: var(--cream);
-    box-shadow: inset 4px 0 0 var(--store-blue);
+    box-shadow: inset 4px 0 0 var(--turq);
   }
   .row-thumb {
     width: 30px;
@@ -1173,7 +1173,7 @@ const label = (v: string) =>
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--floor);
+    background: var(--cream);
   }
   .row-thumb img {
     width: 100%;
@@ -1184,13 +1184,13 @@ const label = (v: string) =>
     font-size: 17px;
   }
   .row-text b {
-    font-family: var(--font-display);
+    font-family: var(--shout);
   }
   .row-text small {
     display: block;
-    font-family: var(--font-receipt);
+    font-family: var(--mono);
     font-size: 10px;
-    color: var(--tag-gray);
+    color: var(--muted);
   }
 
   /* --- nutrition grid --- */
@@ -1214,17 +1214,17 @@ const label = (v: string) =>
     width: 90px;
     height: 120px;
     object-fit: cover;
-    border: 2px solid var(--brown);
+    border: 2px solid var(--ink);
     background: #fff;
   }
   .actions.left {
     justify-content: flex-start;
   }
   button.danger {
-    background: var(--red-dark);
+    background: var(--cherry-deep);
   }
   button.danger:hover:not(:disabled) {
-    background: var(--red);
+    background: var(--cherry);
   }
 
   @media (max-width: 560px) {

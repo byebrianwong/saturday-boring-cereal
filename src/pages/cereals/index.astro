@@ -2,6 +2,7 @@
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import AisleFilters from '../../components/AisleFilters.astro';
+import PageHeader from '../../components/PageHeader.astro';
 import MiniBox from '../../components/MiniBox.astro';
 import PriceTag from '../../components/PriceTag.astro';
 import { macroLine, byRatingDesc } from '../../lib/macros';
@@ -12,9 +13,12 @@ const ranked = [...cereals].sort(byRatingDesc);
 ---
 
 <Layout title="The Aisle — Saturday Boring Cereal">
-  <div class="light"></div>
-  <h1 class="pagetitle">THE AISLE</h1>
-  <p class="pagesub">Every ranked box in the store. Pick an aisle sign to filter; re-sort with the price gun.</p>
+  <PageHeader
+    kicker="Everything in stock · No samples"
+    title="The "
+    accent="Aisle"
+    lede="Every box on record. Filter by type, re-sort however you like, and send up to four to the price check."
+  />
 
   <AisleFilters mode="buttons" />
 
@@ -54,7 +58,6 @@ const ranked = [...cereals].sort(byRatingDesc);
             boxImage={c.data.boxImage}
             href={`/cereals/${c.id}/`}
           />
-          <div class="shelfbar" />
           <PriceTag rating={c.data.rating} macros={macroLine(c)} />
           <button class="addcmp" type="button" data-id={c.id}>+ compare</button>
         </div>
@@ -63,7 +66,6 @@ const ranked = [...cereals].sort(byRatingDesc);
   </div>
 
   <div class="empty wrap" id="empty" hidden>
-    <div class="shelfbar"></div>
     <p>OUT OF STOCK — nothing on this shelf matches. Try another aisle.</p>
   </div>
 
@@ -167,21 +169,6 @@ const ranked = [...cereals].sort(byRatingDesc);
 </script>
 
 <style>
-  .pagetitle {
-    text-align: center;
-    font-size: 30px;
-    letter-spacing: 0.2em;
-    margin-top: 30px;
-  }
-
-  .pagesub {
-    text-align: center;
-    font-family: var(--font-body);
-    font-style: italic;
-    font-size: 13.5px;
-    color: #6b4a2a;
-    margin-top: 6px;
-  }
 
   .controls {
     display: flex;
@@ -195,15 +182,15 @@ const ranked = [...cereals].sort(byRatingDesc);
   .pricegun {
     font-size: 11px;
     letter-spacing: 0.12em;
-    background: var(--red);
+    background: var(--cherry);
     color: #fff;
     padding: 8px 12px;
     border-radius: 4px;
-    box-shadow: 0 4px 0 var(--brown);
+    box-shadow: 0 4px 0 var(--ink);
   }
 
   .pricegun select {
-    font-family: var(--font-display);
+    font-family: var(--shout);
     font-size: 11px;
     border: 0;
     border-radius: 3px;
@@ -212,7 +199,7 @@ const ranked = [...cereals].sort(byRatingDesc);
   }
 
   .count {
-    font-family: var(--font-receipt);
+    font-family: var(--mono);
     font-size: 12px;
     color: #546e7a;
   }
@@ -223,23 +210,19 @@ const ranked = [...cereals].sort(byRatingDesc);
     gap: 34px 18px;
     max-width: 980px;
     margin-top: 34px;
+      margin-bottom: 70px;
   }
 
   .cell {
     display: flex;
     flex-direction: column;
     align-items: center;
-    perspective: 900px;
   }
 
   .cell[hidden] {
     display: none;
   }
 
-  .cell > :global(.shelfbar) {
-    width: 100%;
-    margin-top: -2px;
-  }
 
   .cell > :global(.ptag) {
     width: 118px;
@@ -253,7 +236,7 @@ const ranked = [...cereals].sort(byRatingDesc);
   }
 
   .empty p {
-    font-family: var(--font-receipt);
+    font-family: var(--mono);
     font-size: 13px;
     color: #546e7a;
     margin-top: 14px;
@@ -262,27 +245,27 @@ const ranked = [...cereals].sort(byRatingDesc);
 
   .addcmp {
     margin-top: 8px;
-    font-family: var(--font-display);
+    font-family: var(--shout);
     font-size: 10px;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     background: #fff;
-    color: var(--store-blue-dark);
-    border: 2px solid var(--store-blue);
+    color: var(--turq-deep);
+    border: 2px solid var(--turq);
     border-radius: 999px;
     padding: 5px 12px;
     cursor: pointer;
   }
 
   .addcmp:hover {
-    background: var(--store-blue);
+    background: var(--turq);
     color: #fff;
   }
 
   .addcmp.on {
     background: var(--yellow);
-    border-color: var(--brown);
-    color: var(--brown);
+    border-color: var(--ink);
+    color: var(--ink);
   }
 
   .addcmp:disabled {
@@ -300,7 +283,7 @@ const ranked = [...cereals].sort(byRatingDesc);
     display: flex;
     align-items: center;
     gap: 14px;
-    background: var(--brown);
+    background: var(--ink);
     color: var(--cream);
     border: 3px solid var(--yellow);
     border-radius: 999px;
@@ -318,14 +301,14 @@ const ranked = [...cereals].sort(byRatingDesc);
   }
 
   .carthint {
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-style: italic;
     font-size: 11px;
     color: #d9c39f;
   }
 
   .cartgo {
-    background: var(--red);
+    background: var(--cherry);
     color: #fff;
     text-decoration: none;
     font-size: 12px;
@@ -335,14 +318,14 @@ const ranked = [...cereals].sort(byRatingDesc);
   }
 
   .cartgo:hover {
-    background: var(--red-dark);
+    background: var(--cherry-deep);
   }
 
   .cartclear {
     background: none;
     border: 0;
     color: #d9c39f;
-    font-family: var(--font-body);
+    font-family: var(--fine);
     font-size: 12px;
     cursor: pointer;
     text-decoration: underline;

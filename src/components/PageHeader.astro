@@ -1,0 +1,99 @@
+---
+// The ad break that opens every inner page. One loud band, then the page's
+// actual content stays calm underneath it.
+//
+// `title` is split so the last word can take the yellow stroked treatment:
+// pass the emphasis separately rather than embedding markup in a string.
+
+interface Props {
+  kicker: string;
+  title: string;
+  /** Rendered after `title` in yellow with a cherry drop shadow. */
+  accent?: string;
+  lede?: string;
+  /** Turquoise instead of orange, for pages that follow an orange section. */
+  tone?: 'orange' | 'turq';
+}
+
+const { kicker, title, accent, lede, tone = 'orange' } = Astro.props;
+---
+
+<section class={`head ${tone}`}>
+  <div class="rays"></div>
+  <div class="rays-fine"></div>
+
+  <div class="wrap head-in">
+    <div class="section-kicker">{kicker}</div>
+    <h1 class="head-title">
+      {title}{accent && <em>{accent}</em>}
+    </h1>
+    {lede && <p class="head-lede">{lede}</p>}
+    <slot />
+  </div>
+</section>
+
+<style>
+  .head {
+    position: relative;
+    overflow: hidden;
+    background: var(--orange);
+    border-bottom: 6px solid var(--ink);
+    padding: 48px 0 44px;
+    text-align: center;
+  }
+
+  .head.turq { background: var(--turq); }
+
+  .head .rays,
+  .head .rays-fine { top: 50%; }
+
+  /* On turquoise the warm rays would muddy, so cool them down. */
+  .head.turq .rays {
+    background: repeating-conic-gradient(
+      from 0deg at 50% 50%,
+      rgba(255, 255, 255, 0.5) 0deg 7deg,
+      rgba(255, 255, 255, 0.12) 7deg 14deg
+    );
+  }
+
+  .head-in { position: relative; z-index: 3; }
+
+  .head-title {
+    margin: 16px 0 0;
+    font-family: var(--shout);
+    font-size: clamp(46px, 9vw, 104px);
+    line-height: 0.82;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    color: var(--white);
+    text-shadow: 6px 6px 0 var(--ink);
+  }
+
+  /* The stroke fattens the glyphs, so the word space needs help to survive. */
+  .head-title em {
+    font-style: normal;
+    margin-left: 0.09em;
+    color: var(--yellow);
+    -webkit-text-stroke: 3px var(--ink);
+    text-shadow: 6px 6px 0 var(--cherry);
+  }
+
+  /* Framing copy is allowed to be readable; it just isn't allowed to shout. */
+  .head-lede {
+    max-width: 680px;
+    margin: 24px auto 0;
+    font-family: var(--fine);
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: rgba(255, 248, 234, 0.94);
+    border: 3px solid var(--ink);
+    padding: 12px 20px;
+    text-align: left;
+  }
+
+  @media (max-width: 860px) {
+    .head { padding: 34px 0 32px; }
+    .head-lede { font-size: 15px; }
+  }
+</style>
