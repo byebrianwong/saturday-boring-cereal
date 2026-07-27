@@ -591,7 +591,7 @@ export async function searchCandidates(query, { fdcKey = 'DEMO_KEY', useUsda = t
 // --- nutrition block writer ---------------------------------------------------
 // Field order from the Zod schema in src/content.config.ts, so an inserted key
 // lands where it belongs on the label rather than at the end of the block.
-const NUTRITION_ORDER = [
+export const NUTRITION_ORDER = [
   'servingSize', 'servingDescription', 'calories', 'totalFat', 'saturatedFat',
   'transFat', 'polyunsaturatedFat', 'monounsaturatedFat', 'totalCarbs',
   'dietaryFiber', 'totalSugars', 'addedSugars', 'protein', 'proteinDV', 'sodium',

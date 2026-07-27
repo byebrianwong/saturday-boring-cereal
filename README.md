@@ -13,6 +13,7 @@ npm install
 npm run dev        # site at http://localhost:4321; admin at /admin + /keystatic
 npm run build      # static output in dist/ (admin excluded — see below)
 npm run preview    # serve the built site
+npm test           # guards the frontmatter editor against corrupting content
 ```
 
 ## Deploy
@@ -145,9 +146,10 @@ Five ways in, same files:
    straight-on front and where to find one.
 
 5. **The Stock Room** — `npm run dev`, then [http://localhost:4321/admin](http://localhost:4321/admin).
-   `npm run find` with a browser on it: search, pick the product off a list, pick its box
-   photo out of a gallery, type the score and the note, save. See
-   [Web admin](#web-admin-the-stock-room) below — including why it's dev-only.
+   Two tabs: **Add a cereal** (search, pick the product, pick its box photo, score it) and
+   **Edit one you have** (everything above in one form — score, note, tags, every nutrition
+   field, and the photo). See [Web admin](#web-admin-the-stock-room) below — including why
+   it's dev-only.
 
 6. **Keystatic** — run `npm run dev`, open [http://localhost:4321/keystatic](http://localhost:4321/keystatic).
    Full CRUD with pickers for form factors, protein sources, attributes, and every
@@ -167,10 +169,40 @@ Rules encoded in the schema:
 - `noAutoImage: true` marks a product with no usable flat front anywhere, so enrichment
   can't put an angled one back. `npm run image <slug> --none` sets it.
 
+## Updating a cereal you already have
+
+Four places can change an existing entry. They all write the same markdown files, so pick
+whichever is closest to hand:
+
+| What you're changing | Fastest way |
+|---|---|
+| Score / tasting note | `npm run rate "heritage flakes" 8.5 --note "…"` |
+| Box photo | `npm run image "heritage flakes" <url>` |
+| Anything — score, note, tags, any nutrition field, the photo | **Stock Room** → *Edit one you have* |
+| Anything, in a CMS | Keystatic at `/keystatic` |
+
+`npm run rate` and the Stock Room both stamp `dateUpdated` when the **score or note**
+changes, leaving `dateReviewed` as the original review date — the site uses the pair to
+tell a re-rate from a first review. Fixing a nutrition typo isn't a re-review, so it
+doesn't stamp.
+
+The Stock Room's edit form is the only one of the four that covers everything in one
+place; `boxImage`/`imageSource`/`imageCredit`, `dateUpdated`, `purchaseLocation` and
+`price` are **not** in `keystatic.config.ts`, so Keystatic can't set them (and if a
+Keystatic save ever drops them, `git diff` will show it — worth a look the first time).
+
+Renaming in the edit form changes only how a cereal reads on the site. The filename and
+its URL stay put, because they're the identity every existing link uses. To genuinely
+rename one, `git mv` the markdown and the `.jpg` and update `boxImage` by hand.
+
 ## Web admin (the Stock Room)
 
-`npm run dev` → **[localhost:4321/admin](http://localhost:4321/admin)**. It's `npm run
-find` with a browser on it, for when you'd rather not be in a terminal:
+`npm run dev` → **[localhost:4321/admin](http://localhost:4321/admin)**, for when you'd
+rather not be in a terminal. Two tabs.
+
+### Add a cereal
+
+`npm run find` with a browser on it:
 
 1. **Search** a name. Both sources, same lookup code the CLI uses.
 2. **Pick the product** from the results — each one shows its serving size and macros, and
@@ -187,6 +219,36 @@ find` with a browser on it, for when you'd rather not be in a terminal:
 
 It writes the same files as the CLI, so it's `git status` and a commit afterwards, same as
 always.
+
+### Edit one you have
+
+The catalog, filterable, with its box art. Click one and you get every field on one form:
+brand, name, score, note, emoji, box colour, all three tag groups, all fifteen nutrition
+fields, and the photo. **Find photos** re-runs the Open Food Facts search for that product
+and offers the gallery again; **Remove photo** deletes the `.jpg` and sets `noAutoImage`,
+exactly like `npm run image <slug> --none`.
+
+**Preview changes** shows the resulting file before anything is written, and saving edits
+only what you actually changed:
+
+```diff
+-rating: 7
++rating: 8.5
++shortNote: Better than I remembered.
+ dateReviewed: 2026-01-06
++dateUpdated: 2026-07-27
+```
+
+That surgical behaviour is the whole point, and it's the reason the write path is a
+line-level edit rather than parse-then-reserialize: reserializing drops any key the tool
+doesn't model, and these files carry several (`purchaseLocation`, `price`, a review body)
+that nothing in the admin touches.
+
+`npm test` holds it to that: it parses every file in the real catalog, feeds every value
+straight back through the editor, and fails unless the output is byte-identical — plus
+the targeted cases (quoting, key insertion order, nullable vs. removable fields, the
+review body). Run it after touching `updateFrontmatter` in
+[scripts/lib/compose-core.mjs](scripts/lib/compose-core.mjs).
 
 ### Why it's dev-only
 

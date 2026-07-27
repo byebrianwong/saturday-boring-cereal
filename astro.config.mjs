@@ -31,6 +31,9 @@ const adminRoutes = {
         ['/admin/api/login', './src/admin/api/login.ts'],
         ['/admin/api/search', './src/admin/api/search.ts'],
         ['/admin/api/create', './src/admin/api/create.ts'],
+        ['/admin/api/list', './src/admin/api/list.ts'],
+        ['/admin/api/load', './src/admin/api/load.ts'],
+        ['/admin/api/update', './src/admin/api/update.ts'],
       ];
       for (const [pattern, entrypoint] of routes) {
         injectRoute({ pattern, entrypoint, prerender: false });

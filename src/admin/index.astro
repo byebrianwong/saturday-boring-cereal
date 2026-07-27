@@ -42,6 +42,97 @@ const label = (v: string) =>
 
   {authed && (
     <div class="admin" id="admin">
+      <div class="tabs" role="tablist">
+        <button type="button" class="tab on" id="tab-add" role="tab">Add a cereal</button>
+        <button type="button" class="tab" id="tab-edit" role="tab">Edit one you have</button>
+      </div>
+
+      <!-- ============================ EDIT ============================ -->
+      <section id="pane-edit" hidden>
+        <input type="search" id="filter" placeholder="Filter the aisle…" />
+        <p class="status" id="edit-status"></p>
+        <div id="catalog" class="catalog"></div>
+
+        <form class="compose" id="editor" hidden>
+          <div class="picked" id="editing"></div>
+
+          <div class="grid">
+            <label>Brand<input type="text" id="e-brand" required /></label>
+            <label>Product name<input type="text" id="e-name" required /></label>
+            <label>Taste score <span class="sub">0–10, blank = unrated</span>
+              <input type="number" id="e-rating" min="0" max="10" step="0.1" />
+            </label>
+            <label>Emoji <span class="sub">used when there's no photo</span>
+              <input type="text" id="e-emoji" maxlength="4" />
+            </label>
+            <label>Box colour <span class="sub">behind the emoji</span>
+              <input type="text" id="e-boxColor" />
+            </label>
+          </div>
+          <label class="full">Tasting note
+            <input type="text" id="e-note" placeholder="One line. Blank removes it." />
+          </label>
+
+          <fieldset>
+            <legend>Tags</legend>
+            <div class="tags">
+              <div><h4>Form</h4>{FORM_FACTORS?.map((v: string) => (
+                <label class="chk"><input type="checkbox" name="e-form" value={v} /> {label(v)}</label>
+              ))}</div>
+              <div><h4>Protein</h4>{PROTEIN_SOURCES?.map((v: string) => (
+                <label class="chk"><input type="checkbox" name="e-protein-src" value={v} /> {label(v)}</label>
+              ))}</div>
+              <div><h4>Attributes</h4>{ATTRIBUTES?.map((v: string) => (
+                <label class="chk"><input type="checkbox" name="e-attr" value={v} /> {label(v)}</label>
+              ))}</div>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Nutrition <span class="sub">per serving · blank means “not listed”</span></legend>
+            <p class="note">
+              Leave a field blank when the box doesn't print it — the site says “not listed”
+              rather than inventing a number. That goes double for protein %DV, which labels
+              only carry when a protein claim is made.
+            </p>
+            <div class="nutgrid" id="nutgrid"></div>
+          </fieldset>
+
+          <fieldset>
+            <legend>Box photo</legend>
+            <div class="photo-now" id="photo-now"></div>
+            <div class="actions left">
+              <button type="button" class="secondary" id="find-photos">Find photos</button>
+              <button type="button" class="secondary danger" id="drop-photo">Remove photo</button>
+            </div>
+            <p class="status" id="photo-status"></p>
+            <div class="gallery" id="e-gallery"></div>
+            <div class="imgrow">
+              <label class="full">Or paste an image URL
+                <input type="url" id="e-imgurl" placeholder="https://…/front.png" />
+              </label>
+              <label>Fit
+                <select id="e-fit">
+                  <option value="cover">cover — crop to fill</option>
+                  <option value="contain">contain — pad onto white</option>
+                </select>
+              </label>
+            </div>
+          </fieldset>
+
+          <div class="actions">
+            <button type="button" id="e-preview-btn" class="secondary">Preview changes</button>
+            <button type="submit" id="e-save-btn">Save changes</button>
+          </div>
+          <p class="err" id="edit-err" hidden></p>
+        </form>
+
+        <pre class="preview" id="e-preview" hidden></pre>
+        <div class="done" id="e-done" hidden></div>
+      </section>
+
+      <!-- ============================ ADD ============================= -->
+      <section id="pane-add">
       <!-- 1. search -->
       <form class="search" id="search">
         <input
@@ -123,6 +214,7 @@ const label = (v: string) =>
 
       <pre class="preview" id="preview" hidden></pre>
       <div class="done" id="done" hidden></div>
+      </section>
     </div>
   )}
 </Layout>
@@ -385,6 +477,320 @@ const label = (v: string) =>
     composeEl.addEventListener('submit', (e) => {
       e.preventDefault();
       submit(false);
+    });
+
+    // ======================= EDIT AN EXISTING CEREAL =======================
+    const NUTRITION_FIELDS: [string, string, string][] = [
+      ['servingSize', 'Serving size', 'g'],
+      ['servingDescription', 'Serving description', ''],
+      ['calories', 'Calories', 'kcal'],
+      ['totalFat', 'Total fat', 'g'],
+      ['saturatedFat', 'Saturated fat', 'g'],
+      ['transFat', 'Trans fat', 'g'],
+      ['polyunsaturatedFat', 'Polyunsaturated fat', 'g'],
+      ['monounsaturatedFat', 'Monounsaturated fat', 'g'],
+      ['totalCarbs', 'Total carbs', 'g'],
+      ['dietaryFiber', 'Dietary fiber', 'g'],
+      ['totalSugars', 'Total sugars', 'g'],
+      ['addedSugars', 'Added sugars', 'g'],
+      ['protein', 'Protein', 'g'],
+      ['proteinDV', 'Protein %DV', '%'],
+      ['sodium', 'Sodium', 'mg'],
+    ];
+
+    let catalog: any[] = [];
+    let editing: any = null;
+    let editImage: string | null = null;
+    let dropPhoto = false;
+
+    const editorEl = $('editor') as HTMLFormElement;
+    const catalogEl = $('catalog');
+    const eGalleryEl = $('e-gallery');
+
+    // --- tabs -----------------------------------------------------------------
+    function showTab(which: 'add' | 'edit') {
+      $('tab-add').classList.toggle('on', which === 'add');
+      $('tab-edit').classList.toggle('on', which === 'edit');
+      ($('pane-add') as HTMLElement).hidden = which !== 'add';
+      ($('pane-edit') as HTMLElement).hidden = which !== 'edit';
+      if (which === 'edit' && !catalog.length) loadCatalog();
+    }
+    $('tab-add').addEventListener('click', () => showTab('add'));
+    $('tab-edit').addEventListener('click', () => showTab('edit'));
+
+    // --- the catalog ----------------------------------------------------------
+    async function loadCatalog() {
+      $('edit-status').textContent = 'Loading the aisle…';
+      try {
+        const res = await fetch('/admin/api/list');
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not list the cereals.');
+        catalog = data.cereals || [];
+        $('edit-status').textContent = `${catalog.length} in the aisle.`;
+        renderCatalog();
+      } catch (e: any) {
+        $('edit-status').textContent = e.message;
+      }
+    }
+
+    function renderCatalog() {
+      const q = ($('filter') as HTMLInputElement).value.trim().toLowerCase();
+      const shown = q
+        ? catalog.filter((c) => `${c.brand} ${c.name} ${c.slug}`.toLowerCase().includes(q))
+        : catalog;
+      catalogEl.innerHTML = shown.map((c) => `
+        <button type="button" class="row${editing?.slug === c.slug ? ' on' : ''}" data-slug="${esc(c.slug)}">
+          <span class="row-thumb">${c.boxImage
+            ? `<img src="${esc(c.boxImage)}" alt="" loading="lazy" />`
+            : `<span class="row-emoji">${esc(c.emoji)}</span>`}</span>
+          <span class="row-text">
+            <b>${esc(c.brand)}</b> ${esc(c.name)}
+            <small>${c.rating == null ? 'unrated' : c.rating + '/10'} · ${esc(c.slug)}${
+              c.dateUpdated ? ` · updated ${esc(c.dateUpdated)}` : ''}</small>
+          </span>
+        </button>`).join('') || '<p class="none">Nothing matches that filter.</p>';
+
+      catalogEl.querySelectorAll('.row').forEach((el) =>
+        el.addEventListener('click', () => openCereal((el as HTMLElement).dataset.slug!)));
+    }
+    $('filter').addEventListener('input', renderCatalog);
+
+    // --- load one into the form ----------------------------------------------
+    async function openCereal(slug: string) {
+      $('edit-err').hidden = true;
+      ($('e-preview') as HTMLElement).hidden = true;
+      ($('e-done') as HTMLElement).hidden = true;
+      $('photo-status').textContent = '';
+      eGalleryEl.innerHTML = '';
+      editImage = null;
+      dropPhoto = false;
+
+      let data: any;
+      try {
+        const res = await fetch('/admin/api/load', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ slug }),
+        });
+        data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not load it.');
+      } catch (e: any) {
+        $('edit-status').textContent = e.message;
+        return;
+      }
+
+      editing = { slug, ...data.cereal };
+      renderCatalog();
+
+      const c = data.cereal;
+      ($('e-brand') as HTMLInputElement).value = c.brand ?? '';
+      ($('e-name') as HTMLInputElement).value = c.name ?? '';
+      ($('e-rating') as HTMLInputElement).value = c.rating == null ? '' : String(c.rating);
+      ($('e-note') as HTMLInputElement).value = c.shortNote ?? '';
+      ($('e-emoji') as HTMLInputElement).value = c.emoji ?? '🥣';
+      ($('e-boxColor') as HTMLInputElement).value = c.boxColor ?? '';
+      ($('e-imgurl') as HTMLInputElement).value = '';
+
+      for (const [group, values] of [
+        ['e-form', c.formFactors],
+        ['e-protein-src', c.proteinSources],
+        ['e-attr', c.attributes],
+      ] as [string, string[] | undefined][]) {
+        editorEl.querySelectorAll(`input[name="${group}"]`).forEach((el) => {
+          (el as HTMLInputElement).checked = !!values?.includes((el as HTMLInputElement).value);
+        });
+      }
+
+      $('nutgrid').innerHTML = NUTRITION_FIELDS.map(([key, lbl, unit]) => {
+        const v = c.nutrition?.[key];
+        const isText = key === 'servingDescription';
+        return `<label>${esc(lbl)}${unit ? ` <span class="sub">${esc(unit)}</span>` : ''}
+          <input type="${isText ? 'text' : 'number'}" step="any" id="n-${key}"
+                 value="${v == null ? '' : esc(v)}" placeholder="${isText ? '' : 'not listed'}" />
+        </label>`;
+      }).join('');
+
+      $('editing').innerHTML =
+        `Editing <code>${esc(slug)}.md</code>` +
+        ` · <a href="/cereals/${esc(slug)}/" target="_blank" rel="noreferrer">see the page</a>` +
+        `<br><span class="sub">The filename and URL stay as they are — renaming the brand or ` +
+        `product here only changes how it reads on the site.</span>`;
+
+      renderPhotoNow();
+      editorEl.hidden = false;
+      editorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // --- photo ---------------------------------------------------------------
+    function renderPhotoNow() {
+      const current = editing?.boxImage;
+      if (dropPhoto) {
+        $('photo-now').innerHTML =
+          `<p class="warn">Photo will be removed on save, and <code>noAutoImage</code> set so ` +
+          `enrichment can't put an angled one back. The ${esc(($('e-emoji') as HTMLInputElement).value)} placeholder takes over.</p>`;
+        return;
+      }
+      $('photo-now').innerHTML = current
+        ? `<img class="now" src="${esc(current)}" alt="" /><span class="sub">Current photo${
+            editing.imageSource ? ` · ${esc(editing.imageSource)}` : ''}</span>`
+        : `<p class="none">No photo — showing the ${esc(editing?.emoji ?? '🥣')} placeholder.${
+            editing?.noAutoImage ? ' Marked <code>noAutoImage</code>.' : ''}</p>`;
+    }
+
+    $('drop-photo').addEventListener('click', () => {
+      dropPhoto = !dropPhoto;
+      if (dropPhoto) {
+        editImage = null;
+        ($('e-imgurl') as HTMLInputElement).value = '';
+        eGalleryEl.querySelectorAll('.shot').forEach((el) => el.classList.remove('on'));
+      }
+      ($('drop-photo') as HTMLButtonElement).textContent = dropPhoto ? 'Keep the photo' : 'Remove photo';
+      renderPhotoNow();
+    });
+
+    // Reuses the same search the add flow uses — just for its image pool.
+    $('find-photos').addEventListener('click', async () => {
+      const btn = $('find-photos') as HTMLButtonElement;
+      const query = `${($('e-brand') as HTMLInputElement).value} ${($('e-name') as HTMLInputElement).value}`.trim();
+      btn.disabled = true;
+      $('photo-status').textContent = `Looking for photos of “${query}”…`;
+      try {
+        const res = await fetch('/admin/api/search', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ query, useUsda: false }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Search failed.');
+        const found = data.images || [];
+        $('photo-status').textContent = found.length
+          ? `${found.length} photo${found.length === 1 ? '' : 's'} found — pick one, or keep what you have.`
+          : 'No photos on any matching record. Paste a URL instead.';
+        eGalleryEl.innerHTML = found.map((img: any) => `
+          <button type="button" class="shot" data-url="${esc(img.url)}">
+            <img src="${esc(img.url)}" alt="" loading="lazy" />
+            <small>${esc(img.from)}</small>
+          </button>`).join('');
+        eGalleryEl.querySelectorAll('.shot').forEach((el) =>
+          el.addEventListener('click', () => {
+            editImage = (el as HTMLElement).dataset.url || null;
+            dropPhoto = false;
+            ($('drop-photo') as HTMLButtonElement).textContent = 'Remove photo';
+            ($('e-imgurl') as HTMLInputElement).value = '';
+            eGalleryEl.querySelectorAll('.shot').forEach((s) => s.classList.remove('on'));
+            el.classList.add('on');
+            renderPhotoNow();
+          }));
+      } catch (e: any) {
+        $('photo-status').textContent = e.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    $('e-imgurl').addEventListener('input', (e) => {
+      const v = (e.target as HTMLInputElement).value.trim();
+      if (v) {
+        editImage = v;
+        dropPhoto = false;
+        ($('drop-photo') as HTMLButtonElement).textContent = 'Remove photo';
+        eGalleryEl.querySelectorAll('.shot').forEach((el) => el.classList.remove('on'));
+        renderPhotoNow();
+      }
+    });
+
+    // --- save ----------------------------------------------------------------
+    function editPayload(dryRun: boolean) {
+      const checked = (group: string) =>
+        [...editorEl.querySelectorAll(`input[name="${group}"]:checked`)].map((el) => (el as HTMLInputElement).value);
+      const nutrition: Record<string, string> = {};
+      for (const [key] of NUTRITION_FIELDS) {
+        nutrition[key] = ($(`n-${key}`) as HTMLInputElement).value;
+      }
+      const pasted = ($('e-imgurl') as HTMLInputElement).value.trim();
+      return {
+        slug: editing.slug,
+        fields: {
+          brand: ($('e-brand') as HTMLInputElement).value,
+          name: ($('e-name') as HTMLInputElement).value,
+          rating: ($('e-rating') as HTMLInputElement).value,
+          shortNote: ($('e-note') as HTMLInputElement).value,
+          emoji: ($('e-emoji') as HTMLInputElement).value,
+          boxColor: ($('e-boxColor') as HTMLInputElement).value,
+          formFactors: checked('e-form'),
+          proteinSources: checked('e-protein-src'),
+          attributes: checked('e-attr'),
+        },
+        nutrition,
+        imageUrl: dropPhoto ? null : pasted || editImage,
+        removeImage: dropPhoto,
+        fit: ($('e-fit') as HTMLSelectElement).value,
+        dryRun,
+      };
+    }
+
+    async function saveEdit(dryRun: boolean) {
+      const err = $('edit-err');
+      err.hidden = true;
+      const btn = dryRun ? ($('e-preview-btn') as HTMLButtonElement) : ($('e-save-btn') as HTMLButtonElement);
+      const original = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = dryRun ? 'Building…' : 'Saving…';
+
+      let data: any;
+      try {
+        const res = await fetch('/admin/api/update', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(editPayload(dryRun)),
+        });
+        data = await res.json();
+        if (!res.ok) throw new Error(data.error || `Failed (${res.status})`);
+      } catch (e: any) {
+        err.textContent = e.message;
+        err.hidden = false;
+        return;
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+
+      if (data.unchanged) {
+        err.textContent = 'Nothing changed — the file is already exactly this.';
+        err.hidden = false;
+        return;
+      }
+
+      if (dryRun) {
+        ($('e-preview') as HTMLElement).textContent = data.markdown;
+        ($('e-preview') as HTMLElement).hidden = false;
+        ($('e-preview') as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        return;
+      }
+
+      const img = data.image;
+      $('e-done').innerHTML =
+        `<h2>✓ Saved <code>${esc(data.slug)}.md</code></h2>` +
+        `<p>Changed: ${esc((data.changed || []).join(', ')) || 'the photo only'}.</p>` +
+        (data.imageError ? `<p class="warn">Photo failed: ${esc(data.imageError)} — the old one stays.</p>` : '') +
+        (img
+          ? `<p>New photo: ${img.width}×${img.height} → trimmed ${img.trimmedWidth}×${img.trimmedHeight} → 900×1200, ${(img.bytes / 1024).toFixed(0)}KB.` +
+            (img.lostPct >= 25 ? ` <span class="warn">The crop discarded ~${img.lostPct}% off the ${esc(img.lostAxis)} — try “contain”.</span>` : '') + `</p>`
+          : '') +
+        `<p><a href="/cereals/${esc(data.slug)}/" target="_blank" rel="noreferrer">Open its page →</a></p>` +
+        `<p class="sub">Written to disk — <code>git diff</code> to see it, then commit.</p>`;
+      ($('e-done') as HTMLElement).hidden = false;
+      ($('e-preview') as HTMLElement).hidden = true;
+      editorEl.hidden = true;
+      editing = null;
+      loadCatalog();
+      ($('e-done') as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    $('e-preview-btn').addEventListener('click', () => saveEdit(true));
+    editorEl.addEventListener('submit', (e) => {
+      e.preventDefault();
+      saveEdit(false);
     });
   }
 </script>
@@ -705,6 +1111,120 @@ const label = (v: string) =>
     font-size: 12px;
     color: var(--tag-gray);
     margin-top: 10px;
+  }
+
+  /* --- tabs --- */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 18px;
+    border-bottom: 2px solid var(--brown);
+  }
+  .tab {
+    background: transparent;
+    color: var(--tag-gray);
+    border: 2px solid transparent;
+    border-bottom: none;
+    margin-bottom: -2px;
+  }
+  .tab.on {
+    background: var(--cream);
+    color: var(--brown);
+    border-color: var(--brown);
+  }
+  .tab:hover:not(.on) {
+    background: transparent;
+    color: var(--brown);
+  }
+
+  /* --- catalog list --- */
+  .catalog {
+    max-height: 420px;
+    overflow-y: auto;
+    border: 2px solid var(--brown);
+    background: #fff;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    text-transform: none;
+    letter-spacing: normal;
+    background: #fff;
+    color: var(--tag-ink);
+    border: none;
+    border-bottom: 1px solid #e0e0e0;
+    padding: 7px 10px;
+    font-size: 14px;
+  }
+  .row:hover {
+    background: var(--cream);
+  }
+  .row.on {
+    background: var(--cream);
+    box-shadow: inset 4px 0 0 var(--store-blue);
+  }
+  .row-thumb {
+    width: 30px;
+    height: 40px;
+    flex: 0 0 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--floor);
+  }
+  .row-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .row-emoji {
+    font-size: 17px;
+  }
+  .row-text b {
+    font-family: var(--font-display);
+  }
+  .row-text small {
+    display: block;
+    font-family: var(--font-receipt);
+    font-size: 10px;
+    color: var(--tag-gray);
+  }
+
+  /* --- nutrition grid --- */
+  .nutgrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px 12px;
+  }
+  .nutgrid label {
+    font-size: 9px;
+  }
+
+  /* --- current photo --- */
+  .photo-now {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  .photo-now .now {
+    width: 90px;
+    height: 120px;
+    object-fit: cover;
+    border: 2px solid var(--brown);
+    background: #fff;
+  }
+  .actions.left {
+    justify-content: flex-start;
+  }
+  button.danger {
+    background: var(--red-dark);
+  }
+  button.danger:hover:not(:disabled) {
+    background: var(--red);
   }
 
   @media (max-width: 560px) {
