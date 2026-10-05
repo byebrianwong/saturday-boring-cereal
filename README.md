@@ -73,6 +73,24 @@ Five ways in, same files:
    form-factor/attribute/protein-source tags from the name and ingredients, and asks you
    for the only two things it can't know: the taste score and the tasting note.
 
+   **If a search misses a product that exists, the query probably has too many words.**
+   Open Food Facts requires every word in the query to match the product's recorded name,
+   so a word that isn't in that name removes the product instead of narrowing to it.
+   Flavour words cause this most often. Seven Sundays "PB Puffs" is stored under that name
+   alone, so searching "Seven Sundays PB Puffs Peanut Butter" — what the bag actually says
+   — returns only the chocolate version, which reads as the product not being listed.
+
+   The search handles this itself: when a query comes back with fewer results than the
+   list can hold, it drops the last word and searches again, up to twice, then reports
+   which shorter query it used. A query that already fills the list costs one request, the
+   same as before.
+
+   **A source that fails says so.** Open Food Facts rejects a lot of requests when it's
+   busy (about half of them when measured on 2026-10-05), so each search retries up to
+   three times. If it still fails, the search reports the error rather than returning a
+   short list that looks complete. "Nothing matched" and "nothing answered" are different
+   answers and need different next steps.
+
    **Why this one can fill in the macros when `npm run add` can't.** The batch enrichment
    path has to verify an unattended match, so it cross-checks the source's
    protein/sugar/fiber against numbers you already recorded — which is why `add` makes you

@@ -291,12 +291,16 @@ const label = (v: string) =>
       if (!candidates.length) {
         statusEl.textContent = data.allSourcesFailed
           ? 'Every source errored, so this says nothing about whether the product is listed. Check your connection and try again.'
-          : 'Nothing matched. Try fewer words — brand plus one flavour word works best. Small and store brands are often missing from both databases; those need `npm run add`.';
+          : 'Nothing matched, including shorter versions of what you typed. Small and store brands are often missing from both databases; those need `npm run add`.';
         return;
       }
 
       statusEl.textContent =
         `${candidates.length} result${candidates.length === 1 ? '' : 's'}` +
+        // Open Food Facts needs every word to match, so the search drops
+        // trailing words until it finds something. Say so — otherwise these
+        // look like results for the query that was typed.
+        (data.offQuery ? ` · no Open Food Facts match for the whole phrase, searched “${data.offQuery}” there` : '') +
         (data.errors?.length ? ` · ${data.errors.join(' · ')}` : '');
 
       resultsEl.innerHTML = `<h2>1 · Which one is it?</h2>` + candidates.map((c) => `

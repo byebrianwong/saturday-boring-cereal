@@ -20,15 +20,18 @@ export const POST: APIRoute = async ({ request }) => {
   const fdcKey = process.env.FDC_API_KEY || 'DEMO_KEY';
   let candidates: any[] = [];
   let errors: string[] = [];
+  // Set when Open Food Facts matched a shortened query rather than the one
+  // typed, so the UI can say so instead of quietly returning other results.
+  let offQuery: string | null = null;
+  // "Nothing matched" and "nothing answered" need different next steps, so the
+  // UI has to be able to tell them apart. The search counts the sources that
+  // failed, because a search can report a problem and still return results.
+  let allSourcesFailed = false;
   try {
-    ({ candidates, errors } = await searchCandidates(query, { fdcKey, useUsda }));
+    ({ candidates, errors, offQuery, allSourcesFailed } = await searchCandidates(query, { fdcKey, useUsda }));
   } catch (e: any) {
     return json({ error: `Search failed: ${e.message}` }, 502);
   }
-
-  // "Nothing matched" and "nothing answered" need different next steps, so the
-  // UI has to be able to tell them apart.
-  const allSourcesFailed = errors.length === (useUsda ? 2 : 1);
 
   // Annotate each candidate with what the UI needs to decide: the brand/name
   // split it would get, and whether that slug is already in the catalog.
@@ -81,7 +84,7 @@ export const POST: APIRoute = async ({ request }) => {
     }
   }
 
-  return json({ candidates: annotated, images, errors, allSourcesFailed });
+  return json({ candidates: annotated, images, errors, allSourcesFailed, offQuery });
 };
 
 function json(body: unknown, status = 200) {
