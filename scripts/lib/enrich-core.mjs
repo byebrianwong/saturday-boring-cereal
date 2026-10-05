@@ -411,7 +411,52 @@ function frontImagesOf(p) {
   return [...seen.values()];
 }
 
-export async function offCandidates(query, { limit = 8 } = {}) {
+// Open Food Facts requires every word in the query to match, so a word that
+// isn't in the record's product_name removes that product instead of narrowing
+// to it. Flavour words are the usual culprit: Seven Sundays "PB Puffs" is
+// stored under that name alone, so "Seven Sundays PB Puffs Peanut Butter" —
+// what the bag actually says — returns only the chocolate one, which looks
+// exactly like the product not being listed.
+//
+// Dropping words can only widen the result set, so when a search comes back
+// with fewer than it could hold, try again with the last word dropped and add
+// what that finds. Searches that already fill the list cost one request, the
+// same as before; this only spends more when the narrow query underfills.
+// Stops at two words, because a one-word query returns a page of whatever that
+// brand makes and the real product may not be on it.
+//
+// Returns the shortest query that was tried, so the caller can say when it
+// searched for something other than what the user typed.
+export async function offCandidates(query, { limit = 8, broadenSteps = 2 } = {}) {
+  const words = query.trim().split(/\s+/);
+  const byCode = new Map();
+  let usedQuery = query;
+  let partial = null;
+
+  for (let drop = 0; drop <= broadenSteps; drop++) {
+    if (words.length - drop < 2) break;
+    const attempt = words.slice(0, words.length - drop).join(' ');
+    // A failure on the first attempt means there's nothing to show, so it goes
+    // to the caller as an error. On a later one the narrower results still
+    // stand — but the list is now missing whatever the wider search would have
+    // added, and saying so beats presenting it as the whole answer.
+    let products;
+    try {
+      products = await offSearchByName(attempt, limit);
+    } catch (e) {
+      if (!byCode.size) throw e;
+      partial = `${e.message} on the wider search for “${attempt}”, so this list may be short`;
+      break;
+    }
+    usedQuery = attempt;
+    for (const p of products) if (p.code && !byCode.has(p.code)) byCode.set(p.code, p);
+    if (byCode.size >= limit) break;
+  }
+
+  return { products: offProducts([...byCode.values()]), usedQuery, partial };
+}
+
+async function offSearchByName(query, limit) {
   const fields = [
     'product_name', 'brands', 'code', 'nutriments', 'image_front_url',
     'serving_size', 'serving_quantity', 'ingredients_text', 'labels_tags', 'quantity',
@@ -421,10 +466,23 @@ export async function offCandidates(query, { limit = 8 } = {}) {
   ].join(',');
   const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(query)}` +
     `&search_simple=1&action=process&json=1&page_size=${limit}&fields=${fields}`;
-  const res = await fetch(url, { headers: { 'User-Agent': UA } });
-  if (!res.ok) return [];
-  const products = (await res.json()).products || [];
+  // Open Food Facts rejects a lot of requests under load — around half of them
+  // when measured on 2026-10-05 — and the next attempt usually works. Retry
+  // the statuses that mean "busy", and let anything else through as an error.
+  // Swallowing a failure here would show a search as "nothing matched" when
+  // the product is listed, which is the worst answer of the three.
+  const RETRYABLE = new Set([429, 502, 503, 504]);
+  let res;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt) await new Promise((r) => setTimeout(r, 400 * attempt));
+    res = await fetch(url, { headers: { 'User-Agent': UA } });
+    if (res.ok || !RETRYABLE.has(res.status)) break;
+  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}${RETRYABLE.has(res.status) ? ' after 3 tries (busy — try again shortly)' : ''}`);
+  return (await res.json()).products || [];
+}
 
+function offProducts(products) {
   return products
     .filter((p) => p.product_name)
     .map((p) => {
@@ -473,8 +531,10 @@ export async function usdaCandidates(query, { fdcKey = 'DEMO_KEY', limit = 8 } =
   const url = `https://api.nal.usda.gov/fdc/v1/foods/search?api_key=${fdcKey}` +
     `&query=${encodeURIComponent(query)}&dataType=Branded&pageSize=${limit}`;
   const res = await fetch(url);
-  if (res.status === 429) throw new Error('USDA rate limit');
-  if (!res.ok) return [];
+  if (res.status === 429) throw new Error('rate limit — set FDC_API_KEY for a personal key');
+  // Same reasoning as Open Food Facts: a failed request must not read as "the
+  // product isn't listed".
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const foods = (await res.json()).foods || [];
 
   return foods.map((f) => {
@@ -549,18 +609,28 @@ export async function usdaUpgradeToLabel(cand, { fdcKey = 'DEMO_KEY' } = {}) {
 // instead of failing the search.
 export async function searchCandidates(query, { fdcKey = 'DEMO_KEY', useUsda = true, limit = 8 } = {}) {
   const errors = [];
-  const [off, usda] = await Promise.all([
+  // Counted rather than inferred from errors.length: a search can report a
+  // problem and still have results, and "no source answered" has to stay
+  // distinguishable from "nothing matched".
+  let failed = 0;
+  const [offResult, usda] = await Promise.all([
     offCandidates(query, { limit }).catch((e) => {
       errors.push(`Open Food Facts: ${e.message}`);
-      return [];
+      failed++;
+      return { products: [], usedQuery: query, partial: null };
     }),
     useUsda
       ? usdaCandidates(query, { fdcKey, limit }).catch((e) => {
           errors.push(`USDA: ${e.message}`);
+          failed++;
           return [];
         })
       : Promise.resolve([]),
   ]);
+  const off = offResult.products;
+  // Only worth reporting when it differs from what the user typed.
+  const offQuery = offResult.usedQuery === query ? null : offResult.usedQuery;
+  if (offResult.partial) errors.push(`Open Food Facts: ${offResult.partial}`);
 
   // Same product from both sources: keep the richer record, prefer the one with
   // a photo, and remember that the other source agreed.
@@ -579,13 +649,26 @@ export async function searchCandidates(query, { fdcKey = 'DEMO_KEY', useUsda = t
     }
   }
 
-  const candidates = [...seen.values()]
+  const ranked = [...seen.values()]
     .map((c) => ({ ...c, relevance: nameRelevance(query, c) }))
     .filter((c) => c.relevance >= 1) // nothing in common with the query isn't a hit
-    .sort((a, b) => b.relevance - a.relevance)
-    .slice(0, limit);
+    .sort((a, b) => b.relevance - a.relevance);
 
-  return { candidates, errors };
+  // The sources share the slots, so a run of near-identical USDA rows can push
+  // a good Open Food Facts match off the end — and Open Food Facts is the one
+  // with the photos and the barcodes. Give each source an equal share of the
+  // list first, then fill what's left by relevance. Grouped by whatever
+  // `source` values are present so adding a third source needs no change here.
+  const reserve = Math.ceil(limit / 2);
+  const reserved = new Set();
+  for (const source of new Set(ranked.map((c) => c.source))) {
+    for (const c of ranked.filter((c) => c.source === source).slice(0, reserve)) reserved.add(c);
+  }
+  const candidates = [...reserved, ...ranked.filter((c) => !reserved.has(c))]
+    .slice(0, limit)
+    .sort((a, b) => b.relevance - a.relevance);
+
+  return { candidates, errors, offQuery, allSourcesFailed: failed === (useUsda ? 2 : 1) };
 }
 
 // --- nutrition block writer ---------------------------------------------------

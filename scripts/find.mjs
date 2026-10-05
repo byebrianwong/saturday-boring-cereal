@@ -85,20 +85,22 @@ if (!query) fail('no search term given');
 
 // --- 2. search ----------------------------------------------------------------
 console.log(`\nSearching Open Food Facts${USE_USDA ? ' + USDA' : ''} for “${query}”…`);
-const { candidates, errors } = await searchCandidates(query, { fdcKey: FDC_KEY, useUsda: USE_USDA });
+const { candidates, errors, offQuery, allSourcesFailed } = await searchCandidates(query, { fdcKey: FDC_KEY, useUsda: USE_USDA });
 for (const e of errors) console.log(`  (${e})`);
+if (offQuery) {
+  console.log(`  (no Open Food Facts match for the whole phrase — searched “${offQuery}” there instead)`);
+}
 
 if (!candidates.length) {
   rl?.close();
   // "Nothing matched" and "nothing answered" call for different next steps.
-  if (errors.length === (USE_USDA ? 2 : 1)) {
+  if (allSourcesFailed) {
     console.log('\nEvery source errored, so this says nothing about whether the product is listed.');
     console.log('Check your connection and try again.');
     process.exit(1);
   }
   console.log(
-    '\nNothing matched.\n' +
-    '  · Try fewer words — brand plus one flavour word works best ("kodiak cookie butter").\n' +
+    '\nNothing matched, including shorter versions of what you typed.\n' +
     '  · Small and store brands are often missing from both databases. For those,\n' +
     '    `npm run add` takes the numbers off the box by hand.'
   );
