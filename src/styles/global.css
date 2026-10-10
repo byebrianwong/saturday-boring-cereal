@@ -721,6 +721,11 @@ img {
   .rays { width: 1100px; height: 1100px; }
 }
 
+@media (max-width: 640px) {
+  .ticker { height: 30px; border-bottom-width: 4px; }
+  .ticker-inner { font-size: 13px; }
+}
+
 @media (max-width: 560px) {
   .tags { gap: 14px; }
   .tag { width: 104px; height: 104px; }
