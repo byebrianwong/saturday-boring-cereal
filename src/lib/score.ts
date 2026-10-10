@@ -147,6 +147,49 @@ export function scoreTier(score: number): 'good' | 'mid' | 'bad' {
   return 'bad';
 }
 
+// UK front-of-pack traffic-light thresholds, per 100 g of food: at or below
+// `low` is green, above `high` is red, in between is amber. Used only to tint
+// table cells for nutrients the grade does not score. Sodium is derived from
+// the salt thresholds (0.3 g and 1.5 g salt; sodium is 40% of salt).
+const TRAFFIC_LIGHTS = {
+  totalFat: { low: 3, high: 17.5 },
+  saturatedFat: { low: 1.5, high: 5 },
+  sodium: { low: 120, high: 600 },
+} as const;
+
+export type MacroTintKey =
+  | 'protein'
+  | 'dietaryFiber'
+  | 'totalSugars'
+  | 'addedSugars'
+  | keyof typeof TRAFFIC_LIGHTS;
+
+/**
+ * Good / mid / bad tier for one nutrient, per 100 g. Protein, fiber and both
+ * sugars use the same targets as the grade, so a cell's tint agrees with the
+ * Health score. Fat, saturated fat and sodium use the traffic lights above.
+ * Returns null when the label omits the value.
+ */
+export function macroTier(
+  key: MacroTintKey,
+  value: number | null | undefined,
+): 'good' | 'mid' | 'bad' | null {
+  if (value == null) return null;
+  switch (key) {
+    case 'protein':
+      return scoreTier(up(value, PROTEIN_TARGET)!);
+    case 'dietaryFiber':
+      return scoreTier(up(value, FIBER_TARGET)!);
+    case 'totalSugars':
+    case 'addedSugars':
+      return scoreTier(down(value, SUGAR_CEILING)!);
+    default: {
+      const t = TRAFFIC_LIGHTS[key];
+      return value <= t.low ? 'good' : value > t.high ? 'bad' : 'mid';
+    }
+  }
+}
+
 /**
  * Colour tier for a letter grade's stamp. S gets its own "blue ribbon" look;
  * the rest ramp green→amber→red so the seal's colour matches its letter.
