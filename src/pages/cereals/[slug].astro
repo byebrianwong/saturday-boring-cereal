@@ -31,6 +31,11 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
     <a href={u('/cereals/')}>← BACK TO THE AISLE</a>
   </div>
 
+  <header class="title wrap">
+    <div class="tbrand">{data.brand}</div>
+    <h1>{data.name}</h1>
+  </header>
+
   <div class="product wrap">
     <div class="left">
       <div class="scene">
@@ -43,7 +48,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
                 <>
                   <div class="em">{data.emoji}</div>
                   <div class="prodbrand">{data.brand}</div>
-                  <h1>{data.name}</h1>
+                  <div class="prodname">{data.name}</div>
                 </>
               )
             }
@@ -63,6 +68,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
       </div>
 
       <div class="taglist">
+        <span class="taglabel">Filed under</span>
         {tags.map((t) => (
           <a href={u(`/tags/${t}/`)} class="tagchip">{label(t)}</a>
         ))}
@@ -108,6 +114,28 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
 
   .crumb a:hover {
     text-decoration: underline;
+  }
+
+  .title {
+    max-width: 940px;
+    margin-top: 14px;
+  }
+
+  .tbrand {
+    font-family: var(--fine);
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--orange);
+  }
+
+  .title h1 {
+    font-family: var(--shout);
+    font-size: clamp(30px, 5vw, 48px);
+    line-height: 0.95;
+    text-transform: uppercase;
+    margin-top: 6px;
   }
 
   .product {
@@ -182,7 +210,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
     text-transform: uppercase;
   }
 
-  .front h1 {
+  .front .prodname {
     font-size: 22px;
     color: #fff;
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
@@ -222,31 +250,48 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
     color: #7a6a4a;
   }
 
+  /* Small outlined pills with a label in front, so they read as links to
+     similar boxes rather than tabs for the content below. */
   .taglist {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
     justify-content: center;
-    margin-top: 20px;
+    align-items: center;
+    margin-top: 18px;
+  }
+
+  .taglabel {
+    font-family: var(--fine);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 2px;
   }
 
   .tagchip {
-    background: var(--turq);
-    color: #fff;
-    font-size: 10px;
-    letter-spacing: 0.12em;
+    font-family: var(--fine);
+    font-size: 12px;
+    color: var(--turq-deep);
+    border: 1.5px solid currentColor;
+    border-radius: 999px;
+    padding: 3px 10px;
     text-decoration: none;
-    padding: 7px 12px 6px;
-    border-radius: 6px 6px 2px 2px;
-    text-transform: uppercase;
   }
 
   .tagchip:hover {
-    background: var(--cherry);
+    background: var(--turq-deep);
+    color: #fff;
   }
 
   .tagchip.plain {
-    background: #78909c;
+    color: var(--muted);
+  }
+
+  .tagchip.plain:hover {
+    background: var(--muted);
+    color: #fff;
   }
 
   .credit {
@@ -304,6 +349,10 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
   @media (max-width: 760px) {
     .product {
       grid-template-columns: 1fr;
+      gap: 30px;
+    }
+    .title {
+      text-align: center;
     }
   }
 </style>
