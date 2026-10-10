@@ -15,6 +15,7 @@ nutrition:
   calories: 250
   totalFat: 11
   saturatedFat: 3
+  totalCarbs: 33
   totalSugars: 7
   addedSugars: 0
   dietaryFiber: 4

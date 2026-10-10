@@ -19,6 +19,7 @@ nutrition:
   calories: null
   totalFat: 13
   saturatedFat: 3.5
+  totalCarbs: 38
   totalSugars: 14
   addedSugars: null
   dietaryFiber: 5
