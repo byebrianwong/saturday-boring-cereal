@@ -1,15 +1,19 @@
 import type { CollectionEntry } from 'astro:content';
+import { per100gOf } from './nutrition';
+import { grams } from './format';
 
 // The Overall Grade: one composite number so a box can be read at a glance,
 // backed by transparent subscores. Everything here is derived at build time —
 // nothing is stored in frontmatter — so retuning a target below re-scores the
 // whole shelf at once. The methodology is posted on /about §6.
 
-// --- Tunable targets (per stated serving, matching how the rest of the site
-// reports nutrition). "Full marks" points, chosen from the real shelf spread. ---
-const PROTEIN_TARGET = 15; // g of protein that earns a full protein subscore
-const SUGAR_CEILING = 15; // g of sugar that drops the sugar subscore to zero
-const FIBER_TARGET = 8; // g of fiber that earns a full fiber subscore
+// --- Tunable targets, per 100 g. Grading per 100 g instead of per serving
+// means a box can't score better by stating a bigger serving. Most servings on
+// the shelf are about 50 g, so these are the old per-serving targets
+// (15 g / 15 g / 8 g) doubled, with fiber rounded to 15. ---
+const PROTEIN_TARGET = 30; // g of protein per 100 g that earns a full protein subscore
+const SUGAR_CEILING = 30; // g of sugar per 100 g that drops the sugar subscore to zero
+const FIBER_TARGET = 15; // g of fiber per 100 g that earns a full fiber subscore
 
 // Overall = half Taste, half Nutrition. The Nutrition half is the mean of
 // whichever of protein/sugar/fiber the label actually lists.
@@ -22,7 +26,7 @@ export interface Subscore {
   label: string;
   /** 0–100 "goodness"; null when the label doesn't list the input. */
   score: number | null;
-  /** Raw value shown beside the bar, e.g. "14g" or "8.5/10". */
+  /** Raw value shown beside the bar, e.g. "14g" (per 100 g) or "8.5/10". */
   detail: string;
 }
 
@@ -54,7 +58,8 @@ function mean(nums: number[]): number | null {
 }
 
 export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
-  const { rating, nutrition: n } = c.data;
+  const { rating } = c.data;
+  const n = per100gOf(c);
 
   const taste = rating == null ? null : rating * 10;
   const protein = up(n.protein, PROTEIN_TARGET);
@@ -74,7 +79,7 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
       key: 'protein',
       label: 'Protein',
       score: protein,
-      detail: n.protein == null ? 'not listed' : `${n.protein}g`,
+      detail: grams(n.protein),
     },
     {
       key: 'sugar',
@@ -83,13 +88,13 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
       detail:
         sugarGrams == null
           ? 'not listed'
-          : `${sugarGrams}g ${n.addedSugars == null ? 'total' : 'added'}`,
+          : `${grams(sugarGrams)} ${n.addedSugars == null ? 'total' : 'added'}`,
     },
     {
       key: 'fiber',
       label: 'Fiber',
       score: fiber,
-      detail: n.dietaryFiber == null ? 'not listed' : `${n.dietaryFiber}g`,
+      detail: grams(n.dietaryFiber),
     },
   ];
 
@@ -119,8 +124,8 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
 
 // Tier-list bands (S is the top, above A) on the 0–100 overall. Deliberately
 // hard at the top: S is the blue ribbon for the single best box on the shelf, so
-// its cutoff sits just under the current top score (~78) and above the runner-up
-// (~76) — one box earns it, and A holds the rest of the top shelf. Retune here.
+// its cutoff sits at the current top score (77) and above the runner-up (76).
+// One box earns it, and A holds the rest of the top shelf. Retune here.
 const BANDS: Array<[number, string]> = [
   [77, 'S'],
   [75, 'A'],

@@ -6,6 +6,7 @@ import PageHeader from '../../components/PageHeader.astro';
 import MiniBox from '../../components/MiniBox.astro';
 import PriceTag from '../../components/PriceTag.astro';
 import { macroLine, byRatingDesc } from '../../lib/macros';
+import { per100gOf } from '../../lib/nutrition';
 import { u } from '../../lib/url';
 
 const cereals = await getCollection('cereals');
@@ -45,9 +46,9 @@ const ranked = [...cereals].sort(byRatingDesc);
           data-form={c.data.formFactors.join(' ')}
           data-attrs={c.data.attributes.join(' ')}
           data-rating={c.data.rating ?? -1}
-          data-protein={c.data.nutrition.protein ?? -1}
-          data-sugar={c.data.nutrition.totalSugars ?? 9999}
-          data-fiber={c.data.nutrition.dietaryFiber ?? -1}
+          data-protein={per100gOf(c).protein ?? -1}
+          data-sugar={per100gOf(c).totalSugars ?? 9999}
+          data-fiber={per100gOf(c).dietaryFiber ?? -1}
           data-date={c.data.dateReviewed.getTime()}
         >
           <MiniBox

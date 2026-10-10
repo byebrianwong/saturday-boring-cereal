@@ -1,7 +1,8 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { u } from '../lib/url';
-import { rating } from '../lib/format';
+import { rating, gramsShort } from '../lib/format';
+import { per100gOf } from '../lib/nutrition';
 
 interface Props {
   cereal: CollectionEntry<'cereals'>;
@@ -12,14 +13,14 @@ interface Props {
 
 const { cereal, rank, size = 'sm' } = Astro.props;
 const d = cereal.data;
-const n = d.nutrition;
+const n = per100gOf(cereal);
 
 // Macros are the one place on the page that never exaggerates: only print a
 // value the label actually lists.
 const macros = [
-  { v: n.protein, k: 'Protein' },
-  { v: n.totalSugars, k: 'Sugar' },
-  { v: n.servingSize, k: 'Serving' },
+  { v: n.protein, k: 'Protein /100g' },
+  { v: n.totalSugars, k: 'Sugar /100g' },
+  { v: n.dietaryFiber, k: 'Fiber /100g' },
 ].filter((m) => m.v != null);
 ---
 
@@ -48,7 +49,7 @@ const macros = [
   <span class="macros">
     {macros.map((m) => (
       <span>
-        <span class="mv">{m.v}g</span>
+        <span class="mv">{gramsShort(m.v)}</span>
         <span class="mk">{m.k}</span>
       </span>
     ))}

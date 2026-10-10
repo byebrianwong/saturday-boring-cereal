@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 import { byRatingDesc } from '../lib/macros';
 import { gramsShort } from '../lib/format';
+import { per100gOf } from '../lib/nutrition';
 import { scoreCereal } from '../lib/score';
 import GradeStamp from '../components/GradeStamp.astro';
 import PageHeader from '../components/PageHeader.astro';
@@ -51,8 +52,8 @@ const medal = ['gold', 'silver', 'bronze'];
           </div>
           <GradeStamp grade={scoreOf.get(c.id)!.grade} overall={scoreOf.get(c.id)!.overall} size="sm" />
           <div class="rowmacros">
-            {gramsShort(c.data.nutrition.protein) && <span><b>{gramsShort(c.data.nutrition.protein)}</b> pro</span>}
-            {gramsShort(c.data.nutrition.totalSugars) && <span><b>{gramsShort(c.data.nutrition.totalSugars)}</b> sug</span>}
+            {gramsShort(per100gOf(c).protein) && <span><b>{gramsShort(per100gOf(c).protein)}</b> pro</span>}
+            {gramsShort(per100gOf(c).totalSugars) && <span><b>{gramsShort(per100gOf(c).totalSugars)}</b> sug</span>}
           </div>
         </li>
       ))
