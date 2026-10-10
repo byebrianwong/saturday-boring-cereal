@@ -17,7 +17,7 @@ attributes: [organic, low-sugar]
 nutrition:
   servingSize: 40
   calories: 160
-  totalFat: null
+  totalFat: 1.5
   saturatedFat: 0
   transFat: 0
   totalSugars: 5

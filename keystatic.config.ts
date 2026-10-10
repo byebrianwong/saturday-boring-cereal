@@ -53,9 +53,17 @@ export default config({
       columns: ['brand', 'rating', 'dateReviewed'],
       schema: {
         name: fields.slug({
-          name: { label: 'Product name', description: 'Without the brand, e.g. “Almond Butter”.' },
+          name: {
+            label: 'Product name',
+            description:
+              'Without the brand, but with the cereal line when there is one, e.g. “Honey Bunches of Oats, Honey Roasted”.',
+          },
         }),
-        brand: fields.text({ label: 'Brand', validation: { isRequired: true } }),
+        brand: fields.text({
+          label: 'Brand',
+          description: 'The company on the box, e.g. “Post” or “General Mills”, not the cereal line.',
+          validation: { isRequired: true },
+        }),
         rating: fields.number({
           label: 'Taste rating (0–10)',
           description: 'Decimals allowed — the historical Notion scale. Leave blank if unrated.',

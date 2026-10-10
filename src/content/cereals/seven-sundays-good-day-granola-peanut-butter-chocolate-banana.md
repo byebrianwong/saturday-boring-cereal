@@ -1,5 +1,5 @@
 ---
-name: Good Day Granola Peanut Butter Chocolate Banana
+name: Good Day Granola, Peanut Butter Chocolate Banana
 brand: Seven Sundays
 rating: 8.5
 shortNote: Good granola with a medium banana flavor
@@ -25,9 +25,9 @@ nutrition:
   totalCarbs: 18
   dietaryFiber: 4
   totalSugars: 6
-  addedSugars: null
+  addedSugars: 3
   protein: 6
-  proteinDV: null
+  proteinDV: 5
   sodium: 100
 ---
 

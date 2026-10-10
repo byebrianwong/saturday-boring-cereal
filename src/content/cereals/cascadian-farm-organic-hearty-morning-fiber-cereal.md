@@ -1,5 +1,5 @@
 ---
-name: Organic Hearty Morning Fiber Cereal
+name: Hearty Morning Fiber
 brand: Cascadian Farm
 rating: 8
 shortNote: Hearty-ish flakes, some clusters, fairly sweet
@@ -16,7 +16,7 @@ attributes: [organic, high-fiber]
 nutrition:
   servingSize: 64
   calories: 220
-  totalFat: null
+  totalFat: 3.5
   saturatedFat: 0.5
   transFat: 0
   polyunsaturatedFat: 0.5

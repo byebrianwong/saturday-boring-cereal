@@ -71,7 +71,6 @@ const CLEANUPS = [
 function clean(name) {
   let n = name.replace(/\*\*/g, '').trim();
   for (const [bad, good] of CLEANUPS) n = n.replace(bad, good);
-  // "Strawberry Cheerios Protein" -> brand Cheerios, product "Strawberry Protein"
   return n;
 }
 
@@ -88,6 +87,31 @@ function splitBrand(rawName) {
   }
   return { brand: n.split(' ')[0], name: n.split(' ').slice(1).join(' ') || n };
 }
+
+// Published brand/name, checked against the box and the maker's site. Brand is
+// the company and the product name keeps the cereal line, so Honey Bunches of
+// Oats is "Post" / "Honey Bunches of Oats, Honey Roasted". The split above still
+// drives the slug (URLs stay put) and the shape/tag/colour helpers below.
+const PUBLISHED = {
+  '1972-801e': ['Cascadian Farm', 'Hearty Morning Fiber'],
+  '2902-80c6': ["Michele's Granola", 'Almond Butter Granola'],
+  '1972-8023': ["Nature's Path", 'Flax Plus, Maple Pecan Crunch'],
+  '2132-80b4': ['General Mills', 'Cheerios Protein, Strawberry'],
+  '3002-8099': ['Kodiak', 'Protein-Packed Cookie Butter Granola'],
+  '2132-8021': ['Quaker', 'Protein Granola, Maple & Brown Sugar'],
+  '2132-803b': ['Manitoba Harvest', 'Superseed Granola, Blueberry'],
+  '3082-805c': ['Manitoba Harvest', 'Superseed Granola, Blueberry'],
+  '2ff2-80f4': ['Seven Sundays', 'Bright Side Granola, Triple Berry'],
+  '25b2-8093': ['Calbee', 'Frugra Fruit & Granola, Reduced Sugar'],
+  '1972-800a': ['Cascadian Farm', 'No Added Sugar Blueberry Vanilla Granola'],
+  '1972-80c0': ['Cascadian Farm', 'Climate Smart Kernza Grains'],
+  '1972-80a3': ["Nature's Path", 'Heritage Crunch'],
+  '1972-80b8': ["Nature's Path", 'Flax Plus, Red Berry Crunch'],
+  '2ad2-8026': ['IKEA', 'Hjälteroll Granola with Nuts and Dried Berries'],
+  '1972-8081': ['Post', 'Honey Bunches of Oats, Honey Roasted'],
+  '2312-80f9': ['KIND', 'Healthy Grains Granola Clusters, Dark Chocolate'],
+  '1c62-8002': ["Kellogg's", 'Special K Zero Cinnamon'],
+};
 
 // --- Form factors from the "Text" mini-taxonomy + name keywords ----------------
 function formFactors({ Text, name, brand }) {
@@ -190,9 +214,10 @@ function toMarkdown(row) {
   if (/no sugar added/i.test(name)) addedSugars = 0;
   if (brand === 'Magic Spoon' || brand === 'Special K') addedSugars = 0;
 
+  const [pubBrand, pubName] = PUBLISHED[row.id] || [brand, name || brand];
   const fm = {
-    name: name || brand,
-    brand,
+    name: pubName,
+    brand: pubBrand,
     rating: yamlNum(row.Taste ?? null),
     dateReviewed: row.created,
     emoji,

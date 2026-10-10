@@ -1,5 +1,5 @@
 ---
-name: Organic Flax Plus Maple Pecan Crunch
+name: Flax Plus, Maple Pecan Crunch
 brand: "Nature's Path"
 rating: 8.5
 dateReviewed: 2026-02-15
@@ -16,14 +16,14 @@ proteinSources: []
 attributes: [organic]
 nutrition:
   servingSize: 60
-  calories: 230
-  totalFat: null
+  calories: 250
+  totalFat: 7
   saturatedFat: 1
   polyunsaturatedFat: 3
   monounsaturatedFat: 2.5
-  totalSugars: 10
-  addedSugars: 10
-  dietaryFiber: 6
+  totalSugars: 11
+  addedSugars: 11
+  dietaryFiber: 7
   protein: 6
   proteinDV: null
   sodium: 210

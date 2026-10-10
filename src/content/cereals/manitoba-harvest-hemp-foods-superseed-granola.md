@@ -1,25 +1,27 @@
 ---
-name: Superseed Granola
-brand: Manitoba Harvest Hemp Foods
+name: Superseed Granola, Blueberry
+brand: Manitoba Harvest
 rating: 7
 shortNote: Can sometimes have a grassy hempy taste
 dateReviewed: 2026-02-15
-emoji: '🌱'
+emoji: '🫐'
 boxColor: "#4e8a5c"
+barcode: '697658692239'
 formFactors: [granola]
 proteinSources: [nut-seed]
-attributes: [high-protein]
+attributes: [organic, high-protein]
 nutrition:
   servingSize: 60
-  calories: null
+  calories: 280
   totalFat: 12
   saturatedFat: 6
   totalSugars: 9
-  addedSugars: null
+  addedSugars: 9
   dietaryFiber: 4
   protein: 11
-  proteinDV: null
-boxImage: /images/cereals/manitoba-harvest-hemp-foods-superseed-granola.jpg
+  proteinDV: 18
+  sodium: 170
+boxImage: /images/cereals/manitoba-harvest-organic-superseed-granola-blueberry.jpg
 imageSource: other
 imageCredit: "Image: Manitoba Harvest, via Kroger"
 ---

@@ -1,6 +1,6 @@
 ---
-name: Strawberry Protein
-brand: Cheerios
+name: Cheerios Protein, Strawberry
+brand: General Mills
 rating: 7
 shortNote: Slight artificial strawberry flavor; fairly sweet
 dateReviewed: 2025-06-15
@@ -16,14 +16,14 @@ attributes: []
 nutrition:
   servingSize: 37
   calories: 150
-  totalFat: null
+  totalFat: 2.5
   saturatedFat: 0
   transFat: 0
   totalSugars: 12
-  addedSugars: 7
+  addedSugars: 11
   dietaryFiber: 2
   protein: 8
-  proteinDV: null
+  proteinDV: 10
   sodium: 210
 ---
 

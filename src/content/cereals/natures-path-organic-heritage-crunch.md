@@ -1,5 +1,5 @@
 ---
-name: Organic Heritage Crunch
+name: Heritage Crunch
 brand: "Nature's Path"
 rating: 8
 dateReviewed: 2026-01-06
@@ -20,7 +20,7 @@ nutrition:
   polyunsaturatedFat: 2
   monounsaturatedFat: 1
   totalSugars: 7
-  addedSugars: 3
+  addedSugars: 7
   dietaryFiber: 6
   protein: 6
   proteinDV: null

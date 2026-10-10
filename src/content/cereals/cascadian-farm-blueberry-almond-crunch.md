@@ -17,12 +17,13 @@ attributes: [organic]
 nutrition:
   servingSize: 54
   calories: 240
-  totalFat: null
+  totalFat: 10
   saturatedFat: 3
   totalSugars: 6
   addedSugars: 0
   dietaryFiber: 5
   protein: 5
   proteinDV: null
+  sodium: 270
 ---
 

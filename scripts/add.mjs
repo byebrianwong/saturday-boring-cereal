@@ -110,8 +110,8 @@ async function ask(prompt, { required = false, def } = {}) {
   }
 }
 
-const brand = await ask({ q: 'Brand', flag: 'brand', hint: 'e.g. Magic Spoon' }, { required: true, def: flag('brand') });
-const name = await ask({ q: 'Product name (without brand)', flag: 'name', hint: 'e.g. Peanut Butter' }, { required: true, def: flag('name') });
+const brand = await ask({ q: 'Brand', flag: 'brand', hint: 'the company, e.g. Magic Spoon, Post, General Mills' }, { required: true, def: flag('brand') });
+const name = await ask({ q: 'Product name (without brand)', flag: 'name', hint: 'include the cereal line, e.g. Peanut Butter, Honey Bunches of Oats, Honey Roasted' }, { required: true, def: flag('name') });
 const ratingRaw = await ask({ q: 'Taste score 0–10', flag: 'rating', hint: '(blank = unrated)' }, { def: flag('rating') });
 const servingRaw = await ask({ q: 'Serving size in grams', flag: 'serving', hint: 'e.g. 36' }, { required: true, def: flag('serving') });
 // Recorded macros power the safety cross-check — enter what the box lists.

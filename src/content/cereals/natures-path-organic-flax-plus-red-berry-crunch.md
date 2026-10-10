@@ -1,5 +1,5 @@
 ---
-name: Organic Flax Plus Red Berry Crunch
+name: Flax Plus, Red Berry Crunch
 brand: "Nature's Path"
 rating: 8
 dateReviewed: 2025-02-11
@@ -17,13 +17,13 @@ attributes: [organic]
 nutrition:
   servingSize: 58
   calories: 240
-  totalFat: null
+  totalFat: 5
   saturatedFat: 0.5
   polyunsaturatedFat: 2.5
   monounsaturatedFat: 1
-  totalSugars: 11
+  totalSugars: 12
   addedSugars: 11
-  dietaryFiber: 6
+  dietaryFiber: 8
   protein: 6
   proteinDV: null
   sodium: 170

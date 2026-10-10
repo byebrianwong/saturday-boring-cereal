@@ -1,18 +1,18 @@
 ---
-name: Blueberry Vanilla No Sugar Added Granola
+name: No Added Sugar Blueberry Vanilla Granola
 brand: Cascadian Farm
 rating: 8
 shortNote: Light crispy granola type
 dateReviewed: 2026-01-25
 emoji: '🫐'
 boxColor: "#6fa8d6"
-barcode: '0021908119915'
+barcode: '0021908133171'
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [organic, no-added-sugar]
 nutrition:
   servingSize: 52
-  calories: 240
+  calories: 250
   totalFat: 11
   saturatedFat: 3
   totalSugars: 7

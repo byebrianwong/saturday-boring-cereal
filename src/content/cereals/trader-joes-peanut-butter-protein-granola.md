@@ -12,13 +12,14 @@ attributes: [high-protein]
 nutrition:
   servingSize: 60
   calories: 280
-  totalFat: 12
+  totalFat: 13
   saturatedFat: 2
-  totalSugars: 9
-  addedSugars: null
-  dietaryFiber: 3
+  totalSugars: 10
+  addedSugars: 8
+  dietaryFiber: 4
   protein: 11
-  proteinDV: null
+  proteinDV: 11
+  sodium: 160
 boxImage: /images/cereals/trader-joes-peanut-butter-protein-granola.jpg
 imageSource: manufacturer
 imageCredit: "Image: Trader Joe's (traderjoes.com)"

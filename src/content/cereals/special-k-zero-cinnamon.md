@@ -1,6 +1,6 @@
 ---
-name: Zero Cinnamon
-brand: Special K
+name: Special K Zero Cinnamon
+brand: "Kellogg's"
 rating: 3
 dateReviewed: 2025-03-30
 emoji: '🧂'
@@ -15,16 +15,16 @@ formFactors: [flakes]
 proteinSources: []
 attributes: [high-protein, low-sugar]
 nutrition:
-  servingSize: 36
-  calories: 150
-  totalFat: null
+  servingSize: 39
+  calories: 160
+  totalFat: 7
   saturatedFat: 1
   transFat: 0
-  totalSugars: 0.1
+  totalSugars: 0
   addedSugars: 0
-  dietaryFiber: 3
-  protein: 18
-  proteinDV: null
-  sodium: 286
+  dietaryFiber: 4
+  protein: 20
+  proteinDV: 32
+  sodium: 310
 ---
 
