@@ -19,6 +19,7 @@ nutrition:
   transFat: 0
   polyunsaturatedFat: 2
   monounsaturatedFat: 1
+  totalCarbs: 44
   totalSugars: 7
   addedSugars: 7
   dietaryFiber: 6

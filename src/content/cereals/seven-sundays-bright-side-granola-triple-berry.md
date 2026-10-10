@@ -20,6 +20,7 @@ nutrition:
   totalFat: 10
   saturatedFat: 3.5
   transFat: 0
+  totalCarbs: 18
   totalSugars: 6
   addedSugars: 2
   dietaryFiber: 4

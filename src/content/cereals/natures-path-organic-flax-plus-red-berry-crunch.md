@@ -21,6 +21,7 @@ nutrition:
   saturatedFat: 0.5
   polyunsaturatedFat: 2.5
   monounsaturatedFat: 1
+  totalCarbs: 41
   totalSugars: 12
   addedSugars: 11
   dietaryFiber: 8
