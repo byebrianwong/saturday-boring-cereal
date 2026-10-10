@@ -34,13 +34,14 @@ const items = ranked.map((c) => {
   // label's own figure.
   n: {
     servingSize: n.servingSize,
-    calories: round0(n.calories),
     protein: round1(n.protein),
+    dietaryFiber: round1(n.dietaryFiber),
     totalSugars: round1(n.totalSugars),
     addedSugars: round1(n.addedSugars),
-    dietaryFiber: round1(n.dietaryFiber),
-    totalFat: round1(n.totalFat),
     saturatedFat: round1(n.saturatedFat),
+    calories: round0(n.calories),
+    totalCarbs: round1(n.totalCarbs),
+    totalFat: round1(n.totalFat),
     sodium: round0(n.sodium),
   },
   // % Daily Value per 100 g, shown under the amount. Rows without an FDA Daily
@@ -48,10 +49,11 @@ const items = ranked.map((c) => {
   // the label doesn't print its own %DV.
   dv: {
     protein: round0(protein.dv),
-    addedSugars: round0(percentDV('addedSugars', n.addedSugars)),
     dietaryFiber: round0(percentDV('dietaryFiber', n.dietaryFiber)),
-    totalFat: round0(percentDV('totalFat', n.totalFat)),
+    addedSugars: round0(percentDV('addedSugars', n.addedSugars)),
     saturatedFat: round0(percentDV('saturatedFat', n.saturatedFat)),
+    totalCarbs: round0(percentDV('totalCarbs', n.totalCarbs)),
+    totalFat: round0(percentDV('totalFat', n.totalFat)),
     sodium: round0(percentDV('sodium', n.sodium)),
   } as Record<string, number | null>,
   proteinDVEstimated: protein.estimated,
@@ -139,18 +141,29 @@ const items = ranked.map((c) => {
     const mg = (v: number | null) => (v == null ? nil : `${v}mg`);
     const plain = (v: number | null) => (v == null ? nil : String(v));
 
-    // Which direction is "better" for the best-in-row star.
-    const METRICS: Array<{ key: string; label: string; fmt: (v: number | null) => string; best?: 'max' | 'min' }> = [
-      { key: 'calories', label: 'Calories', fmt: plain, best: 'min' },
+    // Rows in display order: the nutrients the grade scores come first, good
+    // ones (protein, fiber) then bad ones (sugars, saturated fat). The `minor`
+    // rows follow, smaller and greyer, because the grade ignores them. `best`
+    // is which direction is "better" for the best-in-row star.
+    const METRICS: Array<{
+      key: string;
+      label: string;
+      fmt: (v: number | null) => string;
+      best?: 'max' | 'min';
+      minor?: boolean;
+    }> = [
       { key: 'protein', label: 'Protein', fmt: g, best: 'max' },
+      { key: 'dietaryFiber', label: 'Fiber', fmt: g, best: 'max' },
       { key: 'totalSugars', label: 'Total sugars', fmt: g, best: 'min' },
       { key: 'addedSugars', label: 'Added sugars', fmt: g, best: 'min' },
-      { key: 'dietaryFiber', label: 'Fiber', fmt: g, best: 'max' },
-      { key: 'totalFat', label: 'Total fat', fmt: g },
-      { key: 'saturatedFat', label: 'Saturated fat', fmt: g },
-      { key: 'sodium', label: 'Sodium', fmt: mg, best: 'min' },
-      { key: 'servingSize', label: 'Label serving', fmt: g },
+      { key: 'saturatedFat', label: 'Saturated fat', fmt: g, best: 'min' },
+      { key: 'calories', label: 'Calories', fmt: plain, best: 'min', minor: true },
+      { key: 'totalCarbs', label: 'Carbs', fmt: g, minor: true },
+      { key: 'totalFat', label: 'Total fat', fmt: g, minor: true },
+      { key: 'sodium', label: 'Sodium', fmt: mg, best: 'min', minor: true },
+      { key: 'servingSize', label: 'Label serving', fmt: g, minor: true },
     ];
+    const FIRST_MINOR = METRICS.findIndex((m) => m.minor);
 
     function bestId(key: string, dir: 'max' | 'min', chosen: Row[]): string | null {
       const vals = chosen
@@ -231,8 +244,10 @@ const items = ranked.map((c) => {
           return `<div class="cell grade-cell${win ? ' win' : ''}">${stamp}${win ? '<span class="star">★</span>' : ''}</div>`;
         }).join('') +
         // metric rows
-        METRICS.map((m) => `
-          <div class="rh">${m.label}</div>` +
+        METRICS.map((m, i) => {
+          const minor = !m.minor ? '' : i === FIRST_MINOR ? ' minor first' : ' minor';
+          return `
+          <div class="rh${minor}">${m.label}</div>` +
           chosen.map((c) => {
             const win = m.best && winners[m.key] === c.id;
             const v = c.n[m.key];
@@ -241,9 +256,9 @@ const items = ranked.map((c) => {
               ? ''
               : `<span class="pdv">${m.key === 'protein' && c.proteinDVEstimated ? '~' : ''}${p}% DV</span>`;
             const amt = pdv ? `<span class="amt">${m.fmt(v)}${pdv}</span>` : m.fmt(v);
-            return `<div class="cell${win ? ' win' : ''}">${amt}${win ? '<span class="star">★</span>' : ''}</div>`;
-          }).join('')
-        ).join('') +
+            return `<div class="cell${minor}${win ? ' win' : ''}">${amt}${win ? '<span class="star">★</span>' : ''}</div>`;
+          }).join('');
+        }).join('') +
         `</div>`;
       board.appendChild(el);
       el.querySelectorAll<HTMLButtonElement>('.drop').forEach((btn) =>
@@ -571,6 +586,11 @@ const items = ranked.map((c) => {
   .board :global(.cell .na) { font-size: 12.5px; }
   .board :global(.cell .amt) { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .board :global(.cell .pdv) { font-size: 11px; color: var(--muted-light); white-space: nowrap; }
+
+  /* Rows the grade ignores: smaller and greyer, below a heavier rule. */
+  .board :global(.rh.minor) { color: var(--muted-light); opacity: 0.75; }
+  .board :global(.cell.minor) { font-size: 12.5px; color: var(--muted); padding-top: 9px; padding-bottom: 9px; }
+  .board :global(.minor.first) { border-top: 3px solid var(--ink); }
 
   .board :global(.grade-rh) {
     color: var(--ink);

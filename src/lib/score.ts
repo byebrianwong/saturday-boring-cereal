@@ -52,7 +52,10 @@ export interface Score {
   grade: string | null;
   /** 0–100 nutrition-only mean; survives even when Taste is missing. */
   nutrition: number | null;
-  /** Always taste, protein, sugar, fiber, saturated fat — in that order. */
+  /**
+   * Always taste, then the good nutrients (protein, fiber), then the bad ones
+   * (sugar, saturated fat), in that order.
+   */
   subscores: Subscore[];
 }
 
@@ -118,16 +121,16 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
             : `${grams(n.protein)} · ${Math.round(proteinDV)}% DV`,
     },
     {
-      key: 'sugar',
-      label: 'Sugar',
-      score: sugar,
-      detail: grams(n.totalSugars),
-    },
-    {
       key: 'fiber',
       label: 'Fiber',
       score: fiber,
       detail: gramsWithDV('dietaryFiber', n.dietaryFiber),
+    },
+    {
+      key: 'sugar',
+      label: 'Sugar',
+      score: sugar,
+      detail: grams(n.totalSugars),
     },
     {
       key: 'satFat',
@@ -189,28 +192,13 @@ export function scoreTier(score: number): 'good' | 'mid' | 'bad' {
   return 'bad';
 }
 
-// UK front-of-pack traffic-light thresholds, per 100 g of food: at or below
-// `low` is green, above `high` is red, in between is amber. Used only to tint
-// table cells for nutrients the grade does not score. Sodium is derived from
-// the salt thresholds (0.3 g and 1.5 g salt; sodium is 40% of salt).
-const TRAFFIC_LIGHTS = {
-  totalFat: { low: 3, high: 17.5 },
-  sodium: { low: 120, high: 600 },
-} as const;
-
-export type MacroTintKey =
-  | 'protein'
-  | 'dietaryFiber'
-  | 'totalSugars'
-  | 'saturatedFat'
-  | keyof typeof TRAFFIC_LIGHTS;
+export type MacroTintKey = 'protein' | 'dietaryFiber' | 'totalSugars' | 'saturatedFat';
 
 /**
- * Good / mid / bad tier for one nutrient, per 100 g. The four graded nutrients
- * use the same targets as the grade, so a cell's tint agrees with the Health
- * score; for protein, pass the %DV from `proteinDVOf`, not grams. Fat and
- * sodium use the traffic lights above. Returns null when the label omits the
- * value.
+ * Good / mid / bad tier for one graded nutrient, per 100 g. Uses the same
+ * targets as the grade, so a cell's tint agrees with the Health score; for
+ * protein, pass the %DV from `proteinDVOf`, not grams. Returns null when the
+ * label omits the value.
  */
 export function macroTier(
   key: MacroTintKey,
@@ -226,10 +214,6 @@ export function macroTier(
       return scoreTier(down(value, SUGAR_CEILING)!);
     case 'saturatedFat':
       return scoreTier(down(value, SAT_FAT_CEILING)!);
-    default: {
-      const t = TRAFFIC_LIGHTS[key];
-      return value <= t.low ? 'good' : value > t.high ? 'bad' : 'mid';
-    }
   }
 }
 
