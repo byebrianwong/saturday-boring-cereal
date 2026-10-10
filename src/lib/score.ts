@@ -1,6 +1,12 @@
 import type { CollectionEntry } from 'astro:content';
-import { per100gOf, type Nutrition } from './nutrition';
+import { per100gOf, percentDV, type DVKey, type Nutrition } from './nutrition';
 import { grams } from './format';
+
+/** "5.4g · 19% DV", or plain grams when the label omits the value. */
+function gramsWithDV(key: DVKey, value: number | null | undefined): string {
+  const dv = percentDV(key, value);
+  return dv == null ? grams(value) : `${grams(value)} · ${Math.round(dv)}% DV`;
+}
 
 // The Overall Grade: one composite number so a box can be read at a glance,
 // backed by transparent subscores. Everything here is derived at build time —
@@ -121,13 +127,13 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
       key: 'fiber',
       label: 'Fiber',
       score: fiber,
-      detail: grams(n.dietaryFiber),
+      detail: gramsWithDV('dietaryFiber', n.dietaryFiber),
     },
     {
       key: 'satFat',
       label: 'Sat. fat',
       score: satFat,
-      detail: grams(n.saturatedFat),
+      detail: gramsWithDV('saturatedFat', n.saturatedFat),
     },
   ];
 

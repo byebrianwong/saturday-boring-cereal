@@ -43,3 +43,26 @@ export function per100g(n: Nutrition): Nutrition {
 export function per100gOf(c: CollectionEntry<'cereals'>): Nutrition {
   return per100g(c.data.nutrition);
 }
+
+// FDA Daily Values for adults and children 4+, based on a 2,000-calorie diet
+// (21 CFR 101.9(c), the values on every US label since the 2016 update):
+// https://www.fda.gov/food/nutrition-facts-label/daily-value-nutrition-and-supplement-facts-labels
+// Calories, trans fat, total sugars and the poly/mono fats have no Daily
+// Value, so a real label leaves their %DV blank and so does this site.
+// Protein's %DV comes from `proteinDVOf` in score.ts, because a label's
+// protein %DV is adjusted for protein quality and can't be derived from grams.
+export const DAILY_VALUES = {
+  totalFat: 78,
+  saturatedFat: 20,
+  sodium: 2300,
+  totalCarbs: 275,
+  dietaryFiber: 28,
+  addedSugars: 50,
+} as const;
+
+export type DVKey = keyof typeof DAILY_VALUES;
+
+/** % Daily Value for an amount in the same units as the DV (g, or mg for sodium). */
+export function percentDV(key: DVKey, value: number | null | undefined): number | null {
+  return value == null ? null : (value / DAILY_VALUES[key]) * 100;
+}
