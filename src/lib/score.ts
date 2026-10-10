@@ -6,16 +6,27 @@ import type { CollectionEntry } from 'astro:content';
 // whole shelf at once. The methodology is posted on /about §6.
 
 // --- Tunable targets (per stated serving, matching how the rest of the site
-// reports nutrition). "Full marks" points, chosen from the real shelf spread. ---
-const PROTEIN_TARGET = 15; // g of protein that earns a full protein subscore
-const SUGAR_CEILING = 15; // g of sugar that drops the sugar subscore to zero
-const FIBER_TARGET = 8; // g of fiber that earns a full fiber subscore
+// reports nutrition). ---
+// Protein is scored on % Daily Value, because the label's %DV is adjusted for
+// protein quality. 35% DV earns full marks.
+const PROTEIN_DV_TARGET = 35;
+// Most labels print protein in grams only. For those, assume 1.25% DV per gram
+// (10g → 12.5% DV). Real labels range from 1% to 2% DV per gram, depending on
+// protein quality.
+const PROTEIN_DV_PER_GRAM_ESTIMATE = 1.25;
+const SUGAR_CEILING = 20; // g of total sugar that drops the sugar subscore to zero
+const FIBER_TARGET = 12; // g of fiber that earns a full fiber subscore
+const SAT_FAT_CEILING = 8; // g of saturated fat that drops its subscore to zero
 
-// Overall = half Taste, half Nutrition. The Nutrition half is the mean of
-// whichever of protein/sugar/fiber the label actually lists.
-const TASTE_WEIGHT = 0.5;
+// Overall = 40% Taste, 60% Nutrition.
+const TASTE_WEIGHT = 0.4;
 
-export type SubKey = 'taste' | 'protein' | 'sugar' | 'fiber';
+// How much each nutrient counts toward the Nutrition share, in priority order:
+// protein first, then low sugar, then fiber, then low saturated fat. When a label
+// leaves a nutrient out, the remaining weights are scaled up to fill its share.
+const NUTRITION_WEIGHTS = { protein: 0.4, sugar: 0.3, fiber: 0.2, satFat: 0.1 };
+
+export type SubKey = 'taste' | 'protein' | 'sugar' | 'fiber' | 'satFat';
 
 export interface Subscore {
   key: SubKey;
@@ -33,7 +44,7 @@ export interface Score {
   grade: string | null;
   /** 0–100 nutrition-only mean; survives even when Taste is missing. */
   nutrition: number | null;
-  /** Always taste, protein, sugar, fiber — in that order. */
+  /** Always taste, protein, sugar, fiber, saturated fat — in that order. */
   subscores: Subscore[];
 }
 
@@ -44,24 +55,31 @@ function up(value: number | null | undefined, target: number): number | null {
   return value == null ? null : clamp01(value / target) * 100;
 }
 
-/** Lower raw value → higher score (sugar). */
+/** Lower raw value → higher score (sugar, saturated fat). */
 function down(value: number | null | undefined, ceiling: number): number | null {
   return value == null ? null : clamp01(1 - value / ceiling) * 100;
 }
 
-function mean(nums: number[]): number | null {
-  return nums.length ? nums.reduce((a, b) => a + b, 0) / nums.length : null;
+/** Weighted mean of the [score, weight] pairs whose score is listed. */
+function weightedMean(pairs: Array<[number | null, number]>): number | null {
+  const listed = pairs.filter((p): p is [number, number] => p[0] != null);
+  const totalWeight = listed.reduce((a, [, w]) => a + w, 0);
+  if (!totalWeight) return null;
+  return listed.reduce((a, [v, w]) => a + v * w, 0) / totalWeight;
 }
 
 export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
   const { rating, nutrition: n } = c.data;
 
   const taste = rating == null ? null : rating * 10;
-  const protein = up(n.protein, PROTEIN_TARGET);
-  // Prefer added sugars; fall back to total when the label omits added.
-  const sugarGrams = n.addedSugars ?? n.totalSugars;
-  const sugar = down(sugarGrams, SUGAR_CEILING);
+  // Use the label's protein %DV when printed; otherwise estimate it from grams.
+  const proteinDVEstimated = n.proteinDV == null;
+  const proteinDV =
+    n.proteinDV ?? (n.protein == null ? null : n.protein * PROTEIN_DV_PER_GRAM_ESTIMATE);
+  const protein = up(proteinDV, PROTEIN_DV_TARGET);
+  const sugar = down(n.totalSugars, SUGAR_CEILING);
   const fiber = up(n.dietaryFiber, FIBER_TARGET);
+  const satFat = down(n.saturatedFat, SAT_FAT_CEILING);
 
   const subscores: Subscore[] = [
     {
@@ -74,16 +92,18 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
       key: 'protein',
       label: 'Protein',
       score: protein,
-      detail: n.protein == null ? 'not listed' : `${n.protein}g`,
+      detail:
+        proteinDV == null
+          ? 'not listed'
+          : proteinDVEstimated
+            ? `${n.protein}g · ~${+proteinDV.toFixed(1)}% DV est.`
+            : `${n.protein ?? '?'}g · ${proteinDV}% DV`,
     },
     {
       key: 'sugar',
       label: 'Sugar',
       score: sugar,
-      detail:
-        sugarGrams == null
-          ? 'not listed'
-          : `${sugarGrams}g ${n.addedSugars == null ? 'total' : 'added'}`,
+      detail: n.totalSugars == null ? 'not listed' : `${n.totalSugars}g`,
     },
     {
       key: 'fiber',
@@ -91,11 +111,20 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
       score: fiber,
       detail: n.dietaryFiber == null ? 'not listed' : `${n.dietaryFiber}g`,
     },
+    {
+      key: 'satFat',
+      label: 'Sat. fat',
+      score: satFat,
+      detail: n.saturatedFat == null ? 'not listed' : `${n.saturatedFat}g`,
+    },
   ];
 
-  const nutrition = mean(
-    [protein, sugar, fiber].filter((v): v is number => v != null),
-  );
+  const nutrition = weightedMean([
+    [protein, NUTRITION_WEIGHTS.protein],
+    [sugar, NUTRITION_WEIGHTS.sugar],
+    [fiber, NUTRITION_WEIGHTS.fiber],
+    [satFat, NUTRITION_WEIGHTS.satFat],
+  ]);
 
   // Unrated cereals stay unrated overall — the site never invents a Taste score.
   let overall: number | null = null;
@@ -119,14 +148,14 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
 
 // Tier-list bands (S is the top, above A) on the 0–100 overall. Deliberately
 // hard at the top: S is the blue ribbon for the single best box on the shelf, so
-// its cutoff sits just under the current top score (~78) and above the runner-up
-// (~76) — one box earns it, and A holds the rest of the top shelf. Retune here.
+// its cutoff sits at the current top score (64) and above the runner-up (63).
+// Retune here when the targets above change.
 const BANDS: Array<[number, string]> = [
-  [77, 'S'],
-  [75, 'A'],
-  [65, 'B'],
-  [55, 'C'],
-  [45, 'D'],
+  [64, 'S'],
+  [62, 'A'],
+  [60, 'B'],
+  [57, 'C'],
+  [50, 'D'],
   [0, 'F'],
 ];
 
