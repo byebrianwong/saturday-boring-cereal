@@ -1,22 +1,24 @@
 import type { CollectionEntry } from 'astro:content';
+import { per100gOf, type Nutrition } from './nutrition';
+import { grams } from './format';
 
 // The Overall Grade: one composite number so a box can be read at a glance,
 // backed by transparent subscores. Everything here is derived at build time —
 // nothing is stored in frontmatter — so retuning a target below re-scores the
 // whole shelf at once. The methodology is posted on /about §6.
 
-// --- Tunable targets (per stated serving, matching how the rest of the site
-// reports nutrition). ---
+// --- Tunable targets, per 100 g. Grading per 100 g instead of per serving
+// means a box can't score better by stating a bigger serving. ---
 // Protein is scored on % Daily Value, because the label's %DV is adjusted for
-// protein quality. 35% DV earns full marks.
+// protein quality. 35% DV per 100 g earns full marks.
 const PROTEIN_DV_TARGET = 35;
 // Most labels print protein in grams only. For those, assume 1.25% DV per gram
 // (10g → 12.5% DV). Real labels range from 1% to 2% DV per gram, depending on
 // protein quality.
 const PROTEIN_DV_PER_GRAM_ESTIMATE = 1.25;
-const SUGAR_CEILING = 20; // g of total sugar that drops the sugar subscore to zero
-const FIBER_TARGET = 12; // g of fiber that earns a full fiber subscore
-const SAT_FAT_CEILING = 8; // g of saturated fat that drops its subscore to zero
+const SUGAR_CEILING = 20; // g of total sugar per 100 g that drops the sugar subscore to zero
+const FIBER_TARGET = 12; // g of fiber per 100 g that earns a full fiber subscore
+const SAT_FAT_CEILING = 8; // g of saturated fat per 100 g that drops its subscore to zero
 
 // Overall = 40% Taste, 60% Nutrition.
 const TASTE_WEIGHT = 0.4;
@@ -33,7 +35,7 @@ export interface Subscore {
   label: string;
   /** 0–100 "goodness"; null when the label doesn't list the input. */
   score: number | null;
-  /** Raw value shown beside the bar, e.g. "14g" or "8.5/10". */
+  /** Raw value shown beside the bar, e.g. "14g" (per 100 g) or "8.5/10". */
   detail: string;
 }
 
@@ -68,14 +70,24 @@ function weightedMean(pairs: Array<[number | null, number]>): number | null {
   return listed.reduce((a, [v, w]) => a + v * w, 0) / totalWeight;
 }
 
+/**
+ * Protein as % Daily Value: the label's own %DV when printed, otherwise an
+ * estimate from grams. Pass per-100 g nutrition to get %DV per 100 g.
+ */
+export function proteinDVOf(n: Nutrition): { dv: number | null; estimated: boolean } {
+  if (n.proteinDV != null) return { dv: n.proteinDV, estimated: false };
+  return {
+    dv: n.protein == null ? null : n.protein * PROTEIN_DV_PER_GRAM_ESTIMATE,
+    estimated: true,
+  };
+}
+
 export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
-  const { rating, nutrition: n } = c.data;
+  const { rating } = c.data;
+  const n = per100gOf(c);
 
   const taste = rating == null ? null : rating * 10;
-  // Use the label's protein %DV when printed; otherwise estimate it from grams.
-  const proteinDVEstimated = n.proteinDV == null;
-  const proteinDV =
-    n.proteinDV ?? (n.protein == null ? null : n.protein * PROTEIN_DV_PER_GRAM_ESTIMATE);
+  const { dv: proteinDV, estimated: proteinDVEstimated } = proteinDVOf(n);
   const protein = up(proteinDV, PROTEIN_DV_TARGET);
   const sugar = down(n.totalSugars, SUGAR_CEILING);
   const fiber = up(n.dietaryFiber, FIBER_TARGET);
@@ -96,26 +108,26 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
         proteinDV == null
           ? 'not listed'
           : proteinDVEstimated
-            ? `${n.protein}g · ~${+proteinDV.toFixed(1)}% DV est.`
-            : `${n.protein ?? '?'}g · ${proteinDV}% DV`,
+            ? `${grams(n.protein)} · ~${Math.round(proteinDV)}% DV est.`
+            : `${grams(n.protein)} · ${Math.round(proteinDV)}% DV`,
     },
     {
       key: 'sugar',
       label: 'Sugar',
       score: sugar,
-      detail: n.totalSugars == null ? 'not listed' : `${n.totalSugars}g`,
+      detail: grams(n.totalSugars),
     },
     {
       key: 'fiber',
       label: 'Fiber',
       score: fiber,
-      detail: n.dietaryFiber == null ? 'not listed' : `${n.dietaryFiber}g`,
+      detail: grams(n.dietaryFiber),
     },
     {
       key: 'satFat',
       label: 'Sat. fat',
       score: satFat,
-      detail: n.saturatedFat == null ? 'not listed' : `${n.saturatedFat}g`,
+      detail: grams(n.saturatedFat),
     },
   ];
 
@@ -148,14 +160,14 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
 
 // Tier-list bands (S is the top, above A) on the 0–100 overall. Deliberately
 // hard at the top: S is the blue ribbon for the single best box on the shelf, so
-// its cutoff sits at the current top score (64) and above the runner-up (63).
-// Retune here when the targets above change.
+// its cutoff sits just under the current top score (71) and above the runner-up
+// (68). Retune here when the targets above change.
 const BANDS: Array<[number, string]> = [
-  [64, 'S'],
-  [62, 'A'],
-  [60, 'B'],
+  [70, 'S'],
+  [66, 'A'],
+  [61, 'B'],
   [57, 'C'],
-  [50, 'D'],
+  [45, 'D'],
   [0, 'F'],
 ];
 
@@ -169,6 +181,50 @@ export function scoreTier(score: number): 'good' | 'mid' | 'bad' {
   if (score >= 75) return 'good';
   if (score >= 55) return 'mid';
   return 'bad';
+}
+
+// UK front-of-pack traffic-light thresholds, per 100 g of food: at or below
+// `low` is green, above `high` is red, in between is amber. Used only to tint
+// table cells for nutrients the grade does not score. Sodium is derived from
+// the salt thresholds (0.3 g and 1.5 g salt; sodium is 40% of salt).
+const TRAFFIC_LIGHTS = {
+  totalFat: { low: 3, high: 17.5 },
+  sodium: { low: 120, high: 600 },
+} as const;
+
+export type MacroTintKey =
+  | 'protein'
+  | 'dietaryFiber'
+  | 'totalSugars'
+  | 'saturatedFat'
+  | keyof typeof TRAFFIC_LIGHTS;
+
+/**
+ * Good / mid / bad tier for one nutrient, per 100 g. The four graded nutrients
+ * use the same targets as the grade, so a cell's tint agrees with the Health
+ * score; for protein, pass the %DV from `proteinDVOf`, not grams. Fat and
+ * sodium use the traffic lights above. Returns null when the label omits the
+ * value.
+ */
+export function macroTier(
+  key: MacroTintKey,
+  value: number | null | undefined,
+): 'good' | 'mid' | 'bad' | null {
+  if (value == null) return null;
+  switch (key) {
+    case 'protein':
+      return scoreTier(up(value, PROTEIN_DV_TARGET)!);
+    case 'dietaryFiber':
+      return scoreTier(up(value, FIBER_TARGET)!);
+    case 'totalSugars':
+      return scoreTier(down(value, SUGAR_CEILING)!);
+    case 'saturatedFat':
+      return scoreTier(down(value, SAT_FAT_CEILING)!);
+    default: {
+      const t = TRAFFIC_LIGHTS[key];
+      return value <= t.low ? 'good' : value > t.high ? 'bad' : 'mid';
+    }
+  }
 }
 
 /**

@@ -24,7 +24,9 @@ import PageHeader from '../components/PageHeader.astro';
       <h2>§2 — The Numbers</h2>
       <p>
         Nutrition is transcribed from the physical box and cross-checked against USDA FoodData
-        Central where possible. Values are per stated serving. When a label doesn't state a value
+        Central where possible. The label lists values per serving, and every box states a different
+        serving, so this store scales them all to 100 grams before showing or grading them. The
+        label's serving size is still noted on each box's page. When a label doesn't state a value
         — protein %DV, poly/mono fats — this store prints <em>“not listed”</em>
         rather than inventing a number. The FDA only requires protein %DV when a protein claim is
         made; most boxes stay quiet, and so do we.
@@ -54,11 +56,13 @@ import PageHeader from '../components/PageHeader.astro';
       <p>
         The Taste score answers one question: is it good. The <em>Overall grade</em> answers a
         nosier one — is it good <em>for you</em>, too. It is 40% the spoon's verdict and 60% the
-        box's own numbers. On the numbers side,
-        per serving, protein counts most (40%), then low total sugar (30%), then fiber (20%), then
-        low saturated fat (10%); only the figures printed on the label are admitted as evidence.
-        Protein is judged by its % Daily Value, which the label adjusts for protein quality: 35%
-        earns full marks. When a box prints only grams, we assume 1.25% DV per gram and say so. A cereal
+        box's own numbers, weighed per 100 grams so a box can't win by declaring a bigger bowl. On
+        the numbers side, protein counts most (40%), then low total sugar (30%), then fiber (20%),
+        then low saturated fat (10%); only the figures printed on the label are admitted as
+        evidence. Protein is judged by its % Daily Value, which the label adjusts for protein
+        quality: 35% per 100 grams earns full marks. When a box prints only grams, we assume 1.25%
+        DV per gram and say so. Full marks for fiber is 12 grams; 20 grams of sugar or 8 grams of
+        saturated fat scores zero. A cereal
         that tastes like a birthday but eats like dessert lands mid-pack, and a virtuous brick
         nobody enjoys does no better. Grades run <em>S, A, B, C, D, F</em>, handed out like a strict
         lunchroom. S is a blue ribbon pinned on the single best box on the shelf — held by exactly

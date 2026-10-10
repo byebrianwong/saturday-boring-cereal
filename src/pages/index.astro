@@ -8,6 +8,8 @@ import BreakfastStrip from '../components/BreakfastStrip.astro';
 import { byRatingDesc } from '../lib/macros';
 import { label } from '../lib/taxonomy';
 import { u } from '../lib/url';
+import { per100gOf } from '../lib/nutrition';
+import { gramsShort } from '../lib/format';
 
 const cereals = await getCollection('cereals');
 const ranked = [...cereals].sort(byRatingDesc);
@@ -26,13 +28,13 @@ const browseTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]);
 // The "but wait, there's less" stats. Every one is derived from the real shelf
 // so the boast is technically accurate, which is the joke.
 const rated = cereals.filter((c) => c.data.rating != null);
-const sugars = cereals.map((c) => c.data.nutrition.totalSugars).filter((v): v is number => v != null);
-const proteins = cereals.map((c) => c.data.nutrition.protein).filter((v): v is number => v != null);
+const sugars = cereals.map((c) => per100gOf(c).totalSugars).filter((v): v is number => v != null);
+const proteins = cereals.map((c) => per100gOf(c).protein).filter((v): v is number => v != null);
 const topScore = Math.max(...rated.map((c) => c.data.rating as number));
 const stats = [
   { n: String(cereals.length), k: 'Boxes on the record' },
-  { n: sugars.length ? `${Math.min(...sugars)}g` : '—', k: 'Lowest sugar found' },
-  { n: proteins.length ? `${Math.max(...proteins)}g` : '—', k: 'Highest protein found' },
+  { n: sugars.length ? (gramsShort(Math.min(...sugars)) as string) : '—', k: 'Lowest sugar per 100g' },
+  { n: proteins.length ? (gramsShort(Math.max(...proteins)) as string) : '—', k: 'Highest protein per 100g' },
   { n: topScore.toFixed(1), k: 'Top score awarded' },
 ];
 
@@ -128,7 +130,7 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
       <h2 class="section-title">The <em>Scoreboard</em></h2>
       <p class="section-lede">
         Ranked #1 to #{runnersUp.length + 1} out of {cereals.length}. Score out of ten. Protein, sugar
-        and serving size taken off the actual side panel — not off the front.
+        and fiber taken off the actual side panel — not off the front — and shown per 100 grams.
       </p>
 
       <div class="ranks">

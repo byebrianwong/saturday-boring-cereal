@@ -3,13 +3,17 @@ import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 import { scoreCereal, gradeColorTier, overallOutOfTen } from '../lib/score';
 import { u } from '../lib/url';
+import { per100gOf } from '../lib/nutrition';
 
 const cereals = await getCollection('cereals');
+const round1 = (v: number | null | undefined) => (v == null ? null : Math.round(v * 10) / 10);
+const round0 = (v: number | null | undefined) => (v == null ? null : Math.round(v));
 const ranked = [...cereals].sort((a, b) => (b.data.rating ?? -1) - (a.data.rating ?? -1));
 
 // Compact payload for the client picker + table.
 const items = ranked.map((c) => {
   const s = scoreCereal(c);
+  const n = per100gOf(c);
   return {
   id: c.id,
   brand: c.data.brand,
@@ -24,15 +28,18 @@ const items = ranked.map((c) => {
   grade: s.grade,
   tier: s.grade == null ? 'na' : gradeColorTier(s.grade),
   out10: s.overall == null ? null : overallOutOfTen(s.overall),
+  // Per 100 g, rounded the way the rest of the site displays it (so the
+  // best-in-row star compares the same numbers people see). Serving size is the
+  // label's own figure.
   n: {
-    servingSize: c.data.nutrition.servingSize,
-    calories: c.data.nutrition.calories ?? null,
-    protein: c.data.nutrition.protein ?? null,
-    totalSugars: c.data.nutrition.totalSugars ?? null,
-    dietaryFiber: c.data.nutrition.dietaryFiber ?? null,
-    totalFat: c.data.nutrition.totalFat ?? null,
-    saturatedFat: c.data.nutrition.saturatedFat ?? null,
-    sodium: c.data.nutrition.sodium ?? null,
+    servingSize: n.servingSize,
+    calories: round0(n.calories),
+    protein: round1(n.protein),
+    totalSugars: round1(n.totalSugars),
+    dietaryFiber: round1(n.dietaryFiber),
+    totalFat: round1(n.totalFat),
+    saturatedFat: round1(n.saturatedFat),
+    sodium: round0(n.sodium),
   },
   };
 });
@@ -76,7 +83,8 @@ const items = ranked.map((c) => {
         </div>
 
         <p class="board-foot">
-          Per the serving size stated on each box, which is not the same serving size on every box.
+          Every figure is per 100 g, scaled from each label, so a box with a bigger stated serving
+          gets no head start. The last row is the label’s own serving size, for reference.
           A star marks the best figure in a row, and only when two or more boxes list it and one of
           them wins outright. Where a label omits a value we say “not listed” rather than making one
           up.
@@ -119,7 +127,6 @@ const items = ranked.map((c) => {
 
     // Which direction is "better" for the best-in-row star.
     const METRICS: Array<{ key: string; label: string; fmt: (v: number | null) => string; best?: 'max' | 'min' }> = [
-      { key: 'servingSize', label: 'Serving', fmt: g },
       { key: 'calories', label: 'Calories', fmt: plain, best: 'min' },
       { key: 'protein', label: 'Protein', fmt: g, best: 'max' },
       { key: 'totalSugars', label: 'Total sugars', fmt: g, best: 'min' },
@@ -127,6 +134,7 @@ const items = ranked.map((c) => {
       { key: 'totalFat', label: 'Total fat', fmt: g },
       { key: 'saturatedFat', label: 'Saturated fat', fmt: g },
       { key: 'sodium', label: 'Sodium', fmt: mg, best: 'min' },
+      { key: 'servingSize', label: 'Label serving', fmt: g },
     ];
 
     function bestId(key: string, dir: 'max' | 'min', chosen: Row[]): string | null {

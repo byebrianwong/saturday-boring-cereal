@@ -3,13 +3,72 @@ import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import AisleFilters from '../../components/AisleFilters.astro';
 import PageHeader from '../../components/PageHeader.astro';
-import MiniBox from '../../components/MiniBox.astro';
-import PriceTag from '../../components/PriceTag.astro';
-import { macroLine, byRatingDesc } from '../../lib/macros';
+import { byRatingDesc } from '../../lib/macros';
+import { per100gOf } from '../../lib/nutrition';
+import { scoreCereal, scoreTier, gradeColorTier, overallOutOfTen, macroTier, proteinDVOf } from '../../lib/score';
+import type { MacroTintKey } from '../../lib/score';
+import { oneDecimal } from '../../lib/format';
+import { label } from '../../lib/taxonomy';
 import { u } from '../../lib/url';
 
 const cereals = await getCollection('cereals');
 const ranked = [...cereals].sort(byRatingDesc);
+
+// One row per box. Nutrition is per 100 g, like everywhere else on the site.
+// A null stays null: the cell prints a dash and sorts to the bottom.
+const rows = ranked.map((c) => {
+  const d = c.data;
+  const n = per100gOf(c);
+  const s = scoreCereal(c);
+  const taste = d.rating == null ? null : d.rating * 10;
+  return {
+    id: c.id,
+    d,
+    href: u(`/cereals/${c.id}/`),
+    taste,
+    tasteTier: taste == null ? 'na' : scoreTier(taste),
+    // Health is the nutrition share of the Overall grade: the weighted mean of
+    // the protein, sugar, fiber and saturated-fat subscores, 0–100. Shown out
+    // of ten so it sits on the same scale as Taste.
+    health: s.nutrition,
+    healthTier: s.nutrition == null ? 'na' : scoreTier(s.nutrition),
+    overall: s.overall,
+    grade: s.grade,
+    gradeTier: s.grade == null ? 'na' : gradeColorTier(s.grade),
+    n,
+    tags: [...d.formFactors, ...d.attributes],
+  };
+});
+
+// Macro columns, in display order. `low` marks columns where less is better,
+// so the first click on the header sorts lowest first. `tint` marks columns
+// that get a pale good/mid/bad background; calories and carbs have no clear
+// better direction, so they stay plain.
+const METRICS = [
+  { key: 'calories', label: 'Cal', title: 'Calories', unit: '', low: true, tint: false },
+  { key: 'protein', label: 'Protein', title: 'Protein', unit: 'g', low: false, tint: true },
+  { key: 'totalCarbs', label: 'Carbs', title: 'Total carbohydrate', unit: 'g', low: false, tint: false },
+  { key: 'totalSugars', label: 'Sugar', title: 'Total sugars', unit: 'g', low: true, tint: true },
+  { key: 'dietaryFiber', label: 'Fiber', title: 'Dietary fiber', unit: 'g', low: false, tint: true },
+  { key: 'totalFat', label: 'Fat', title: 'Total fat', unit: 'g', low: true, tint: true },
+  { key: 'saturatedFat', label: 'Sat fat', title: 'Saturated fat', unit: 'g', low: true, tint: true },
+  { key: 'sodium', label: 'Sodium', title: 'Sodium', unit: 'mg', low: true, tint: true },
+] as const;
+
+type MetricKey = (typeof METRICS)[number]['key'];
+
+// Calories and sodium read as whole numbers; grams get one decimal.
+function fmt(v: number | null | undefined, unit: string): string | null {
+  if (v == null) return null;
+  return unit === 'g' ? `${oneDecimal(v)}g` : `${Math.round(v)}${unit}`;
+}
+
+// HTML lowercases attribute names, so camelCase keys are written as kebab-case
+// (data-s-total-carbs) and come back as camelCase through `dataset`.
+const kebab = (k: string) => k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+
+// data-* values for sorting. Empty string means "not listed".
+const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
 ---
 
 <Layout title="The Aisle — Saturday Boring Cereal">
@@ -17,57 +76,163 @@ const ranked = [...cereals].sort(byRatingDesc);
     kicker="Everything in stock · No samples"
     title="The "
     accent="Aisle"
-    lede="Every box on record. Filter by type, re-sort however you like, and send up to four to the price check."
+    lede="Every box on record, one row each. Sort by any column heading. Filter by type or search by name. Press + on up to four boxes to send them to the price check."
   />
 
   <AisleFilters mode="buttons" />
 
   <div class="controls wrap">
-    <label class="pricegun">
-      SORT:
-      <select id="sort">
-        <option value="rating">Taste (best first)</option>
-        <option value="protein">Protein (most first)</option>
-        <option value="sugar">Sugar (least first)</option>
-        <option value="fiber">Fiber (most first)</option>
-        <option value="date">Recently reviewed</option>
-      </select>
+    <label class="finder">
+      <span>Search</span>
+      <input id="q" type="search" placeholder="Brand, name or note" autocomplete="off" />
     </label>
-    <div class="count" id="count"></div>
+    <div class="count" id="count" aria-live="polite"></div>
   </div>
 
-  <div class="aislegrid wrap" id="grid">
-    {
-      ranked.map((c) => (
-        <div
-          class="cell"
-          data-id={c.id}
-          data-form={c.data.formFactors.join(' ')}
-          data-attrs={c.data.attributes.join(' ')}
-          data-rating={c.data.rating ?? -1}
-          data-protein={c.data.nutrition.protein ?? -1}
-          data-sugar={c.data.nutrition.totalSugars ?? 9999}
-          data-fiber={c.data.nutrition.dietaryFiber ?? -1}
-          data-date={c.data.dateReviewed.getTime()}
-        >
-          <MiniBox
-            emoji={c.data.emoji}
-            brand={c.data.brand}
-            name={c.data.name}
-            boxColor={c.data.boxColor}
-            boxImage={c.data.boxImage}
-            href={`/cereals/${c.id}/`}
-          />
-          <PriceTag rating={c.data.rating} macros={macroLine(c)} />
-          <button class="addcmp" type="button" data-id={c.id}>+ compare</button>
-        </div>
-      ))
-    }
-  </div>
+  <section class="shelf wrap">
+    <div class="ledger-frame">
+      <div class="ledger-scroll" tabindex="0" role="region" aria-label="All cereals, one per row">
+        <table class="ledger" id="ledger">
+          <colgroup>
+            <col class="col-name" />
+            <col span="3" />
+            <col span={METRICS.length} />
+            <col class="col-type" />
+            <col class="col-note" />
+            <col />
+          </colgroup>
+          <thead>
+            <tr class="groups">
+              <th class="g-name" scope="col"></th>
+              <th class="g-scores" colspan="3" scope="colgroup">Scores · out of 10</th>
+              <th class="g-macros" colspan={METRICS.length} scope="colgroup">Per 100 g</th>
+              <th class="g-rest" colspan="3" scope="colgroup">On the box</th>
+            </tr>
+            <tr class="heads">
+              <th class="h-name" scope="col" data-sort="name" data-first="asc">
+                <button type="button">Cereal</button>
+              </th>
+              <th class="h-big h-taste" scope="col" data-sort="taste" data-first="desc">
+                <button type="button">Taste</button>
+              </th>
+              <th class="h-big h-health" scope="col" data-sort="health" data-first="desc">
+                <button type="button">Health</button>
+              </th>
+              <th class="h-grade" scope="col" data-sort="overall" data-first="desc">
+                <button type="button">Grade</button>
+              </th>
+              {METRICS.map((m) => (
+                <th class="h-num" scope="col" data-sort={m.key} data-first={m.low ? 'asc' : 'desc'} title={m.title}>
+                  <button type="button">{m.label}</button>
+                </th>
+              ))}
+              <th class="h-plain" scope="col">Type</th>
+              <th class="h-plain" scope="col">Note</th>
+              <th class="h-plain h-cmp" scope="col" title="Add to the price check">Cmp</th>
+            </tr>
+          </thead>
+          <tbody id="rows">
+            {rows.map((r) => (
+              <tr
+                data-id={r.id}
+                data-tags={r.tags.join(' ')}
+                data-search={`${r.d.brand} ${r.d.name} ${r.d.shortNote ?? ''}`.toLowerCase()}
+                data-s-name={`${r.d.brand} ${r.d.name}`.toLowerCase()}
+                data-s-taste={sortVal(r.taste)}
+                data-s-health={sortVal(r.health)}
+                data-s-overall={sortVal(r.overall)}
+                {...Object.fromEntries(
+                  METRICS.map((m) => [`data-s-${kebab(m.key)}`, sortVal(r.n[m.key as MetricKey])])
+                )}
+              >
+                <th class="c-name" scope="row">
+                  <a href={r.href}>
+                    <span class="thumb" style={`--bc: ${r.d.boxColor}`}>
+                      {r.d.boxImage ? (
+                        <img src={u(r.d.boxImage)} alt="" loading="lazy" />
+                      ) : (
+                        <span class="e" aria-hidden="true">{r.d.emoji}</span>
+                      )}
+                    </span>
+                    <span class="nm">
+                      <b>{r.d.name}</b>
+                      <small>{r.d.brand}</small>
+                    </span>
+                  </a>
+                </th>
+                <td class="c-big">
+                  {r.taste == null ? (
+                    <span class="big na" title="No Taste score on file">—</span>
+                  ) : (
+                    <span class={`big ${r.tasteTier}`}>{(r.taste / 10).toFixed(1)}</span>
+                  )}
+                </td>
+                <td class="c-big">
+                  {r.health == null ? (
+                    <span class="big na" title="The label lists no protein, sugar, fiber or saturated fat">—</span>
+                  ) : (
+                    <span class={`big ${r.healthTier}`}>{(r.health / 10).toFixed(1)}</span>
+                  )}
+                </td>
+                <td class="c-grade">
+                  {r.grade == null ? (
+                    <span class="seal na" title="Unrated boxes get no grade">—</span>
+                  ) : (
+                    <span class={`seal ${r.gradeTier}`} title={`Overall ${overallOutOfTen(r.overall!)} / 10`}>
+                      {r.grade}
+                    </span>
+                  )}
+                </td>
+                {METRICS.map((m) => {
+                  const raw = r.n[m.key as MetricKey];
+                  const v = fmt(raw, m.unit);
+                  // Protein is tinted by its %DV, the same number the grade uses.
+                  const tintValue = m.key === 'protein' ? proteinDVOf(r.n).dv : raw;
+                  const tier = m.tint ? macroTier(m.key as MacroTintKey, tintValue) : null;
+                  return (
+                    <td class:list={['c-num', tier && `tint t-${tier}`]}>
+                      {v ?? <span class="dash" title="Not listed on the label">—</span>}
+                    </td>
+                  );
+                })}
+                <td class="c-type">
+                  {r.tags.length ? r.tags.map((t) => <span class="tg">{label(t)}</span>) : <span class="dash">—</span>}
+                </td>
+                <td class="c-note">
+                  {r.d.shortNote ? r.d.shortNote : <span class="nil-note">No note on file.</span>}
+                </td>
+                <td class="c-cmp">
+                  <button
+                    class="addcmp"
+                    type="button"
+                    data-id={r.id}
+                    aria-pressed="false"
+                    aria-label={`Add ${r.d.brand} ${r.d.name} to the price check`}
+                    title="Add to the price check"
+                  >+</button>
+                </td>
+              </tr>
+            ))}
+            <tr class="none" id="none" hidden>
+              <td colspan={METRICS.length + 7}>
+                Out of stock. Nothing on this shelf matches. Try another aisle or a shorter search.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
-  <div class="empty wrap" id="empty" hidden>
-    <p>OUT OF STOCK — nothing on this shelf matches. Try another aisle.</p>
-  </div>
+    <p class="ledger-foot">
+      Taste is one person’s score out of ten. Health is the nutrition share of the overall grade:
+      protein and fiber count for it, sugar and saturated fat count against it, all per 100 g. The
+      grade is 40% Taste and 60% Health (see <a href={u('/about/#overall')}>Store Policy §6</a>).
+      The pale cell colours use the same protein, sugar, fiber and saturated-fat targets as Health;
+      fat and sodium use the UK front-of-pack traffic lights per 100 g. Calories and carbs are left plain. A dash means the
+      label does not list that figure. Nothing has been invented to fill it, and dashes sort to the
+      bottom.
+    </p>
+  </section>
 
   <div class="cart" id="cart" hidden>
     <span class="cartlabel">🛒 <b id="cartcount">0</b> in cart</span>
@@ -78,59 +243,119 @@ const ranked = [...cereals].sort(byRatingDesc);
 </Layout>
 
 <script>
-  const grid = document.getElementById('grid')!;
-  const empty = document.getElementById('empty')!;
+  const tbody = document.getElementById('rows')!;
+  const none = document.getElementById('none')!;
   const count = document.getElementById('count')!;
-  const sortSel = document.getElementById('sort') as HTMLSelectElement;
-  const buttons = Array.from(
+  const q = document.getElementById('q') as HTMLInputElement;
+  const filterBtns = Array.from(
     document.querySelectorAll<HTMLButtonElement>('[data-filter-bar] [data-filter]')
   );
-  const cells = Array.from(grid.querySelectorAll<HTMLElement>('.cell'));
+  const heads = Array.from(document.querySelectorAll<HTMLTableCellElement>('th[data-sort]'));
+  const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('tr[data-id]'));
 
-  let active = 'all';
+  // State lives in the URL hash so a sorted, filtered view can be linked.
+  // `f` is the aisle filter (the home page's aisle signs already link with it).
+  const state = { f: 'all', s: 'taste', d: 'desc' as 'asc' | 'desc', q: '' };
 
-  function matches(cell: HTMLElement): boolean {
-    if (active === 'all') return true;
-    const form = (cell.dataset.form ?? '').split(' ');
-    const attrs = (cell.dataset.attrs ?? '').split(' ');
-    return form.includes(active) || attrs.includes(active);
+  function readHash() {
+    const h = new URLSearchParams(location.hash.slice(1));
+    const f = h.get('f');
+    if (f && filterBtns.some((b) => b.dataset.filter === f)) state.f = f;
+    const s = h.get('s');
+    if (s && heads.some((th) => th.dataset.sort === s)) state.s = s;
+    const d = h.get('d');
+    if (d === 'asc' || d === 'desc') state.d = d;
+    else state.d = (heads.find((th) => th.dataset.sort === state.s)?.dataset.first as 'asc' | 'desc') ?? 'desc';
+    state.q = h.get('q') ?? '';
+    q.value = state.q;
   }
 
-  function apply() {
+  function writeHash() {
+    const h = new URLSearchParams();
+    if (state.f !== 'all') h.set('f', state.f);
+    if (state.s !== 'taste' || state.d !== 'desc') {
+      h.set('s', state.s);
+      h.set('d', state.d);
+    }
+    if (state.q) h.set('q', state.q);
+    const str = h.toString();
+    history.replaceState(null, '', str ? `#${str}` : location.pathname);
+  }
+
+  function matches(row: HTMLTableRowElement): boolean {
+    if (state.f !== 'all' && !(row.dataset.tags ?? '').split(' ').includes(state.f)) return false;
+    const terms = state.q.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    const hay = row.dataset.search ?? '';
+    return terms.every((t) => hay.includes(t));
+  }
+
+  // Missing values always sort last, whichever way the column is sorted.
+  function compare(a: HTMLTableRowElement, b: HTMLTableRowElement): number {
+    const key = `s${state.s[0].toUpperCase()}${state.s.slice(1)}`;
+    const av = a.dataset[key] ?? '';
+    const bv = b.dataset[key] ?? '';
+    if (av === '' && bv === '') return 0;
+    if (av === '') return 1;
+    if (bv === '') return -1;
+    const dir = state.d === 'asc' ? 1 : -1;
+    if (state.s === 'name') return dir * av.localeCompare(bv);
+    return dir * (Number(av) - Number(bv));
+  }
+
+  function render() {
     let shown = 0;
-    for (const cell of cells) {
-      const ok = matches(cell);
-      cell.hidden = !ok;
+    for (const row of rows) {
+      const ok = matches(row);
+      row.hidden = !ok;
       if (ok) shown++;
     }
-    empty.hidden = shown > 0;
-    count.textContent = `${shown} box${shown === 1 ? '' : 'es'} on the shelf`;
+    // Stable sort, with taste as the tie-break, so equal values keep a sensible order.
+    const sorted = [...rows].sort((a, b) => compare(a, b) || Number(b.dataset.sTaste || -1) - Number(a.dataset.sTaste || -1));
+    for (const row of sorted) tbody.insertBefore(row, none);
+    none.hidden = shown > 0;
+    count.textContent = `${shown} of ${rows.length} box${rows.length === 1 ? '' : 'es'} shown`;
 
-    const key = sortSel.value;
-    const dir = key === 'sugar' ? 1 : -1; // sugar ascends; everything else descends
-    const attr = { rating: 'rating', protein: 'protein', sugar: 'sugar', fiber: 'fiber', date: 'date' }[key] ?? 'rating';
-    [...cells]
-      .sort((a, b) => dir * (Number(a.dataset[attr]) - Number(b.dataset[attr])))
-      .forEach((c) => grid.appendChild(c));
+    for (const th of heads) {
+      const on = th.dataset.sort === state.s;
+      th.classList.toggle('on', on);
+      if (on) th.setAttribute('aria-sort', state.d === 'asc' ? 'ascending' : 'descending');
+      else th.removeAttribute('aria-sort');
+    }
+    for (const b of filterBtns) b.classList.toggle('on', b.dataset.filter === state.f);
+    writeHash();
   }
 
-  function setActive(key: string) {
-    active = key;
-    for (const b of buttons) b.classList.toggle('on', b.dataset.filter === key);
-    if (key !== 'all') history.replaceState(null, '', `#f=${key}`);
-    else history.replaceState(null, '', location.pathname);
-    apply();
+  for (const th of heads) {
+    th.querySelector('button')!.addEventListener('click', () => {
+      const key = th.dataset.sort!;
+      if (state.s === key) state.d = state.d === 'asc' ? 'desc' : 'asc';
+      else {
+        state.s = key;
+        state.d = (th.dataset.first as 'asc' | 'desc') ?? 'desc';
+      }
+      render();
+    });
   }
 
-  for (const b of buttons) {
-    b.addEventListener('click', () => setActive(b.dataset.filter!));
+  for (const b of filterBtns) {
+    b.addEventListener('click', () => {
+      state.f = b.dataset.filter!;
+      render();
+    });
   }
-  sortSel.addEventListener('change', apply);
 
-  // Deep-linking: /cereals/#f=granola pre-filters (home page aisle signs use this).
-  const hash = new URLSearchParams(location.hash.slice(1));
-  const initial = hash.get('f');
-  setActive(initial && buttons.some((b) => b.dataset.filter === initial) ? initial : 'all');
+  q.addEventListener('input', () => {
+    state.q = q.value;
+    render();
+  });
+
+  readHash();
+  render();
+  // A link to another sort or filter on this same page only changes the hash.
+  addEventListener('hashchange', () => {
+    readHash();
+    render();
+  });
 
   // --- "add to compare" cart -> /compare?ids=... (max 4, matching the compare page) ---
   const CART_MAX = 4;
@@ -147,7 +372,8 @@ const ranked = [...cereals].sort(byRatingDesc);
     for (const b of addBtns) {
       const on = inCart.has(b.dataset.id!);
       b.classList.toggle('on', on);
-      b.textContent = on ? '✓ added' : '+ compare';
+      b.setAttribute('aria-pressed', String(on));
+      b.textContent = on ? '✓' : '+';
       b.disabled = !on && inCart.size >= CART_MAX;
     }
     cart.hidden = inCart.size === 0;
@@ -169,6 +395,9 @@ const ranked = [...cereals].sort(byRatingDesc);
 </script>
 
 <style>
+  /* Class names here are page-local on purpose. Global names like .box,
+     .score, .macros, .tags and .brand would pull in unset properties from
+     global.css even when this page's rule wins. */
 
   .controls {
     display: flex;
@@ -179,98 +408,363 @@ const ranked = [...cereals].sort(byRatingDesc);
     flex-wrap: wrap;
   }
 
-  .pricegun {
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    background: var(--cherry);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    box-shadow: 0 4px 0 var(--ink);
+  /* The search box is furniture, so it gets the hard border and shadow. */
+  .finder {
+    display: flex;
+    align-items: stretch;
+    border: 3px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    background: var(--white);
   }
 
-  .pricegun select {
+  .finder span {
+    display: flex;
+    align-items: center;
+    background: var(--turq);
+    color: var(--white);
     font-family: var(--shout);
-    font-size: 11px;
-    border: 0;
-    border-radius: 3px;
-    padding: 3px 6px;
-    margin-left: 6px;
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 12px 4px;
+    border-right: 3px solid var(--ink);
   }
+
+  .finder input {
+    border: 0;
+    font-family: var(--fine);
+    font-size: 15px;
+    color: var(--ink);
+    padding: 8px 12px;
+    width: 260px;
+    background: transparent;
+  }
+
+  .finder input:focus { outline: none; }
+  .finder:focus-within { outline: 4px solid var(--turq); outline-offset: 3px; }
 
   .count {
-    font-family: var(--mono);
+    font-family: var(--fine);
     font-size: 12px;
-    color: #546e7a;
-  }
-
-  .aislegrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
-    gap: 34px 18px;
-    max-width: 980px;
-    margin-top: 34px;
-      margin-bottom: 70px;
-  }
-
-  .cell {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .cell[hidden] {
-    display: none;
-  }
-
-
-  .cell > :global(.ptag) {
-    width: 118px;
-    margin-top: -1px;
-  }
-
-  .empty {
-    max-width: 680px;
-    text-align: center;
-    margin-top: 40px;
-  }
-
-  .empty p {
-    font-family: var(--mono);
-    font-size: 13px;
-    color: #546e7a;
-    margin-top: 14px;
-    letter-spacing: 0.06em;
-  }
-
-  .addcmp {
-    margin-top: 8px;
-    font-family: var(--shout);
-    font-size: 10px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    background: #fff;
-    color: var(--turq-deep);
-    border: 2px solid var(--turq);
-    border-radius: 999px;
-    padding: 5px 12px;
+    color: var(--muted);
+  }
+
+  /* ---- the ledger ----
+     Loud frame, calm contents. The frame and the group bars carry the ad
+     look; the cells are small, plain and tabular. Taste and Health are the
+     one exception: they are the headline of each row, so they get the
+     display face and a colour band. */
+
+  /* The table needs more width than the 1280px page column. */
+  .shelf { max-width: 1600px; margin: 26px auto 80px; }
+
+  .ledger-frame {
+    background: var(--white);
+    border: 4px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
+  }
+
+  /* Wide tables scroll inside their own box, never the page. */
+  .ledger-scroll { overflow-x: auto; }
+  .ledger-scroll:focus-visible { outline-offset: -4px; }
+
+  .ledger {
+    width: 100%;
+    min-width: 1180px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-family: var(--fine);
+    font-size: 14px;
+    color: var(--ink-soft);
+    text-align: left;
+  }
+
+  .col-name { width: 230px; }
+  .col-type { width: 130px; }
+  .col-note { width: 240px; }
+
+  .ledger th,
+  .ledger td {
+    padding: 9px 7px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: middle;
+    font-weight: normal;
+  }
+
+  /* Group bars: black strips with white caps, like the section kickers. */
+  .groups th {
+    background: var(--ink);
+    color: var(--white);
+    font-family: var(--fine);
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    padding: 6px 10px 5px;
+    border-bottom: 0;
+    text-align: center;
+  }
+
+  .groups .g-scores { background: var(--cherry); }
+  .groups .g-name { background: var(--ink); }
+
+  .heads th {
+    background: var(--cream);
+    border-bottom: 3px solid var(--ink);
+    padding: 0;
+    white-space: nowrap;
+    vertical-align: bottom;
+  }
+
+  .heads th button {
+    display: block;
+    width: 100%;
+    border: 0;
+    background: none;
     cursor: pointer;
   }
 
-  .addcmp:hover {
-    background: var(--turq);
-    color: #fff;
+  .heads th button,
+  .heads .h-plain {
+    padding: 10px 7px 8px;
+    font-family: var(--fine);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: inherit;
   }
+
+  .heads .h-plain { text-align: left; }
+
+  .heads th button:hover { color: var(--ink); background: #fff1c4; }
+
+  /* Sort arrow: a small mark, shown only on the active column. */
+  .heads th button::after {
+    content: '';
+    display: inline-block;
+    width: 0.9em;
+    text-align: left;
+    padding-left: 2px;
+  }
+
+  .heads th.on button { color: var(--ink); background: var(--yellow); }
+  .heads th[aria-sort='ascending'] button::after { content: '▲'; }
+  .heads th[aria-sort='descending'] button::after { content: '▼'; }
+
+  .h-num, .h-grade, .h-big { text-align: center; }
+
+  /* Taste and Health headings are allowed to shout. */
+  .heads .h-big button {
+    font-family: var(--shout);
+    font-size: 18px;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    padding: 8px 6px 5px;
+  }
+
+  /* Sticky first column, so the name stays put while the macros scroll. */
+  .h-name,
+  .c-name {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    border-right: 3px solid var(--ink);
+  }
+
+  .g-name { position: sticky; left: 0; z-index: 2; border-right: 3px solid var(--ink); }
+  /* Column widths in <colgroup> are only hints; this one has to hold. */
+  .c-name { background: var(--white); min-width: 190px; padding-left: 10px; }
+
+  tbody tr:hover td:not(.tint),
+  tbody tr:hover .c-name { background: #fffaf0; }
+
+  tbody tr:last-of-type td,
+  tbody tr:last-of-type th { border-bottom: 0; }
+
+  .c-name a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink);
+  }
+
+  .thumb {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 44px;
+    border: 2px solid var(--ink);
+    background: var(--bc, var(--cream));
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb .e { font-size: 19px; line-height: 1; }
+
+  .nm b {
+    display: block;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.2;
+  }
+
+  .nm small {
+    display: block;
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted-light);
+    margin-top: 3px;
+  }
+
+  .c-name a:hover b { color: var(--cherry); text-decoration: underline; text-underline-offset: 3px; }
+
+  /* ---- the two headline numbers ---- */
+
+  .c-big { text-align: center; padding: 7px 8px; }
+
+  .big {
+    display: inline-block;
+    min-width: 54px;
+    padding: 6px 7px 3px;
+    border: 3px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    font-family: var(--shout);
+    font-size: 26px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--white);
+    background: var(--muted-light);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .big.good { background: var(--score-good); }
+  .big.mid { background: var(--score-mid); color: var(--ink); }
+  .big.bad { background: var(--score-bad); }
+  .big.na { background: var(--cream); color: var(--muted-light); box-shadow: none; border-style: dashed; }
+
+  /* The grade is a small flat seal: it summarises the two numbers beside it. */
+  .c-grade { text-align: center; }
+
+  .seal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 2px solid var(--ink);
+    font-family: var(--shout);
+    font-size: 17px;
+    line-height: 1;
+    color: var(--white);
+    background: var(--muted);
+  }
+
+  .seal.elite { background: var(--turq); }
+  .seal.good { background: var(--score-good); }
+  .seal.mid { background: var(--score-mid); color: var(--ink); }
+  .seal.bad { background: var(--score-bad); }
+  .seal.na { background: var(--cream); color: var(--muted-light); border-style: dashed; }
+
+  /* ---- the payload: flat, small, unexcited ---- */
+
+  .c-num {
+    text-align: center;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Pale tints, far quieter than the Taste and Health blocks: they hint at
+     good, middling or poor without making the numbers shout. */
+  .c-num.t-good { background: color-mix(in srgb, var(--score-good) 13%, var(--white)); }
+  .c-num.t-mid { background: color-mix(in srgb, var(--score-mid) 16%, var(--white)); }
+  .c-num.t-bad { background: color-mix(in srgb, var(--score-bad) 11%, var(--white)); }
+
+  .dash { color: var(--muted-light); }
+
+  .c-type {
+    min-width: 130px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  /* A tag never splits across two lines ("No Added / Sugar"). */
+  .c-type .tg { display: inline-block; white-space: nowrap; margin-right: 7px; }
+
+  .c-note {
+    min-width: 190px;
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--ink-soft);
+  }
+
+  .c-note .nil-note { font-size: 12px; }
+
+  .c-cmp { text-align: center; white-space: nowrap; }
+
+  .addcmp {
+    width: 28px;
+    height: 28px;
+    font-family: var(--shout);
+    font-size: 17px;
+    line-height: 1;
+    background: var(--white);
+    color: var(--ink);
+    border: 2px solid var(--ink);
+    box-shadow: 2px 2px 0 var(--ink);
+    padding: 0;
+    cursor: pointer;
+  }
+
+  .addcmp:hover:not(:disabled) { background: var(--turq); color: var(--white); }
 
   .addcmp.on {
     background: var(--yellow);
-    border-color: var(--ink);
     color: var(--ink);
   }
 
   .addcmp:disabled {
     opacity: 0.35;
     cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .none td {
+    text-align: center;
+    padding: 28px 10px;
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .ledger-foot {
+    max-width: 860px;
+    margin: 18px auto 0;
+    font-family: var(--fine);
+    font-size: 11px;
+    line-height: 1.55;
+    letter-spacing: 0.03em;
+    color: var(--muted);
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  .ledger-foot a { color: var(--turq-deep); text-decoration: underline; text-underline-offset: 2px; }
+
+  .sr {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
   /* floating price-check cart */
@@ -286,22 +780,17 @@ const ranked = [...cereals].sort(byRatingDesc);
     background: var(--ink);
     color: var(--cream);
     border: 3px solid var(--yellow);
-    border-radius: 999px;
     padding: 10px 12px 10px 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    box-shadow: 6px 6px 0 var(--cherry);
+    font-family: var(--fine);
     font-size: 13px;
+    white-space: nowrap;
   }
 
-  .cart[hidden] {
-    display: none;
-  }
-
-  .cartlabel b {
-    color: var(--yellow);
-  }
+  .cart[hidden] { display: none; }
+  .cartlabel b { color: var(--yellow); }
 
   .carthint {
-    font-family: var(--fine);
     font-style: italic;
     font-size: 11px;
     color: #d9c39f;
@@ -310,16 +799,14 @@ const ranked = [...cereals].sort(byRatingDesc);
   .cartgo {
     background: var(--cherry);
     color: #fff;
-    text-decoration: none;
-    font-size: 12px;
+    font-family: var(--shout);
+    font-size: 14px;
     letter-spacing: 0.08em;
-    padding: 8px 16px;
-    border-radius: 999px;
+    padding: 8px 16px 6px;
+    border: 2px solid var(--yellow);
   }
 
-  .cartgo:hover {
-    background: var(--cherry-deep);
-  }
+  .cartgo:hover { background: var(--cherry-deep); }
 
   .cartclear {
     background: none;
@@ -329,5 +816,21 @@ const ranked = [...cereals].sort(byRatingDesc);
     font-size: 12px;
     cursor: pointer;
     text-decoration: underline;
+  }
+
+  @media (max-width: 860px) {
+    .finder input { width: 200px; }
+  }
+
+  /* On a phone the sticky name column has to give up room to the numbers. */
+  @media (max-width: 560px) {
+    .col-name { width: 150px; }
+    .c-name { min-width: 150px; padding: 8px; }
+    .thumb { display: none; }
+    .nm b { font-size: 13px; }
+    .ledger-frame { box-shadow: 4px 4px 0 var(--ink); }
+    .finder input { width: 160px; }
+    .cart { gap: 10px; padding: 8px 10px 8px 14px; }
+    .carthint { display: none; }
   }
 </style>
