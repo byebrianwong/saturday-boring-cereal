@@ -1,5 +1,5 @@
 ---
-name: Organic Superseed Granola Blueberry
+name: Superseed Granola, Blueberry
 brand: Manitoba Harvest
 rating: 7
 shortNote: Pretty average granola taste, nothing special

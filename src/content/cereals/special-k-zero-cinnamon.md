@@ -1,6 +1,6 @@
 ---
-name: Zero Cinnamon
-brand: Special K
+name: Special K Zero Cinnamon
+brand: "Kellogg's"
 rating: 3
 dateReviewed: 2025-03-30
 emoji: '🧂'

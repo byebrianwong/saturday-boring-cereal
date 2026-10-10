@@ -1,5 +1,5 @@
 ---
-name: "Frugra Reduced Sugar Fruit & Granola"
+name: "Frugra Fruit & Granola, Reduced Sugar"
 brand: Calbee
 rating: 8
 shortNote: Light crispy granola type

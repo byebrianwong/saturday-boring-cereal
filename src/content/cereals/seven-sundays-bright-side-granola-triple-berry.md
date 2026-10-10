@@ -1,5 +1,5 @@
 ---
-name: Bright Side Granola Triple Berry
+name: Bright Side Granola, Triple Berry
 brand: Seven Sundays
 rating: 8.5
 dateReviewed: 2026-02-15

@@ -1,6 +1,6 @@
 ---
-name: Almond Butter
-brand: Michelle’s Granola
+name: Almond Butter Granola
+brand: "Michele's Granola"
 rating: 8.5
 shortNote: Tastes sugary
 dateReviewed: 2026-02-15

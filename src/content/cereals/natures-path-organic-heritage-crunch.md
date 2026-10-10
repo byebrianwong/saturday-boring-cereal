@@ -1,5 +1,5 @@
 ---
-name: Organic Heritage Crunch
+name: Heritage Crunch
 brand: "Nature's Path"
 rating: 8
 dateReviewed: 2026-01-06

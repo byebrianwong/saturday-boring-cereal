@@ -1,6 +1,6 @@
 ---
-name: Strawberry Protein
-brand: Cheerios
+name: Cheerios Protein, Strawberry
+brand: General Mills
 rating: 7
 shortNote: Slight artificial strawberry flavor; fairly sweet
 dateReviewed: 2025-06-15
