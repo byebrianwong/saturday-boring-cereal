@@ -7,6 +7,8 @@ dateReviewed: 2025-06-15
 emoji: '🍓'
 boxColor: "#f0b429"
 barcode: '0016000226357'
+labelImage: /images/labels/cheerios-strawberry-protein.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0016000226357"
 noAutoImage: true
 formFactors: [os]
 proteinSources: []

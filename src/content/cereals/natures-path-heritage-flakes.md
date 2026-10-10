@@ -6,6 +6,8 @@ dateReviewed: 2026-01-06
 emoji: '🌾'
 boxColor: "#6fae57"
 barcode: '0058449770206'
+labelImage: /images/labels/natures-path-heritage-flakes.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0058449770206"
 boxImage: /images/cereals/natures-path-heritage-flakes.jpg
 imageSource: manufacturer
 imageCredit: "Image: Nature's Path (naturespath.com)"

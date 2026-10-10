@@ -3,12 +3,18 @@ import { grams, milligrams, percent, plain } from '../lib/format';
 import { per100g, type Nutrition } from '../lib/nutrition';
 
 interface Props {
-  /** Per serving, as stored. The panel shows it per 100 g. */
+  /** Per serving, as stored. */
   nutrition: Nutrition;
+  /**
+   * '100g' (default) scales to 100 g for fair comparison. 'serving' shows the
+   * stored numbers as the label prints them, for checking against a label photo.
+   */
+  basis?: '100g' | 'serving';
 }
 
-const { nutrition: label } = Astro.props;
-const n = per100g(label);
+const { nutrition: label, basis = '100g' } = Astro.props;
+const perServing = basis === 'serving';
+const n = perServing ? label : per100g(label);
 const servingText = label.servingDescription
   ? `${label.servingDescription} (${label.servingSize}g)`
   : `${label.servingSize}g`;
@@ -37,7 +43,7 @@ const rows: Array<{ label: string; value: string; indent?: boolean; bold?: boole
     <span>{servingText}</span>
   </div>
   <div class="rule-8"></div>
-  <div class="amount">AMOUNT PER 100 G</div>
+  <div class="amount">{perServing ? 'AMOUNT PER SERVING' : 'AMOUNT PER 100 G'}</div>
   {
     rows.map((r) => (
       <div class:list={['row', { indent: r.indent, bold: r.bold, missing: r.value === 'not listed' }]}>
@@ -46,11 +52,18 @@ const rows: Array<{ label: string; value: string; indent?: boolean; bold?: boole
       </div>
     ))
   }
-  <div class="fine">
-    Every box is shown per 100 g so boxes with different serving sizes compare fairly. The
-    figures are scaled from the label’s per-serving numbers. “not listed” means the label doesn’t
-    state it — we don’t invent numbers. FDA only requires protein %DV when a protein claim is made.
-  </div>
+  {perServing ? (
+    <div class="fine">
+      These are the per-serving numbers as stored, before scaling to 100 g. They should match
+      the label photo line for line. “not listed” means the field is empty.
+    </div>
+  ) : (
+    <div class="fine">
+      Every box is shown per 100 g so boxes with different serving sizes compare fairly. The
+      figures are scaled from the label’s per-serving numbers. “not listed” means the label doesn’t
+      state it — we don’t invent numbers. FDA only requires protein %DV when a protein claim is made.
+    </div>
+  )}
 </div>
 
 <style>

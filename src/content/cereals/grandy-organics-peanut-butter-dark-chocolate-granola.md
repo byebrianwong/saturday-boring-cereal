@@ -7,6 +7,8 @@ dateReviewed: 2026-09-20
 emoji: '🥣'
 boxColor: "#c98d4e"
 barcode: '0648960035207'
+labelImage: /images/labels/grandy-organics-peanut-butter-dark-chocolate-granola.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0648960035207"
 boxImage: /images/cereals/grandy-organics-peanut-butter-dark-chocolate-granola.jpg
 imageSource: manufacturer
 imageCredit: "Image: grandyorganics.com"

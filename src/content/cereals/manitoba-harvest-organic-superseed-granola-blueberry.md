@@ -7,6 +7,8 @@ dateReviewed: 2025-06-15
 emoji: '🫐'
 boxColor: "#4e8a5c"
 barcode: '697658692239'
+labelImage: /images/labels/manitoba-harvest-organic-superseed-granola-blueberry.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/697658692239"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [organic, high-protein]
