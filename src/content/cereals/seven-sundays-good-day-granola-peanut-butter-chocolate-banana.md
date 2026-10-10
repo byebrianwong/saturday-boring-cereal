@@ -25,9 +25,9 @@ nutrition:
   totalCarbs: 18
   dietaryFiber: 4
   totalSugars: 6
-  addedSugars: null
+  addedSugars: 3
   protein: 6
-  proteinDV: null
+  proteinDV: 5
   sodium: 100
 ---
 

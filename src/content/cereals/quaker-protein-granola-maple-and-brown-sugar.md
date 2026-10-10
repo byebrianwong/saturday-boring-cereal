@@ -15,14 +15,14 @@ proteinSources: [nut-seed]
 attributes: [high-protein]
 nutrition:
   servingSize: 62
-  calories: 260
-  totalFat: null
+  calories: 250
+  totalFat: 7
   saturatedFat: 1
   totalSugars: 13
   addedSugars: 12
   dietaryFiber: 4
   protein: 11
-  proteinDV: null
+  proteinDV: 22
   sodium: 95
 ---
 

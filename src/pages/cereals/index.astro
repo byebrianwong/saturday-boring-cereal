@@ -5,7 +5,7 @@ import AisleFilters from '../../components/AisleFilters.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import { byRatingDesc } from '../../lib/macros';
 import { per100gOf } from '../../lib/nutrition';
-import { scoreCereal, scoreTier, gradeColorTier, overallOutOfTen, macroTier } from '../../lib/score';
+import { scoreCereal, scoreTier, gradeColorTier, overallOutOfTen, macroTier, proteinDVOf } from '../../lib/score';
 import type { MacroTintKey } from '../../lib/score';
 import { oneDecimal } from '../../lib/format';
 import { label } from '../../lib/taxonomy';
@@ -27,9 +27,9 @@ const rows = ranked.map((c) => {
     href: u(`/cereals/${c.id}/`),
     taste,
     tasteTier: taste == null ? 'na' : scoreTier(taste),
-    // Health is the nutrition half of the Overall grade: the mean of the
-    // protein, sugar and fiber subscores, 0–100. Shown out of ten so it sits on
-    // the same scale as Taste.
+    // Health is the nutrition share of the Overall grade: the weighted mean of
+    // the protein, sugar, fiber and saturated-fat subscores, 0–100. Shown out
+    // of ten so it sits on the same scale as Taste.
     health: s.nutrition,
     healthTier: s.nutrition == null ? 'na' : scoreTier(s.nutrition),
     overall: s.overall,
@@ -49,7 +49,6 @@ const METRICS = [
   { key: 'protein', label: 'Protein', title: 'Protein', unit: 'g', low: false, tint: true },
   { key: 'totalCarbs', label: 'Carbs', title: 'Total carbohydrate', unit: 'g', low: false, tint: false },
   { key: 'totalSugars', label: 'Sugar', title: 'Total sugars', unit: 'g', low: true, tint: true },
-  { key: 'addedSugars', label: 'Added', title: 'Added sugars', unit: 'g', low: true, tint: true },
   { key: 'dietaryFiber', label: 'Fiber', title: 'Dietary fiber', unit: 'g', low: false, tint: true },
   { key: 'totalFat', label: 'Fat', title: 'Total fat', unit: 'g', low: true, tint: true },
   { key: 'saturatedFat', label: 'Sat fat', title: 'Saturated fat', unit: 'g', low: true, tint: true },
@@ -170,7 +169,7 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
                 </td>
                 <td class="c-big">
                   {r.health == null ? (
-                    <span class="big na" title="The label lists no protein, sugar or fiber">—</span>
+                    <span class="big na" title="The label lists no protein, sugar, fiber or saturated fat">—</span>
                   ) : (
                     <span class={`big ${r.healthTier}`}>{(r.health / 10).toFixed(1)}</span>
                   )}
@@ -187,7 +186,9 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
                 {METRICS.map((m) => {
                   const raw = r.n[m.key as MetricKey];
                   const v = fmt(raw, m.unit);
-                  const tier = m.tint ? macroTier(m.key as MacroTintKey, raw) : null;
+                  // Protein is tinted by its %DV, the same number the grade uses.
+                  const tintValue = m.key === 'protein' ? proteinDVOf(r.n).dv : raw;
+                  const tier = m.tint ? macroTier(m.key as MacroTintKey, tintValue) : null;
                   return (
                     <td class:list={['c-num', tier && `tint t-${tier}`]}>
                       {v ?? <span class="dash" title="Not listed on the label">—</span>}
@@ -223,11 +224,11 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
     </div>
 
     <p class="ledger-foot">
-      Taste is one person’s score out of ten. Health is the nutrition half of the overall grade:
-      protein and fiber count for it, sugar counts against it, all per 100 g. The grade blends the
-      two fifty-fifty (see <a href={u('/about/#overall')}>Store Policy §6</a>). The pale cell colours
-      use the same protein, sugar and fiber targets as Health; fat, saturated fat and sodium use the
-      UK front-of-pack traffic lights per 100 g. Calories and carbs are left plain. A dash means the
+      Taste is one person’s score out of ten. Health is the nutrition share of the overall grade:
+      protein and fiber count for it, sugar and saturated fat count against it, all per 100 g. The
+      grade is 40% Taste and 60% Health (see <a href={u('/about/#overall')}>Store Policy §6</a>).
+      The pale cell colours use the same protein, sugar, fiber and saturated-fat targets as Health;
+      fat and sodium use the UK front-of-pack traffic lights per 100 g. Calories and carbs are left plain. A dash means the
       label does not list that figure. Nothing has been invented to fill it, and dashes sort to the
       bottom.
     </p>

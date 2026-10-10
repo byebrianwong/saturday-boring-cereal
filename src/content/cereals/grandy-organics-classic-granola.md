@@ -14,17 +14,17 @@ proteinSources: [nut-seed]
 attributes: [organic]
 nutrition:
   servingSize: 56
-  calories: 280
+  calories: 270
   totalFat: 15
   saturatedFat: 2.5
   transFat: 0
-  polyunsaturatedFat: 4
+  polyunsaturatedFat: 4.5
   monounsaturatedFat: 5
   totalSugars: 6
-  addedSugars: 0
+  addedSugars: 5
   dietaryFiber: 5
   protein: 8
   proteinDV: null
-  sodium: 70
+  sodium: 65
 ---
 

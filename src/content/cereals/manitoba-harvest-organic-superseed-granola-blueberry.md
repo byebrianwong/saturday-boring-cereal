@@ -12,18 +12,18 @@ proteinSources: [nut-seed]
 attributes: [organic, high-protein]
 nutrition:
   servingSize: 60
-  calories: 275
-  totalFat: null
-  saturatedFat: 5.5
+  calories: 280
+  totalFat: 12
+  saturatedFat: 5
   transFat: 0
-  polyunsaturatedFat: 4.5
+  polyunsaturatedFat: 3.5
   monounsaturatedFat: 2
   totalSugars: 10
   addedSugars: 9
   dietaryFiber: 4
   protein: 11
-  proteinDV: null
-  sodium: 153
+  proteinDV: 18
+  sodium: 160
 boxImage: /images/cereals/manitoba-harvest-organic-superseed-granola-blueberry.jpg
 imageSource: other
 imageCredit: "Image: Manitoba Harvest, via Kroger"

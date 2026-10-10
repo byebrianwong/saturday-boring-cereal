@@ -14,7 +14,7 @@ attributes: [organic, high-fiber]
 nutrition:
   servingSize: 64
   calories: 220
-  totalFat: null
+  totalFat: 3.5
   saturatedFat: 0.5
   transFat: 0
   polyunsaturatedFat: 0.5
