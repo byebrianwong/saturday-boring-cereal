@@ -1,9 +1,10 @@
 import type { CollectionEntry } from 'astro:content';
 import { gramsShort } from './format';
+import { per100gOf } from './nutrition';
 
-/** "PRO 4g · SUG 5g · 28g" price-tag line, hiding values the label doesn't list. */
+/** "PRO 9.3g · SUG 0g /100g" price-tag line, hiding values the label doesn't list. */
 export function macroLine(c: CollectionEntry<'cereals'>): string {
-  const n = c.data.nutrition;
+  const n = per100gOf(c);
   const parts: string[] = [];
   const pro = gramsShort(n.protein);
   const sug = gramsShort(n.totalSugars);
@@ -11,8 +12,7 @@ export function macroLine(c: CollectionEntry<'cereals'>): string {
   if (pro) parts.push(`PRO ${pro}`);
   if (sug) parts.push(`SUG ${sug}`);
   else if (fib) parts.push(`FIB ${fib}`);
-  parts.push(`${n.servingSize}g`);
-  return parts.join(' · ');
+  return parts.length ? `${parts.join(' · ')} /100g` : '';
 }
 
 export function byRatingDesc(a: CollectionEntry<'cereals'>, b: CollectionEntry<'cereals'>): number {
