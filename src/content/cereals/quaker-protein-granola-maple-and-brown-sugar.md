@@ -7,6 +7,8 @@ dateReviewed: 2025-06-15
 emoji: '🍁'
 boxColor: "#d94f4f"
 barcode: '0030000576106'
+labelImage: /images/labels/quaker-protein-granola-maple-and-brown-sugar.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0030000576106"
 boxImage: /images/cereals/quaker-protein-granola-maple-and-brown-sugar.jpg
 imageSource: manufacturer
 imageCredit: "Image: Quaker Oats / PepsiCo (quakeroats.com)"

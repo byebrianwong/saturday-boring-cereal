@@ -6,6 +6,8 @@ dateReviewed: 2025-11-07
 emoji: '🌰'
 boxColor: "#e07ba3"
 barcode: '00810005'
+labelImage: /images/labels/trader-joes-homestyle-cherry-pistachio-pecan-granola.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/00810005"
 boxImage: /images/cereals/trader-joes-homestyle-cherry-pistachio-pecan-granola.jpg
 imageSource: manufacturer
 imageCredit: "Image: Trader Joe's (traderjoes.com)"

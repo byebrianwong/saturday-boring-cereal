@@ -57,6 +57,11 @@ const cereals = defineCollection({
     // front exists anywhere — the emoji placeholder beats an angled or
     // crowdsourced snapshot, and this stops enrichment re-adding one.
     noAutoImage: z.boolean().optional(),
+    // A photo of the box's printed Nutrition Facts label. The detail page
+    // shows it, collapsed, next to the stored per-serving numbers so they can
+    // be checked by eye. Set with `npm run label`.
+    labelImage: z.string().optional(),
+    labelCredit: z.string().optional(),
     barcode: z.string().optional(),
     purchaseLocation: z.string().optional(),
     price: z.number().optional(),

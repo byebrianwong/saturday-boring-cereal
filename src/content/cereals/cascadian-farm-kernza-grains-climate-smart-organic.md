@@ -7,6 +7,8 @@ dateReviewed: 2025-02-11
 emoji: '🌾'
 boxColor: "#6fa8d6"
 barcode: '00021908123813'
+labelImage: /images/labels/cascadian-farm-kernza-grains-climate-smart-organic.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/00021908123813"
 formFactors: [flakes]
 proteinSources: []
 attributes: [organic]

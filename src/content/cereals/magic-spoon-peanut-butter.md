@@ -7,6 +7,8 @@ emoji: '🥜'
 boxColor: "#7b4fb0"
 noAutoImage: true
 barcode: '0850002887464'
+labelImage: /images/labels/magic-spoon-peanut-butter.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0850002887464"
 formFactors: [os]
 proteinSources: [milk-protein]
 attributes: [high-protein, low-sugar, grain-free, keto, gluten-free]

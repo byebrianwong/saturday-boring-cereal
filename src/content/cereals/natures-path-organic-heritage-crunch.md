@@ -6,6 +6,8 @@ dateReviewed: 2026-01-06
 emoji: '🥣'
 boxColor: "#6fae57"
 barcode: '0058449771753'
+labelImage: /images/labels/natures-path-organic-heritage-crunch.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0058449771753"
 formFactors: [flakes]
 proteinSources: []
 attributes: [organic]

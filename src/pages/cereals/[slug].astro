@@ -85,6 +85,30 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
     </div>
   </div>
 
+  {
+    data.labelImage && (
+      <details class="labelcheck wrap">
+        <summary>CHECK AGAINST THE LABEL PHOTO</summary>
+        <div class="labelgrid">
+          <figure>
+            <a href={u(data.labelImage)} target="_blank" rel="noopener">
+              <img
+                src={u(data.labelImage)}
+                alt={`Nutrition Facts label on the ${data.brand} ${data.name} box`}
+                loading="lazy"
+              />
+            </a>
+            <figcaption>
+              Click the photo for full size.
+              {data.labelCredit && <> {data.labelCredit}</>}
+            </figcaption>
+          </figure>
+          <NutritionPanel nutrition={data.nutrition} basis="serving" />
+        </div>
+      </details>
+    )
+  }
+
   <article class="note wrap">
     <div class="notehead">
       <span class="sticker">MANAGER'S TASTING NOTE</span>
@@ -303,6 +327,56 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
     margin-top: 14px;
   }
 
+  /* Collapsed by default and styled like the back link, so it stays out of the
+     way. Opened, the photo and the per-serving panel sit side by side. */
+  .labelcheck {
+    max-width: 940px;
+    margin-top: 34px;
+  }
+
+  .labelcheck summary {
+    cursor: pointer;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    color: var(--turq-deep);
+    width: fit-content;
+  }
+
+  .labelcheck summary:hover {
+    text-decoration: underline;
+  }
+
+  .labelgrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: start;
+    margin-top: 16px;
+  }
+
+  .labelgrid figure {
+    margin: 0;
+  }
+
+  .labelgrid img {
+    display: block;
+    width: 100%;
+    max-height: 760px;
+    object-fit: contain;
+    object-position: top;
+    border: 2px solid var(--ink);
+    background: #fff;
+  }
+
+  .labelgrid figcaption {
+    font-family: var(--fine);
+    font-style: italic;
+    font-size: 11px;
+    color: #6b4a2a;
+    margin-top: 8px;
+    overflow-wrap: anywhere;
+  }
+
   /* Hard border and offset shadow to match the ad system; the note's own text
      stays plain. margin-bottom keeps it off the footer. */
   .note {
@@ -347,7 +421,8 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
   }
 
   @media (max-width: 760px) {
-    .product {
+    .product,
+    .labelgrid {
       grid-template-columns: 1fr;
       gap: 30px;
     }

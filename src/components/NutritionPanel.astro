@@ -4,12 +4,18 @@ import { per100g, percentDV, type Nutrition } from '../lib/nutrition';
 import { proteinDVOf } from '../lib/score';
 
 interface Props {
-  /** Per serving, as stored. The panel shows it per 100 g. */
+  /** Per serving, as stored. */
   nutrition: Nutrition;
+  /**
+   * '100g' (default) scales to 100 g for fair comparison. 'serving' shows the
+   * stored numbers as the label prints them, for checking against a label photo.
+   */
+  basis?: '100g' | 'serving';
 }
 
-const { nutrition: label } = Astro.props;
-const n = per100g(label);
+const { nutrition: label, basis = '100g' } = Astro.props;
+const perServing = basis === 'serving';
+const n = perServing ? label : per100g(label);
 const servingText = label.servingDescription
   ? `${label.servingDescription} (${label.servingSize} g)`
   : `${label.servingSize} g`;
@@ -46,7 +52,7 @@ const rows: Array<{
   <h3>Nutrition Facts</h3>
   <div class="basis">
     <span>Amount per</span>
-    <span>100 g</span>
+    <span>{perServing ? `serving: ${servingText}` : '100 g'}</span>
   </div>
   <div class="rule-8"></div>
   <div class="calories">
@@ -77,13 +83,21 @@ const rows: Array<{
     })
   }
   <p class="foot">
-    * % Daily Value: how much of the FDA's daily amount, on a 2,000-calorie diet, is in 100 g.
-    No % means the nutrient has no Daily Value. ~ means estimated from grams.
+    * % Daily Value: how much of the FDA's daily amount, on a 2,000-calorie diet, is in
+    {perServing ? 'one serving' : '100 g'}. No % means the nutrient has no Daily Value. ~ means
+    estimated from grams.
   </p>
-  <p class="foot">
-    Scaled from the box's own label serving of {servingText}, so every box is compared at the same
-    weight.
-  </p>
+  {perServing ? (
+    <p class="foot">
+      The stored numbers for one serving, before scaling to 100 g. They should match the label
+      photo line for line.
+    </p>
+  ) : (
+    <p class="foot">
+      Scaled from the box's own label serving of {servingText}, so every box is compared at the
+      same weight.
+    </p>
+  )}
 </div>
 
 <style>
