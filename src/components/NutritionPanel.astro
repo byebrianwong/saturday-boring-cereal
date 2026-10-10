@@ -1,6 +1,7 @@
 ---
 import { grams, milligrams, percent, plain } from '../lib/format';
-import { per100g, type Nutrition } from '../lib/nutrition';
+import { per100g, percentDV, type Nutrition } from '../lib/nutrition';
+import { proteinDVOf } from '../lib/score';
 
 interface Props {
   /** Per serving, as stored. The panel shows it per 100 g. */
@@ -13,19 +14,31 @@ const servingText = label.servingDescription
   ? `${label.servingDescription} (${label.servingSize}g)`
   : `${label.servingSize}g`;
 
-const rows: Array<{ label: string; value: string; indent?: boolean; bold?: boolean }> = [
-  { label: 'Calories', value: plain(n.calories), bold: true },
-  { label: 'Total Fat', value: grams(n.totalFat), bold: true },
-  { label: 'Saturated Fat', value: grams(n.saturatedFat), indent: true },
-  { label: 'Trans Fat', value: grams(n.transFat), indent: true },
-  { label: 'Polyunsaturated Fat', value: grams(n.polyunsaturatedFat), indent: true },
-  { label: 'Monounsaturated Fat', value: grams(n.monounsaturatedFat), indent: true },
-  { label: 'Sodium', value: milligrams(n.sodium), bold: true },
-  { label: 'Total Carbohydrate', value: grams(n.totalCarbs), bold: true },
-  { label: 'Dietary Fiber', value: grams(n.dietaryFiber), indent: true },
-  { label: 'Total Sugars', value: grams(n.totalSugars), indent: true },
-  { label: 'Protein', value: grams(n.protein), bold: true },
-  { label: 'Protein %DV', value: percent(n.proteinDV), indent: true },
+// %DV column, laid out like a US label: blank for nutrients with no Daily Value.
+const dv = (v: number | null) => (v == null ? '' : percent(v));
+const protein = proteinDVOf(n);
+const proteinDVText =
+  protein.dv == null ? '' : protein.estimated ? `~${percent(protein.dv)}` : percent(protein.dv);
+
+const rows: Array<{
+  label: string;
+  value: string;
+  dv: string;
+  /** 0 = top-level nutrient, 1 = indented, 2 = "Includes … Added Sugars". */
+  level?: 1 | 2;
+  bold?: boolean;
+}> = [
+  { label: 'Total Fat', value: grams(n.totalFat), dv: dv(percentDV('totalFat', n.totalFat)), bold: true },
+  { label: 'Saturated Fat', value: grams(n.saturatedFat), dv: dv(percentDV('saturatedFat', n.saturatedFat)), level: 1 },
+  { label: 'Trans Fat', value: grams(n.transFat), dv: '', level: 1 },
+  { label: 'Polyunsaturated Fat', value: grams(n.polyunsaturatedFat), dv: '', level: 1 },
+  { label: 'Monounsaturated Fat', value: grams(n.monounsaturatedFat), dv: '', level: 1 },
+  { label: 'Sodium', value: milligrams(n.sodium), dv: dv(percentDV('sodium', n.sodium)), bold: true },
+  { label: 'Total Carbohydrate', value: grams(n.totalCarbs), dv: dv(percentDV('totalCarbs', n.totalCarbs)), bold: true },
+  { label: 'Dietary Fiber', value: grams(n.dietaryFiber), dv: dv(percentDV('dietaryFiber', n.dietaryFiber)), level: 1 },
+  { label: 'Total Sugars', value: grams(n.totalSugars), dv: '', level: 1 },
+  { label: 'Added Sugars', value: grams(n.addedSugars), dv: dv(percentDV('addedSugars', n.addedSugars)), level: 2 },
+  { label: 'Protein', value: grams(n.protein), dv: proteinDVText, bold: true },
 ];
 ---
 
@@ -37,18 +50,43 @@ const rows: Array<{ label: string; value: string; indent?: boolean; bold?: boole
   </div>
   <div class="rule-8"></div>
   <div class="amount">AMOUNT PER 100 G</div>
+  <div class="calories">
+    <span>Calories</span>
+    <span class:list={['v', { missing: n.calories == null }]}>{plain(n.calories)}</span>
+  </div>
+  <div class="dvhead">% Daily Value*</div>
   {
-    rows.map((r) => (
-      <div class:list={['row', { indent: r.indent, bold: r.bold, missing: r.value === 'not listed' }]}>
-        <span>{r.label}</span>
-        <span class="v">{r.value}</span>
-      </div>
-    ))
+    rows.map((r) => {
+      const missing = r.value === 'not listed';
+      return (
+        <div class:list={['row', `l${r.level ?? 0}`, { bold: r.bold }]}>
+          <span>
+            {r.level === 2 && !missing ? (
+              <>
+                Includes <span class="v">{r.value}</span> {r.label}
+              </>
+            ) : (
+              <>
+                <span class="name">{r.label}</span>{' '}
+                <span class:list={['v', { missing }]}>{r.value}</span>
+              </>
+            )}
+          </span>
+          <span class="dv">{r.dv}</span>
+        </div>
+      );
+    })
   }
+  <div class="fine">
+    * The % Daily Value (DV) tells you how much a nutrient in 100 g of this cereal contributes to a
+    daily diet. 2,000 calories a day is used for general nutrition advice. The DVs are the FDA’s;
+    nutrients without a DV (calories, trans fat, total sugars) have no percentage, same as on the
+    box. A protein %DV marked ~ is estimated from grams because the label doesn’t print one.
+  </div>
   <div class="fine">
     Every box is shown per 100 g so boxes with different serving sizes compare fairly. The
     figures are scaled from the label’s per-serving numbers. “not listed” means the label doesn’t
-    state it — we don’t invent numbers. FDA only requires protein %DV when a protein claim is made.
+    state it — we don’t invent numbers.
   </div>
 </div>
 
@@ -91,24 +129,54 @@ const rows: Array<{ label: string; value: string; indent?: boolean; bold?: boole
     border-bottom: 4px solid #000;
   }
 
+  .calories {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 22px;
+    font-weight: 900;
+    padding: 2px 0 4px;
+    border-bottom: 4px solid #000;
+  }
+
+  .dvhead {
+    text-align: right;
+    font-size: 11px;
+    font-weight: 900;
+    padding: 4px 0;
+    border-bottom: 1px solid #000;
+  }
+
   .row {
     display: flex;
     justify-content: space-between;
+    gap: 12px;
     font-size: 13px;
     padding: 5px 0;
     border-bottom: 1px solid #000;
   }
 
-  .row.bold span:first-child {
+  .row.bold .name {
     font-weight: 900;
   }
 
-  .row.indent {
+  .row.l1 {
     padding-left: 18px;
     font-size: 12px;
   }
 
-  .row.missing .v {
+  .row.l2 {
+    padding-left: 36px;
+    font-size: 12px;
+  }
+
+  .dv {
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .missing {
     color: #999;
     font-style: italic;
   }

@@ -1,9 +1,9 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import { scoreCereal, gradeColorTier, overallOutOfTen } from '../lib/score';
+import { scoreCereal, gradeColorTier, overallOutOfTen, proteinDVOf } from '../lib/score';
 import { u } from '../lib/url';
-import { per100gOf } from '../lib/nutrition';
+import { per100gOf, percentDV } from '../lib/nutrition';
 
 const cereals = await getCollection('cereals');
 const round1 = (v: number | null | undefined) => (v == null ? null : Math.round(v * 10) / 10);
@@ -14,6 +14,7 @@ const ranked = [...cereals].sort((a, b) => (b.data.rating ?? -1) - (a.data.ratin
 const items = ranked.map((c) => {
   const s = scoreCereal(c);
   const n = per100gOf(c);
+  const protein = proteinDVOf(n);
   return {
   id: c.id,
   brand: c.data.brand,
@@ -36,11 +37,24 @@ const items = ranked.map((c) => {
     calories: round0(n.calories),
     protein: round1(n.protein),
     totalSugars: round1(n.totalSugars),
+    addedSugars: round1(n.addedSugars),
     dietaryFiber: round1(n.dietaryFiber),
     totalFat: round1(n.totalFat),
     saturatedFat: round1(n.saturatedFat),
     sodium: round0(n.sodium),
   },
+  // % Daily Value per 100 g, shown under the amount. Rows without an FDA Daily
+  // Value (calories, total sugars) have no entry. Protein marked estimated when
+  // the label doesn't print its own %DV.
+  dv: {
+    protein: round0(protein.dv),
+    addedSugars: round0(percentDV('addedSugars', n.addedSugars)),
+    dietaryFiber: round0(percentDV('dietaryFiber', n.dietaryFiber)),
+    totalFat: round0(percentDV('totalFat', n.totalFat)),
+    saturatedFat: round0(percentDV('saturatedFat', n.saturatedFat)),
+    sodium: round0(percentDV('sodium', n.sodium)),
+  } as Record<string, number | null>,
+  proteinDVEstimated: protein.estimated,
   };
 });
 ---
@@ -85,6 +99,9 @@ const items = ranked.map((c) => {
         <p class="board-foot">
           Every figure is per 100 g, scaled from each label, so a box with a bigger stated serving
           gets no head start. The last row is the label’s own serving size, for reference.
+          % DV is the share of the FDA’s Daily Value on a 2,000-calorie diet; calories and total
+          sugars have no Daily Value, so they get none. A protein % DV marked ~ is estimated from
+          grams because that label doesn’t print one.
           A star marks the best figure in a row, and only when two or more boxes list it and one of
           them wins outright. Where a label omits a value we say “not listed” rather than making one
           up.
@@ -101,6 +118,8 @@ const items = ranked.map((c) => {
       boxColor: string; boxImage: string | null; rating: number | null; href: string;
       overall: number | null; grade: string | null; tier: string; out10: string | null;
       n: Record<string, number | null>;
+      dv: Record<string, number | null>;
+      proteinDVEstimated: boolean;
     }
     const data: Row[] = JSON.parse(document.getElementById('cereal-data')!.textContent!);
     const picker = document.getElementById('picker')!;
@@ -130,6 +149,7 @@ const items = ranked.map((c) => {
       { key: 'calories', label: 'Calories', fmt: plain, best: 'min' },
       { key: 'protein', label: 'Protein', fmt: g, best: 'max' },
       { key: 'totalSugars', label: 'Total sugars', fmt: g, best: 'min' },
+      { key: 'addedSugars', label: 'Added sugars', fmt: g, best: 'min' },
       { key: 'dietaryFiber', label: 'Fiber', fmt: g, best: 'max' },
       { key: 'totalFat', label: 'Total fat', fmt: g },
       { key: 'saturatedFat', label: 'Saturated fat', fmt: g },
@@ -220,7 +240,13 @@ const items = ranked.map((c) => {
           <div class="rh">${m.label}</div>` +
           chosen.map((c) => {
             const win = m.best && winners[m.key] === c.id;
-            return `<div class="cell${win ? ' win' : ''}">${m.fmt(c.n[m.key])}${win ? '<span class="star">★</span>' : ''}</div>`;
+            const v = c.n[m.key];
+            const p = c.dv[m.key];
+            const pdv = v == null || p == null
+              ? ''
+              : `<span class="pdv">${m.key === 'protein' && c.proteinDVEstimated ? '~' : ''}${p}% DV</span>`;
+            const amt = pdv ? `<span class="amt">${m.fmt(v)}${pdv}</span>` : m.fmt(v);
+            return `<div class="cell${win ? ' win' : ''}">${amt}${win ? '<span class="star">★</span>' : ''}</div>`;
           }).join('')
         ).join('') +
         `</div>`;
@@ -548,6 +574,8 @@ const items = ranked.map((c) => {
   .board :global(.cell.win) { background: #fff6da; }
   .board :global(.cell .star) { color: var(--orange); font-size: 11px; }
   .board :global(.cell .na) { font-size: 12.5px; }
+  .board :global(.cell .amt) { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .board :global(.cell .pdv) { font-size: 11px; color: var(--muted-light); white-space: nowrap; }
 
   .board :global(.grade-rh) {
     color: var(--ink);
