@@ -20,99 +20,185 @@ const label = (v: string) =>
 ---
 
 <Layout title="Stock Room — Saturday Boring Cereal">
-  <div class="sign">
-    <strong>STOCK ROOM</strong>
-    <small>STAFF ONLY · GOODS INWARD · DEV SERVER ONLY</small>
-  </div>
+  <div class="stock-room">
+    <div class="sign">
+      <strong>STOCK ROOM</strong>
+      <small>STAFF ONLY · GOODS INWARD · DEV SERVER ONLY</small>
+    </div>
 
-  {!authed && (
-    <form class="gate" id="gate">
-      <h2>Password</h2>
-      <input type="password" id="pw" autocomplete="current-password" autofocus />
-      <button type="submit">Clock in</button>
-      <p class="err" id="gate-err" hidden></p>
-      {defaultPassword && (
-        <p class="hint">
-          No <code>ADMIN_PASSWORD</code> set, so it's <code>cereal</code>. Set one in
-          <code>.env</code> to change it.
-        </p>
-      )}
-    </form>
-  )}
+    {!authed && (
+      <form class="gate" id="gate">
+        <h2>Password</h2>
+        <input type="password" id="pw" autocomplete="current-password" autofocus />
+        <button type="submit">Clock in</button>
+        <p class="err" id="gate-err" hidden></p>
+        {defaultPassword && (
+          <p class="hint">
+            No <code>ADMIN_PASSWORD</code> set, so it's <code>cereal</code>. Set one in
+            <code>.env</code> to change it.
+          </p>
+        )}
+      </form>
+    )}
 
-  {authed && (
-    <div class="admin" id="admin">
-      <div class="tabs" role="tablist">
-        <button type="button" class="tab on" id="tab-add" role="tab">Add a cereal</button>
-        <button type="button" class="tab" id="tab-edit" role="tab">Edit one you have</button>
-      </div>
+    {authed && (
+      <div class="admin" id="admin">
+        <div class="tabs" role="tablist">
+          <button type="button" class="tab on" id="tab-add" role="tab">Add a cereal</button>
+          <button type="button" class="tab" id="tab-edit" role="tab">Edit one you have</button>
+        </div>
 
-      <!-- ============================ EDIT ============================ -->
-      <section id="pane-edit" hidden>
-        <input type="search" id="filter" placeholder="Filter the aisle…" />
-        <p class="status" id="edit-status"></p>
-        <div id="catalog" class="catalog"></div>
+        <!-- ============================ EDIT ============================ -->
+        <section id="pane-edit" hidden>
+          <input type="search" id="filter" placeholder="Filter the aisle…" />
+          <p class="status" id="edit-status"></p>
+          <div id="catalog" class="catalog"></div>
 
-        <form class="compose" id="editor" hidden>
-          <div class="picked" id="editing"></div>
+          <form class="compose" id="editor" hidden>
+            <div class="picked" id="editing"></div>
+
+            <div class="grid">
+              <label>Brand<input type="text" id="e-brand" required /></label>
+              <label>Product name<input type="text" id="e-name" required /></label>
+              <label>Taste score <span class="sub">0–10, blank = unrated</span>
+                <input type="number" id="e-rating" min="0" max="10" step="0.1" />
+              </label>
+              <label>Emoji <span class="sub">used when there's no photo</span>
+                <input type="text" id="e-emoji" maxlength="4" />
+              </label>
+              <label>Box colour <span class="sub">behind the emoji</span>
+                <input type="text" id="e-boxColor" />
+              </label>
+            </div>
+            <label class="full">Tasting note
+              <input type="text" id="e-note" placeholder="One line. Blank removes it." />
+            </label>
+
+            <fieldset>
+              <legend>Tags</legend>
+              <div class="tags">
+                <div><h4>Form</h4>{FORM_FACTORS?.map((v: string) => (
+                  <label class="chk"><input type="checkbox" name="e-form" value={v} /> {label(v)}</label>
+                ))}</div>
+                <div><h4>Protein</h4>{PROTEIN_SOURCES?.map((v: string) => (
+                  <label class="chk"><input type="checkbox" name="e-protein-src" value={v} /> {label(v)}</label>
+                ))}</div>
+                <div><h4>Attributes</h4>{ATTRIBUTES?.map((v: string) => (
+                  <label class="chk"><input type="checkbox" name="e-attr" value={v} /> {label(v)}</label>
+                ))}</div>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Nutrition <span class="sub">per serving · blank means “not listed”</span></legend>
+              <p class="note">
+                Leave a field blank when the box doesn't print it — the site says “not listed”
+                rather than inventing a number. That goes double for protein %DV, which labels
+                only carry when a protein claim is made.
+              </p>
+              <div class="nutgrid" id="nutgrid"></div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Box photo</legend>
+              <div class="photo-now" id="photo-now"></div>
+              <div class="actions left">
+                <button type="button" class="secondary" id="find-photos">Find photos</button>
+                <button type="button" class="secondary danger" id="drop-photo">Remove photo</button>
+              </div>
+              <p class="status" id="photo-status"></p>
+              <div class="gallery" id="e-gallery"></div>
+              <div class="imgrow">
+                <label class="full">Or paste an image URL
+                  <input type="url" id="e-imgurl" placeholder="https://…/front.png" />
+                </label>
+                <label>Fit
+                  <select id="e-fit">
+                    <option value="cover">cover — crop to fill</option>
+                    <option value="contain">contain — pad onto white</option>
+                  </select>
+                </label>
+              </div>
+            </fieldset>
+
+            <div class="actions">
+              <button type="button" id="e-preview-btn" class="secondary">Preview changes</button>
+              <button type="submit" id="e-save-btn">Save changes</button>
+            </div>
+            <p class="err" id="edit-err" hidden></p>
+          </form>
+
+          <pre class="preview" id="e-preview" hidden></pre>
+          <div class="done" id="e-done" hidden></div>
+        </section>
+
+        <!-- ============================ ADD ============================= -->
+        <section id="pane-add">
+        <!-- 1. search -->
+        <form class="search" id="search">
+          <input
+            type="search"
+            id="q"
+            placeholder="Search a cereal by name — e.g. kodiak cookie butter"
+            autofocus
+          />
+          <button type="submit" id="search-btn">Search</button>
+          <label class="usda"><input type="checkbox" id="usda" checked /> include USDA</label>
+        </form>
+        <p class="status" id="status"></p>
+
+        <!-- 2. pick a product -->
+        <div id="results" class="results"></div>
+
+        <!-- 3. everything else -->
+        <form class="compose" id="compose" hidden>
+          <h2>2 · Write it up</h2>
+          <div class="picked" id="picked"></div>
 
           <div class="grid">
-            <label>Brand<input type="text" id="e-brand" required /></label>
-            <label>Product name<input type="text" id="e-name" required /></label>
+            <label>Brand<input type="text" id="brand" required /></label>
+            <label>Product name<input type="text" id="name" required /></label>
             <label>Taste score <span class="sub">0–10, blank = unrated</span>
-              <input type="number" id="e-rating" min="0" max="10" step="0.1" />
+              <input type="number" id="rating" min="0" max="10" step="0.1" />
             </label>
-            <label>Emoji <span class="sub">used when there's no photo</span>
-              <input type="text" id="e-emoji" maxlength="4" />
-            </label>
-            <label>Box colour <span class="sub">behind the emoji</span>
-              <input type="text" id="e-boxColor" />
+            <label>Emoji <span class="sub">box art placeholder</span>
+              <input type="text" id="emoji" value="🥣" maxlength="4" />
             </label>
           </div>
           <label class="full">Tasting note
-            <input type="text" id="e-note" placeholder="One line. Blank removes it." />
+            <input type="text" id="note" placeholder="One line. What it actually tastes like." />
           </label>
 
           <fieldset>
-            <legend>Tags</legend>
+            <legend>Tags <span class="sub">guessed from the name and ingredients — fix what's wrong</span></legend>
             <div class="tags">
               <div><h4>Form</h4>{FORM_FACTORS?.map((v: string) => (
-                <label class="chk"><input type="checkbox" name="e-form" value={v} /> {label(v)}</label>
+                <label class="chk"><input type="checkbox" name="form" value={v} /> {label(v)}</label>
               ))}</div>
               <div><h4>Protein</h4>{PROTEIN_SOURCES?.map((v: string) => (
-                <label class="chk"><input type="checkbox" name="e-protein-src" value={v} /> {label(v)}</label>
+                <label class="chk"><input type="checkbox" name="protein-src" value={v} /> {label(v)}</label>
               ))}</div>
               <div><h4>Attributes</h4>{ATTRIBUTES?.map((v: string) => (
-                <label class="chk"><input type="checkbox" name="e-attr" value={v} /> {label(v)}</label>
+                <label class="chk"><input type="checkbox" name="attr" value={v} /> {label(v)}</label>
               ))}</div>
             </div>
           </fieldset>
 
           <fieldset>
-            <legend>Nutrition <span class="sub">per serving · blank means “not listed”</span></legend>
+            <legend>Box photo <span class="sub">pick the flattest, most straight-on front</span></legend>
             <p class="note">
-              Leave a field blank when the box doesn't print it — the site says “not listed”
-              rather than inventing a number. That goes double for protein %DV, which labels
-              only carry when a protein claim is made.
+              These render as the front face of a 3D box that already rotates itself, so an
+              angled or hand-held shot reads as a box inside a box. If none of these are
+              flat, paste a manufacturer URL below or skip it — the emoji placeholder is
+              better than a bad photo.
             </p>
-            <div class="nutgrid" id="nutgrid"></div>
-          </fieldset>
-
-          <fieldset>
-            <legend>Box photo</legend>
-            <div class="photo-now" id="photo-now"></div>
-            <div class="actions left">
-              <button type="button" class="secondary" id="find-photos">Find photos</button>
-              <button type="button" class="secondary danger" id="drop-photo">Remove photo</button>
-            </div>
-            <p class="status" id="photo-status"></p>
-            <div class="gallery" id="e-gallery"></div>
+            <div class="gallery" id="gallery"></div>
             <div class="imgrow">
               <label class="full">Or paste an image URL
-                <input type="url" id="e-imgurl" placeholder="https://…/front.png" />
+                <input type="url" id="imgurl" placeholder="https://…/front.png" />
               </label>
               <label>Fit
-                <select id="e-fit">
+                <select id="fit">
                   <option value="cover">cover — crop to fill</option>
                   <option value="contain">contain — pad onto white</option>
                 </select>
@@ -121,102 +207,18 @@ const label = (v: string) =>
           </fieldset>
 
           <div class="actions">
-            <button type="button" id="e-preview-btn" class="secondary">Preview changes</button>
-            <button type="submit" id="e-save-btn">Save changes</button>
+            <button type="button" id="preview-btn" class="secondary">Preview file</button>
+            <button type="submit" id="save-btn">Add to the aisle</button>
           </div>
-          <p class="err" id="edit-err" hidden></p>
+          <p class="err" id="compose-err" hidden></p>
         </form>
 
-        <pre class="preview" id="e-preview" hidden></pre>
-        <div class="done" id="e-done" hidden></div>
-      </section>
-
-      <!-- ============================ ADD ============================= -->
-      <section id="pane-add">
-      <!-- 1. search -->
-      <form class="search" id="search">
-        <input
-          type="search"
-          id="q"
-          placeholder="Search a cereal by name — e.g. kodiak cookie butter"
-          autofocus
-        />
-        <button type="submit" id="search-btn">Search</button>
-        <label class="usda"><input type="checkbox" id="usda" checked /> include USDA</label>
-      </form>
-      <p class="status" id="status"></p>
-
-      <!-- 2. pick a product -->
-      <div id="results" class="results"></div>
-
-      <!-- 3. everything else -->
-      <form class="compose" id="compose" hidden>
-        <h2>2 · Write it up</h2>
-        <div class="picked" id="picked"></div>
-
-        <div class="grid">
-          <label>Brand<input type="text" id="brand" required /></label>
-          <label>Product name<input type="text" id="name" required /></label>
-          <label>Taste score <span class="sub">0–10, blank = unrated</span>
-            <input type="number" id="rating" min="0" max="10" step="0.1" />
-          </label>
-          <label>Emoji <span class="sub">box art placeholder</span>
-            <input type="text" id="emoji" value="🥣" maxlength="4" />
-          </label>
-        </div>
-        <label class="full">Tasting note
-          <input type="text" id="note" placeholder="One line. What it actually tastes like." />
-        </label>
-
-        <fieldset>
-          <legend>Tags <span class="sub">guessed from the name and ingredients — fix what's wrong</span></legend>
-          <div class="tags">
-            <div><h4>Form</h4>{FORM_FACTORS?.map((v: string) => (
-              <label class="chk"><input type="checkbox" name="form" value={v} /> {label(v)}</label>
-            ))}</div>
-            <div><h4>Protein</h4>{PROTEIN_SOURCES?.map((v: string) => (
-              <label class="chk"><input type="checkbox" name="protein-src" value={v} /> {label(v)}</label>
-            ))}</div>
-            <div><h4>Attributes</h4>{ATTRIBUTES?.map((v: string) => (
-              <label class="chk"><input type="checkbox" name="attr" value={v} /> {label(v)}</label>
-            ))}</div>
-          </div>
-        </fieldset>
-
-        <fieldset>
-          <legend>Box photo <span class="sub">pick the flattest, most straight-on front</span></legend>
-          <p class="note">
-            These render as the front face of a 3D box that already rotates itself, so an
-            angled or hand-held shot reads as a box inside a box. If none of these are
-            flat, paste a manufacturer URL below or skip it — the emoji placeholder is
-            better than a bad photo.
-          </p>
-          <div class="gallery" id="gallery"></div>
-          <div class="imgrow">
-            <label class="full">Or paste an image URL
-              <input type="url" id="imgurl" placeholder="https://…/front.png" />
-            </label>
-            <label>Fit
-              <select id="fit">
-                <option value="cover">cover — crop to fill</option>
-                <option value="contain">contain — pad onto white</option>
-              </select>
-            </label>
-          </div>
-        </fieldset>
-
-        <div class="actions">
-          <button type="button" id="preview-btn" class="secondary">Preview file</button>
-          <button type="submit" id="save-btn">Add to the aisle</button>
-        </div>
-        <p class="err" id="compose-err" hidden></p>
-      </form>
-
-      <pre class="preview" id="preview" hidden></pre>
-      <div class="done" id="done" hidden></div>
-      </section>
-    </div>
-  )}
+        <pre class="preview" id="preview" hidden></pre>
+        <div class="done" id="done" hidden></div>
+        </section>
+      </div>
+    )}
+  </div>
 </Layout>
 
 <script>
@@ -798,441 +800,448 @@ const label = (v: string) =>
   }
 </script>
 
-<style>
-  .sign {
-    background: var(--ink);
-    color: var(--cream);
-    text-align: center;
-    padding: 10px;
-    letter-spacing: 0.25em;
-    font-size: 13px;
-  }
-  .sign small {
-    display: block;
-    font-size: 9px;
-    color: #d9c39f;
-    margin-top: 3px;
-    letter-spacing: 0.3em;
-  }
+<style is:global>
+  /* Global, not scoped: the catalog rows, search hits, photo pickers and
+     nutrition grid are built in the script with innerHTML, and Astro's
+     scoped styles never reach elements created that way. Nesting every rule
+     under .stock-room keeps them off the rest of the site. */
+  .stock-room {
+    .sign {
+      background: var(--ink);
+      color: var(--cream);
+      text-align: center;
+      padding: 10px;
+      letter-spacing: 0.25em;
+      font-size: 13px;
+    }
+    .sign small {
+      display: block;
+      font-size: 9px;
+      color: #d9c39f;
+      margin-top: 3px;
+      letter-spacing: 0.3em;
+    }
 
-  .gate,
-  .admin {
-    max-width: 860px;
-    margin: 28px auto;
-    padding: 0 16px;
-  }
+    .gate,
+    .admin {
+      max-width: 860px;
+      margin: 28px auto;
+      padding: 0 16px;
+    }
 
-  .gate {
-    max-width: 320px;
-    text-align: center;
-  }
-  .gate h2 {
-    font-size: 12px;
-    letter-spacing: 0.2em;
-    margin-bottom: 10px;
-  }
+    .gate {
+      max-width: 320px;
+      text-align: center;
+    }
+    .gate h2 {
+      font-size: 12px;
+      letter-spacing: 0.2em;
+      margin-bottom: 10px;
+    }
 
-  h2 {
-    font-size: 13px;
-    letter-spacing: 0.15em;
-    margin: 22px 0 10px;
-  }
-  h4 {
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    margin-bottom: 6px;
-    color: var(--muted);
-  }
+    h2 {
+      font-size: 13px;
+      letter-spacing: 0.15em;
+      margin: 22px 0 10px;
+    }
+    h4 {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
 
-  input,
-  select,
-  button {
-    font-family: var(--fine);
-    font-size: 14px;
-  }
+    input,
+    select,
+    button {
+      font-family: var(--fine);
+      font-size: 14px;
+    }
 
-  input[type='text'],
-  input[type='password'],
-  input[type='number'],
-  input[type='search'],
-  input[type='url'],
-  select {
-    width: 100%;
-    padding: 8px 10px;
-    border: 2px solid var(--ink);
-    background: #fff;
-    color: var(--ink);
-  }
+    input[type='text'],
+    input[type='password'],
+    input[type='number'],
+    input[type='search'],
+    input[type='url'],
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 2px solid var(--ink);
+      background: #fff;
+      color: var(--ink);
+    }
 
-  button {
-    background: var(--turq);
-    color: #fff;
-    border: none;
-    padding: 9px 16px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    font-size: 11px;
-    cursor: pointer;
-  }
-  button:hover:not(:disabled) {
-    background: var(--turq-deep);
-  }
-  button:disabled {
-    opacity: 0.45;
-    cursor: default;
-  }
-  button.secondary {
-    background: var(--muted);
-  }
+    button {
+      background: var(--turq);
+      color: #fff;
+      border: none;
+      padding: 9px 16px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    button:hover:not(:disabled) {
+      background: var(--turq-deep);
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+    button.secondary {
+      background: var(--muted);
+    }
 
-  .search {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 8px;
-    align-items: center;
-  }
-  .usda {
-    grid-column: 1 / -1;
-    font-family: var(--fine);
-    font-size: 12px;
-  }
-  .usda input {
-    width: auto;
-  }
+    .search {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .usda {
+      grid-column: 1 / -1;
+      font-family: var(--fine);
+      font-size: 12px;
+    }
+    .usda input {
+      width: auto;
+    }
 
-  .status {
-    font-family: var(--fine);
-    font-size: 13px;
-    margin: 10px 0;
-    color: var(--muted);
-  }
+    .status {
+      font-family: var(--fine);
+      font-size: 13px;
+      margin: 10px 0;
+      color: var(--muted);
+    }
 
-  .hit {
-    display: block;
-    width: 100%;
-    text-align: left;
-    text-transform: none;
-    letter-spacing: normal;
-    background: #fff;
-    color: var(--ink);
-    border: 2px solid var(--ink);
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    font-size: 14px;
-  }
-  .hit:hover:not(:disabled) {
-    background: var(--cream);
-  }
-  .hit.on {
-    border-color: var(--turq);
-    background: var(--cream);
-    box-shadow: inset 4px 0 0 var(--turq);
-  }
-  .hit.off {
-    opacity: 0.5;
-  }
-  .hit-name {
-    font-family: var(--shout);
-    font-size: 14px;
-  }
-  .hit-tags,
-  .hit-macros {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 3px;
-  }
+    .hit {
+      display: block;
+      width: 100%;
+      text-align: left;
+      text-transform: none;
+      letter-spacing: normal;
+      background: #fff;
+      color: var(--ink);
+      border: 2px solid var(--ink);
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+    .hit:hover:not(:disabled) {
+      background: var(--cream);
+    }
+    .hit.on {
+      border-color: var(--turq);
+      background: var(--cream);
+      box-shadow: inset 4px 0 0 var(--turq);
+    }
+    .hit.off {
+      opacity: 0.5;
+    }
+    .hit-name {
+      font-family: var(--shout);
+      font-size: 14px;
+    }
+    .hit-tags,
+    .hit-macros {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
 
-  .picked {
-    background: var(--cream);
-    border-left: 4px solid var(--turq);
-    padding: 10px 12px;
-    font-family: var(--fine);
-    font-size: 13px;
-    margin-bottom: 14px;
-  }
+    .picked {
+      background: var(--cream);
+      border-left: 4px solid var(--turq);
+      padding: 10px 12px;
+      font-family: var(--fine);
+      font-size: 13px;
+      margin-bottom: 14px;
+    }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 12px;
-  }
-  label {
-    display: block;
-    font-size: 10px;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
-  label input,
-  label select {
-    margin-top: 4px;
-    text-transform: none;
-    letter-spacing: normal;
-  }
-  .sub {
-    text-transform: none;
-    letter-spacing: normal;
-    font-family: var(--fine);
-    font-style: italic;
-    color: var(--muted);
-    font-size: 11px;
-  }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    label input,
+    label select {
+      margin-top: 4px;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .sub {
+      text-transform: none;
+      letter-spacing: normal;
+      font-family: var(--fine);
+      font-style: italic;
+      color: var(--muted);
+      font-size: 11px;
+    }
 
-  fieldset {
-    border: 2px solid var(--ink);
-    padding: 12px;
-    margin: 16px 0;
-  }
-  legend {
-    font-size: 11px;
-    letter-spacing: 0.15em;
-    padding: 0 6px;
-    text-transform: uppercase;
-  }
-  .note {
-    font-family: var(--fine);
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
+    fieldset {
+      border: 2px solid var(--ink);
+      padding: 12px;
+      margin: 16px 0;
+    }
+    legend {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      padding: 0 6px;
+      text-transform: uppercase;
+    }
+    .note {
+      font-family: var(--fine);
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
 
-  .tags {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 12px;
-  }
-  .chk {
-    text-transform: none;
-    letter-spacing: normal;
-    font-family: var(--fine);
-    font-size: 13px;
-    margin-bottom: 3px;
-  }
-  .chk input {
-    width: auto;
-    margin-right: 4px;
-  }
+    .tags {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+    }
+    .chk {
+      text-transform: none;
+      letter-spacing: normal;
+      font-family: var(--fine);
+      font-size: 13px;
+      margin-bottom: 3px;
+    }
+    .chk input {
+      width: auto;
+      margin-right: 4px;
+    }
 
-  .gallery {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
-    gap: 8px;
-  }
-  .shot {
-    background: #fff;
-    border: 2px solid var(--ink);
-    padding: 4px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    text-transform: none;
-    letter-spacing: normal;
-  }
-  .shot.on {
-    border-color: var(--turq);
-    box-shadow: 0 0 0 3px var(--yellow);
-  }
-  .shot img {
-    width: 100%;
-    height: 120px;
-    object-fit: contain;
-    background: #fff;
-  }
-  .shot small {
-    font-family: var(--mono);
-    font-size: 9px;
-    color: var(--muted);
-    text-align: center;
-    line-height: 1.2;
-    max-height: 24px;
-    overflow: hidden;
-  }
-  .none-shot {
-    justify-content: center;
-    min-height: 130px;
-    color: var(--muted);
-    font-size: 11px;
-  }
-  .none {
-    font-family: var(--fine);
-    font-size: 13px;
-    color: var(--muted);
-  }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 8px;
+    }
+    .shot {
+      background: #fff;
+      border: 2px solid var(--ink);
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+    .shot.on {
+      border-color: var(--turq);
+      box-shadow: 0 0 0 3px var(--yellow);
+    }
+    .shot img {
+      width: 100%;
+      height: 120px;
+      object-fit: contain;
+      background: #fff;
+    }
+    .shot small {
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.2;
+      max-height: 24px;
+      overflow: hidden;
+    }
+    .none-shot {
+      justify-content: center;
+      min-height: 130px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+    .none {
+      font-family: var(--fine);
+      font-size: 13px;
+      color: var(--muted);
+    }
 
-  .imgrow {
-    display: grid;
-    grid-template-columns: 1fr 180px;
-    gap: 10px;
-    margin-top: 12px;
-  }
-
-  .actions {
-    display: flex;
-    gap: 8px;
-    justify-content: flex-end;
-  }
-
-  .preview {
-    background: var(--ink);
-    color: #e8f0f4;
-    font-family: var(--mono);
-    font-size: 12px;
-    padding: 14px;
-    overflow-x: auto;
-    margin-top: 16px;
-  }
-
-  .done {
-    border: 2px solid var(--score-good);
-    background: #f2fbf3;
-    padding: 14px;
-    margin-top: 16px;
-    font-family: var(--fine);
-    font-size: 14px;
-  }
-  .done h2 {
-    margin-top: 0;
-    color: var(--score-good-dark);
-  }
-  .done p {
-    margin-bottom: 6px;
-  }
-
-  .err {
-    color: var(--cherry-deep);
-    font-family: var(--fine);
-    font-size: 13px;
-    margin-top: 8px;
-  }
-  .warn {
-    color: var(--score-mid-dark);
-  }
-  .hint {
-    font-family: var(--fine);
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 10px;
-  }
-
-  /* --- tabs --- */
-  .tabs {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 18px;
-    border-bottom: 2px solid var(--ink);
-  }
-  .tab {
-    background: transparent;
-    color: var(--muted);
-    border: 2px solid transparent;
-    border-bottom: none;
-    margin-bottom: -2px;
-  }
-  .tab.on {
-    background: var(--cream);
-    color: var(--ink);
-    border-color: var(--ink);
-  }
-  .tab:hover:not(.on) {
-    background: transparent;
-    color: var(--ink);
-  }
-
-  /* --- catalog list --- */
-  .catalog {
-    max-height: 420px;
-    overflow-y: auto;
-    border: 2px solid var(--ink);
-    background: #fff;
-  }
-  .row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-    text-align: left;
-    text-transform: none;
-    letter-spacing: normal;
-    background: #fff;
-    color: var(--ink);
-    border: none;
-    border-bottom: 1px solid #e0e0e0;
-    padding: 7px 10px;
-    font-size: 14px;
-  }
-  .row:hover {
-    background: var(--cream);
-  }
-  .row.on {
-    background: var(--cream);
-    box-shadow: inset 4px 0 0 var(--turq);
-  }
-  .row-thumb {
-    width: 30px;
-    height: 40px;
-    flex: 0 0 30px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--cream);
-  }
-  .row-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  .row-emoji {
-    font-size: 17px;
-  }
-  .row-text b {
-    font-family: var(--shout);
-  }
-  .row-text small {
-    display: block;
-    font-family: var(--mono);
-    font-size: 10px;
-    color: var(--muted);
-  }
-
-  /* --- nutrition grid --- */
-  .nutgrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 8px 12px;
-  }
-  .nutgrid label {
-    font-size: 9px;
-  }
-
-  /* --- current photo --- */
-  .photo-now {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 10px;
-  }
-  .photo-now .now {
-    width: 90px;
-    height: 120px;
-    object-fit: cover;
-    border: 2px solid var(--ink);
-    background: #fff;
-  }
-  .actions.left {
-    justify-content: flex-start;
-  }
-  button.danger {
-    background: var(--cherry-deep);
-  }
-  button.danger:hover:not(:disabled) {
-    background: var(--cherry);
-  }
-
-  @media (max-width: 560px) {
     .imgrow {
-      grid-template-columns: 1fr;
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .preview {
+      background: var(--ink);
+      color: #e8f0f4;
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 14px;
+      overflow-x: auto;
+      margin-top: 16px;
+    }
+
+    .done {
+      border: 2px solid var(--score-good);
+      background: #f2fbf3;
+      padding: 14px;
+      margin-top: 16px;
+      font-family: var(--fine);
+      font-size: 14px;
+    }
+    .done h2 {
+      margin-top: 0;
+      color: var(--score-good-dark);
+    }
+    .done p {
+      margin-bottom: 6px;
+    }
+
+    .err {
+      color: var(--cherry-deep);
+      font-family: var(--fine);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .warn {
+      color: var(--score-mid-dark);
+    }
+    .hint {
+      font-family: var(--fine);
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    /* --- tabs --- */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 18px;
+      border-bottom: 2px solid var(--ink);
+    }
+    .tab {
+      background: transparent;
+      color: var(--muted);
+      border: 2px solid transparent;
+      border-bottom: none;
+      margin-bottom: -2px;
+    }
+    .tab.on {
+      background: var(--cream);
+      color: var(--ink);
+      border-color: var(--ink);
+    }
+    .tab:hover:not(.on) {
+      background: transparent;
+      color: var(--ink);
+    }
+
+    /* --- catalog list --- */
+    .catalog {
+      max-height: 420px;
+      overflow-y: auto;
+      border: 2px solid var(--ink);
+      background: #fff;
+      margin-bottom: 20px;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      text-align: left;
+      text-transform: none;
+      letter-spacing: normal;
+      background: #fff;
+      color: var(--ink);
+      border: none;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 7px 10px;
+      font-size: 14px;
+    }
+    .row:hover {
+      background: var(--cream);
+    }
+    .row.on {
+      background: var(--cream);
+      box-shadow: inset 4px 0 0 var(--turq);
+    }
+    .row-thumb {
+      width: 30px;
+      height: 40px;
+      flex: 0 0 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--cream);
+    }
+    .row-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .row-emoji {
+      font-size: 17px;
+    }
+    .row-text b {
+      font-family: var(--shout);
+    }
+    .row-text small {
+      display: block;
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    /* --- nutrition grid --- */
+    .nutgrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 8px 12px;
+    }
+    .nutgrid label {
+      font-size: 9px;
+    }
+
+    /* --- current photo --- */
+    .photo-now {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    .photo-now .now {
+      width: 90px;
+      height: 120px;
+      object-fit: cover;
+      border: 2px solid var(--ink);
+      background: #fff;
+    }
+    .actions.left {
+      justify-content: flex-start;
+    }
+    button.danger {
+      background: var(--cherry-deep);
+    }
+    button.danger:hover:not(:disabled) {
+      background: var(--cherry);
+    }
+
+    @media (max-width: 560px) {
+      .imgrow {
+        grid-template-columns: 1fr;
+      }
     }
   }
 </style>
