@@ -100,7 +100,7 @@ const PUBLISHED = {
   '3002-8099': ['Kodiak', 'Protein-Packed Cookie Butter Granola'],
   '2132-8021': ['Quaker', 'Protein Granola, Maple & Brown Sugar'],
   '2132-803b': ['Manitoba Harvest', 'Superseed Granola, Blueberry'],
-  '3082-805c': ['Manitoba Harvest', 'Superseed Granola'],
+  '3082-805c': ['Manitoba Harvest', 'Superseed Granola, Blueberry'],
   '2ff2-80f4': ['Seven Sundays', 'Bright Side Granola, Triple Berry'],
   '25b2-8093': ['Calbee', 'Frugra Fruit & Granola, Reduced Sugar'],
   '1972-800a': ['Cascadian Farm', 'No Added Sugar Blueberry Vanilla Granola'],
