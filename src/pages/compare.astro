@@ -97,14 +97,9 @@ const items = ranked.map((c) => {
         </div>
 
         <p class="board-foot">
-          Every figure is per 100 g, scaled from each label, so a box with a bigger stated serving
-          gets no head start. The last row is the label’s own serving size, for reference.
-          % DV is the share of the FDA’s Daily Value on a 2,000-calorie diet; calories and total
-          sugars have no Daily Value, so they get none. A protein % DV marked ~ is estimated from
-          grams because that label doesn’t print one.
-          A star marks the best figure in a row, and only when two or more boxes list it and one of
-          them wins outright. Where a label omits a value we say “not listed” rather than making one
-          up.
+          Figures per 100 g. % DV uses the FDA's Daily Values (2,000 calories); ~ means estimated.
+          A star marks the best in a row.
+          <a href={u('/about/#overall')}>How scoring works</a>
         </p>
       </div>
     </div>
@@ -627,10 +622,18 @@ const items = ranked.map((c) => {
     text-transform: uppercase;
   }
 
+  .board-foot a { color: var(--turq-deep); text-decoration: underline; }
+
   @media (max-width: 860px) {
     .head { padding: 34px 0 32px; }
     .head-lede { font-size: 15px; }
     .belt .panel { padding: 16px 14px 14px; }
+  }
+
+  @media (max-width: 640px) {
+    .head { padding: 22px 0 24px; }
+    .head-title { font-size: 40px; text-shadow: 4px 4px 0 var(--ink); }
+    .head-lede { margin-top: 16px; padding: 10px 14px; }
   }
 
   @media (max-width: 560px) {

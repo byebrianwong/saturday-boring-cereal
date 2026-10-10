@@ -1,5 +1,5 @@
 ---
-name: Organic Flax Plus Maple Pecan Crunch
+name: Flax Plus, Maple Pecan Crunch
 brand: "Nature's Path"
 rating: 8.5
 dateReviewed: 2026-02-15

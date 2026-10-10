@@ -11,8 +11,8 @@ interface Props {
 const { nutrition: label } = Astro.props;
 const n = per100g(label);
 const servingText = label.servingDescription
-  ? `${label.servingDescription} (${label.servingSize}g)`
-  : `${label.servingSize}g`;
+  ? `${label.servingDescription} (${label.servingSize} g)`
+  : `${label.servingSize} g`;
 
 // %DV column, laid out like a US label: blank for nutrients with no Daily Value.
 const dv = (v: number | null) => (v == null ? '' : percent(v));
@@ -44,12 +44,11 @@ const rows: Array<{
 
 <div class="nf">
   <h3>Nutrition Facts</h3>
-  <div class="serving">
-    <span>Label serving size</span>
-    <span>{servingText}</span>
+  <div class="basis">
+    <span>Amount per</span>
+    <span>100 g</span>
   </div>
   <div class="rule-8"></div>
-  <div class="amount">AMOUNT PER 100 G</div>
   <div class="calories">
     <span>Calories</span>
     <span class:list={['v', { missing: n.calories == null }]}>{plain(n.calories)}</span>
@@ -77,17 +76,14 @@ const rows: Array<{
       );
     })
   }
-  <div class="fine">
-    * The % Daily Value (DV) tells you how much a nutrient in 100 g of this cereal contributes to a
-    daily diet. 2,000 calories a day is used for general nutrition advice. The DVs are the FDA’s;
-    nutrients without a DV (calories, trans fat, total sugars) have no percentage, same as on the
-    box. A protein %DV marked ~ is estimated from grams because the label doesn’t print one.
-  </div>
-  <div class="fine">
-    Every box is shown per 100 g so boxes with different serving sizes compare fairly. The
-    figures are scaled from the label’s per-serving numbers. “not listed” means the label doesn’t
-    state it — we don’t invent numbers.
-  </div>
+  <p class="foot">
+    * % Daily Value: how much of the FDA's daily amount, on a 2,000-calorie diet, is in 100 g.
+    No % means the nutrient has no Daily Value. ~ means estimated from grams.
+  </p>
+  <p class="foot">
+    Scaled from the box's own label serving of {servingText}, so every box is compared at the same
+    weight.
+  </p>
 </div>
 
 <style>
@@ -107,13 +103,13 @@ const rows: Array<{
     padding-bottom: 4px;
   }
 
-  .serving {
+  .basis {
     display: flex;
     justify-content: space-between;
     gap: 12px;
-    font-size: 11px;
-    padding: 6px 0;
-    color: #444;
+    font-size: 16px;
+    font-weight: 900;
+    padding: 6px 0 4px;
   }
 
   .rule-8 {
@@ -121,12 +117,19 @@ const rows: Array<{
     margin-bottom: 4px;
   }
 
-  .amount {
+  .foot {
     font-size: 10px;
-    font-weight: 900;
-    letter-spacing: 0.05em;
-    padding: 4px 0;
-    border-bottom: 4px solid #000;
+    line-height: 1.4;
+    color: #444;
+    padding-top: 6px;
+    margin-top: 3px;
+    border-top: 3px solid #000;
+  }
+
+  .foot + .foot {
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 4px;
   }
 
   .calories {
@@ -183,12 +186,5 @@ const rows: Array<{
 
   .v {
     font-variant-numeric: tabular-nums;
-  }
-
-  .fine {
-    font-size: 9.5px;
-    color: #444;
-    padding-top: 8px;
-    line-height: 1.5;
   }
 </style>

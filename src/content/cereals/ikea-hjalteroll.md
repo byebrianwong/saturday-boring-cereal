@@ -1,5 +1,5 @@
 ---
-name: Hjälteroll Granola with Nuts and Berries
+name: Hjälteroll Granola with Nuts and Dried Berries
 brand: IKEA
 rating: 8
 dateReviewed: 2025-11-17

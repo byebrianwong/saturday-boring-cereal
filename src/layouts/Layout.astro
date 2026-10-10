@@ -105,8 +105,7 @@ const path = Astro.url.pathname;
         <div class="foot-rule"></div>
         <div class="fine">
           A single-person regulatory body · Established in a kitchen<br />
-          Nutrition transcribed from the physical box. Where a label omits a value we say “not listed”
-          rather than making one up. No sponsors. No samples. No mascots.
+          No sponsors. No samples. No mascots.
         </div>
       </div>
     </footer>
@@ -181,6 +180,39 @@ const path = Astro.url.pathname;
     box-shadow: 0 0 0 var(--ink);
     outline: 3px solid var(--ink);
     outline-offset: 2px;
+  }
+
+  /* Phones: the header was eating a third of the screen. Drop the tagline and
+     run the nav as one short row that scrolls sideways instead of wrapping. */
+  @media (max-width: 640px) {
+    header.site { padding: 10px 0 0; border-bottom-width: 4px; }
+    .brandline { font-size: 22px; }
+    .brand-sub { display: none; }
+
+    nav.site {
+      margin: 8px -18px 0;
+      padding: 0 18px 10px;
+      gap: 6px;
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    nav.site::-webkit-scrollbar { display: none; }
+
+    nav.site a {
+      flex: none;
+      font-size: 13px;
+      padding: 5px 10px 4px;
+      border-width: 2px;
+      box-shadow: 2px 2px 0 var(--ink);
+    }
+
+    nav.site a.on {
+      transform: translate(2px, 2px);
+      outline-width: 2px;
+    }
   }
 
   footer.site {

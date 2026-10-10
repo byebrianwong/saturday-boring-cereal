@@ -1,5 +1,5 @@
 ---
-name: Organic Flax Plus Red Berry Crunch
+name: Flax Plus, Red Berry Crunch
 brand: "Nature's Path"
 rating: 8
 dateReviewed: 2025-02-11

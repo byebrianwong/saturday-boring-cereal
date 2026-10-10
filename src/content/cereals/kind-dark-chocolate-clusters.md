@@ -1,5 +1,5 @@
 ---
-name: Dark Chocolate Clusters
+name: Healthy Grains Granola Clusters, Dark Chocolate
 brand: KIND
 rating: 7
 dateReviewed: 2025-07-15

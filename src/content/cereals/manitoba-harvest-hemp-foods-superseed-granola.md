@@ -1,6 +1,6 @@
 ---
 name: Superseed Granola
-brand: Manitoba Harvest Hemp Foods
+brand: Manitoba Harvest
 rating: 7
 shortNote: Can sometimes have a grassy hempy taste
 dateReviewed: 2026-02-15

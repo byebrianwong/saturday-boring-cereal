@@ -1,5 +1,5 @@
 ---
-name: Organic Hearty Morning Fiber Cereal
+name: Hearty Morning Fiber
 brand: Cascadian Farm
 rating: 8
 shortNote: Hearty-ish flakes, some clusters, fairly sweet
