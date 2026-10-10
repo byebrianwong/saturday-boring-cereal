@@ -40,22 +40,25 @@ const rows = ranked.map((c) => {
   };
 });
 
-// Macro columns, in display order. `low` marks columns where less is better,
-// so the first click on the header sorts lowest first. `tint` marks columns
-// that get a pale good/mid/bad background; calories and carbs have no clear
-// better direction, so they stay plain.
+// Macro columns, in display order. The four nutrients the grade scores come
+// first: the two good ones (protein, fiber), then the two bad ones (sugar,
+// saturated fat). The rest follow, printed smaller and greyer because the
+// grade ignores them. `low` marks columns where less is better, so the first
+// click on the header sorts lowest first. `graded` columns also get a pale
+// good/mid/bad background that agrees with the Health score.
 const METRICS = [
-  { key: 'calories', label: 'Cal', title: 'Calories', unit: '', low: true, tint: false },
-  { key: 'protein', label: 'Protein', title: 'Protein', unit: 'g', low: false, tint: true },
-  { key: 'totalCarbs', label: 'Carbs', title: 'Total carbohydrate', unit: 'g', low: false, tint: false },
-  { key: 'totalSugars', label: 'Sugar', title: 'Total sugars', unit: 'g', low: true, tint: true },
-  { key: 'dietaryFiber', label: 'Fiber', title: 'Dietary fiber', unit: 'g', low: false, tint: true },
-  { key: 'totalFat', label: 'Fat', title: 'Total fat', unit: 'g', low: true, tint: true },
-  { key: 'saturatedFat', label: 'Sat fat', title: 'Saturated fat', unit: 'g', low: true, tint: true },
-  { key: 'sodium', label: 'Sodium', title: 'Sodium', unit: 'mg', low: true, tint: true },
+  { key: 'protein', label: 'Protein', title: 'Protein', unit: 'g', low: false, graded: true },
+  { key: 'dietaryFiber', label: 'Fiber', title: 'Dietary fiber', unit: 'g', low: false, graded: true },
+  { key: 'totalSugars', label: 'Sugar', title: 'Total sugars', unit: 'g', low: true, graded: true },
+  { key: 'saturatedFat', label: 'Sat fat', title: 'Saturated fat', unit: 'g', low: true, graded: true },
+  { key: 'calories', label: 'Cal', title: 'Calories', unit: '', low: true, graded: false },
+  { key: 'totalCarbs', label: 'Carbs', title: 'Total carbohydrate', unit: 'g', low: false, graded: false },
+  { key: 'totalFat', label: 'Fat', title: 'Total fat', unit: 'g', low: true, graded: false },
+  { key: 'sodium', label: 'Sodium', title: 'Sodium', unit: 'mg', low: true, graded: false },
 ] as const;
 
 type MetricKey = (typeof METRICS)[number]['key'];
+const GRADED_COUNT = METRICS.filter((m) => m.graded).length;
 
 // Calories and sodium read as whole numbers; grams get one decimal.
 function fmt(v: number | null | undefined, unit: string): string | null {
@@ -96,7 +99,8 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
           <colgroup>
             <col class="col-name" />
             <col span="3" />
-            <col span={METRICS.length} />
+            <col span={GRADED_COUNT} />
+            <col span={METRICS.length - GRADED_COUNT} />
             <col class="col-type" />
             <col class="col-note" />
             <col />
@@ -105,7 +109,8 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
             <tr class="groups">
               <th class="g-name" scope="col"></th>
               <th class="g-scores" colspan="3" scope="colgroup">Scores · out of 10</th>
-              <th class="g-macros" colspan={METRICS.length} scope="colgroup">Per 100 g</th>
+              <th class="g-macros" colspan={GRADED_COUNT} scope="colgroup">Graded · per 100 g</th>
+              <th class="g-minor" colspan={METRICS.length - GRADED_COUNT} scope="colgroup">Not graded</th>
               <th class="g-rest" colspan="3" scope="colgroup">On the box</th>
             </tr>
             <tr class="heads">
@@ -122,7 +127,7 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
                 <button type="button">Grade</button>
               </th>
               {METRICS.map((m) => (
-                <th class="h-num" scope="col" data-sort={m.key} data-first={m.low ? 'asc' : 'desc'} title={m.title}>
+                <th class:list={['h-num', { minor: !m.graded }]} scope="col" data-sort={m.key} data-first={m.low ? 'asc' : 'desc'} title={m.title}>
                   <button type="button">{m.label}</button>
                 </th>
               ))}
@@ -188,9 +193,9 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
                   const v = fmt(raw, m.unit);
                   // Protein is tinted by its %DV, the same number the grade uses.
                   const tintValue = m.key === 'protein' ? proteinDVOf(r.n).dv : raw;
-                  const tier = m.tint ? macroTier(m.key as MacroTintKey, tintValue) : null;
+                  const tier = m.graded ? macroTier(m.key as MacroTintKey, tintValue) : null;
                   return (
-                    <td class:list={['c-num', tier && `tint t-${tier}`]}>
+                    <td class:list={['c-num', { minor: !m.graded }, tier && `tint t-${tier}`]}>
                       {v ?? <span class="dash" title="Not listed on the label">—</span>}
                     </td>
                   );
@@ -502,6 +507,7 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
   }
 
   .groups .g-scores { background: var(--cherry); }
+  .groups .g-minor { background: var(--muted); }
   .groups .g-name { background: var(--ink); }
 
   .heads th {
@@ -678,6 +684,16 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
   .c-num.t-good { background: color-mix(in srgb, var(--score-good) 13%, var(--white)); }
   .c-num.t-mid { background: color-mix(in srgb, var(--score-mid) 16%, var(--white)); }
   .c-num.t-bad { background: color-mix(in srgb, var(--score-bad) 11%, var(--white)); }
+
+  /* Columns the grade ignores: smaller and greyer, behind a heavier rule. */
+  .c-num.minor { font-size: 12px; color: var(--muted); }
+  .heads .h-num.minor button { color: var(--muted-light); }
+  .heads .h-num.minor button:hover { color: var(--ink); }
+  .h-num.minor + .h-num.minor,
+  .c-num.minor + .c-num.minor { border-left: 0; }
+  .h-num.minor,
+  .c-num.minor,
+  .g-minor { border-left: 3px solid var(--ink); }
 
   .dash { color: var(--muted-light); }
 
