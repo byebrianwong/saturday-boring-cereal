@@ -13,12 +13,13 @@ attributes: [high-protein, low-sugar, grain-free, keto, gluten-free]
 nutrition:
   servingSize: 36
   calories: 170
-  totalFat: null
+  totalFat: 9
   saturatedFat: 1.5
   totalSugars: 0.1
   addedSugars: 0
   dietaryFiber: 1
   protein: 14
-  proteinDV: null
+  proteinDV: 26
+  sodium: 210
 ---
 

@@ -11,14 +11,15 @@ proteinSources: [nut-seed]
 attributes: [high-protein]
 nutrition:
   servingSize: 64
-  calories: null
+  calories: 270
   totalFat: 9
   saturatedFat: 4.5
   totalSugars: 9
-  addedSugars: null
+  addedSugars: 8
   dietaryFiber: 7
   protein: 17
-  proteinDV: null
+  proteinDV: 20
+  sodium: 230
 boxImage: /images/cereals/kodiak-protein-packed-cookie-butter-granola.jpg
 imageSource: manufacturer
 imageCredit: "Image: Kodiak Cakes (kodiakcakes.com)"

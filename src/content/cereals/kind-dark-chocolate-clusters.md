@@ -10,14 +10,15 @@ proteinSources: []
 attributes: [high-protein]
 nutrition:
   servingSize: 65
-  calories: null
-  totalFat: null
-  saturatedFat: null
+  calories: 240
+  totalFat: 6
+  saturatedFat: 1.5
   totalSugars: 7
-  addedSugars: null
+  addedSugars: 7
   dietaryFiber: 4
   protein: 10
-  proteinDV: null
+  proteinDV: 16
+  sodium: 135
 boxImage: /images/cereals/kind-dark-chocolate-clusters.jpg
 imageSource: manufacturer
 imageCredit: "Image: KIND Snacks (kindsnacks.com)"

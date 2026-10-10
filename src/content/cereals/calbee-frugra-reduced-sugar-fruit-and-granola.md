@@ -11,14 +11,15 @@ proteinSources: [nut-seed]
 attributes: [high-protein, low-sugar]
 nutrition:
   servingSize: 56
-  calories: null
+  calories: 270
   totalFat: 13
   saturatedFat: 6
   totalSugars: 4
-  addedSugars: null
+  addedSugars: 4
   dietaryFiber: 6
   protein: 10
-  proteinDV: null
+  proteinDV: 14
+  sodium: 80
 boxImage: /images/cereals/calbee-frugra-reduced-sugar-fruit-and-granola.jpg
 imageSource: other
 imageCredit: "Image: Calbee, via Amazon listing"

@@ -18,7 +18,7 @@ nutrition:
   polyunsaturatedFat: 2
   monounsaturatedFat: 1
   totalSugars: 7
-  addedSugars: 3
+  addedSugars: 7
   dietaryFiber: 6
   protein: 6
   proteinDV: null

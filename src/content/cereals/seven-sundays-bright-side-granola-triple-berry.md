@@ -22,7 +22,7 @@ nutrition:
   addedSugars: 2
   dietaryFiber: 4
   protein: 6
-  proteinDV: null
+  proteinDV: 6
   sodium: 50
 ---
 

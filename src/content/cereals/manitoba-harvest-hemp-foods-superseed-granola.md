@@ -11,14 +11,15 @@ proteinSources: [nut-seed]
 attributes: [high-protein]
 nutrition:
   servingSize: 60
-  calories: null
+  calories: 280
   totalFat: 12
   saturatedFat: 6
   totalSugars: 9
-  addedSugars: null
+  addedSugars: 9
   dietaryFiber: 4
   protein: 11
-  proteinDV: null
+  proteinDV: 18
+  sodium: 170
 boxImage: /images/cereals/manitoba-harvest-hemp-foods-superseed-granola.jpg
 imageSource: other
 imageCredit: "Image: Manitoba Harvest, via Kroger"
