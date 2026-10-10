@@ -1,5 +1,5 @@
 ---
-name: "Protein Granola Maple & Brown Sugar"
+name: "Protein Granola, Maple & Brown Sugar"
 brand: Quaker
 rating: 6
 shortNote: Slightly drier, harder to eat a lot of

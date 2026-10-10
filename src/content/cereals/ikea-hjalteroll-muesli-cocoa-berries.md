@@ -1,5 +1,5 @@
 ---
-name: Hjälteroll Muesli with Cocoa and Berries
+name: Hjälteroll Muesli with Cocoa and Dried Berries
 brand: IKEA
 rating: null
 dateReviewed: 2026-10-10

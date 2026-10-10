@@ -1,5 +1,5 @@
 ---
-name: Protein Packed Cookie Butter Granola
+name: Protein-Packed Cookie Butter Granola
 brand: Kodiak
 rating: 7
 shortNote: Gets a little artificially tasting at the end

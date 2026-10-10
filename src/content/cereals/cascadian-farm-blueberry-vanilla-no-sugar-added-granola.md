@@ -1,5 +1,5 @@
 ---
-name: Blueberry Vanilla No Sugar Added Granola
+name: No Added Sugar Blueberry Vanilla Granola
 brand: Cascadian Farm
 rating: 8
 shortNote: Light crispy granola type

@@ -1,6 +1,6 @@
 ---
-name: Honey Roasted
-brand: Honey Bunches of Oats
+name: Honey Bunches of Oats, Honey Roasted
+brand: Post
 rating: 8
 dateReviewed: 2025-02-11
 emoji: '🍯'

@@ -1,5 +1,5 @@
 ---
-name: Kernza Grains Climate Smart Organic
+name: Climate Smart Kernza Grains
 brand: Cascadian Farm
 rating: 7
 shortNote: Has a medium grainy taste to it, like slightly thicker darker wheat flakes. Slightly crunchy, but not really crispy. Mild organicy after taste. Would buy again for variety of wheat flake cereals
