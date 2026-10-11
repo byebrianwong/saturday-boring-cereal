@@ -132,6 +132,10 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
         Ranked #1 to #{runnersUp.length + 1} out of {cereals.length}. Score out of ten. Protein, fiber
         and sugar taken off the actual side panel — not off the front — and shown per 100 grams.
       </p>
+      <p class="macro-key">
+        <span class="k-good">Green</span> is good for a cereal, <span class="k-mid">orange</span> is
+        middling, <span class="k-bad">red</span> is poor. Same cut-offs as the Tier score.
+      </p>
 
       <div class="ranks">
         <ChampCard cereal={champ} />
@@ -414,6 +418,27 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
   }
 
   .rank-more { margin-top: 44px; }
+
+  /* Key for the macro colours on the cards. Plain small print, like the
+     numbers it explains. */
+  .macro-key {
+    margin: 10px auto 0;
+    max-width: 640px;
+    font-family: var(--fine);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--ink-soft);
+  }
+
+  .macro-key span {
+    font-weight: bold;
+    padding: 0 3px;
+    box-shadow: inset 0 -4px 0 var(--k);
+  }
+
+  .macro-key .k-good { --k: var(--score-good); }
+  .macro-key .k-mid { --k: var(--score-mid); }
+  .macro-key .k-bad { --k: var(--score-bad); }
 
   /* ---- signoff ---- */
   .signoff {
