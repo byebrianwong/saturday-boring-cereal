@@ -13,7 +13,7 @@ export default {
     docs: {
       description: {
         component:
-          'The Overall tier as a seal. `lg` is the stamp in the Verdict panel on each cereal page; `sm` is the chip on /top/. The letter comes from `tierFor()` in src/lib/score.ts, and its colour from `tierColor()`: S is turquoise, A and B green, C amber, D and F red, unrated grey.',
+          'The Tier as a seal. `lg` is the stamp in the Verdict panel on each cereal page; `sm` is the chip on /top/. The letter comes from `tierFor()` in src/lib/score.ts, and its colour from `tierColor()`: S is turquoise, A and B green, C amber, D and F red, unrated grey.',
       },
     },
   },
@@ -29,12 +29,12 @@ export const TopRated = {
 // The rest use fixed numbers so each colour band has a story.
 export const TierB = { args: { tier: 'B', overall: 56, size: 'lg' } };
 export const TierC = { args: { tier: 'C', overall: 52, size: 'lg' } };
-export const TierF = { args: { tier: 'F', overall: 30, size: 'lg' } };
+export const TierF = { args: { tier: 'F', overall: 40, size: 'lg' } };
 
 export const Unrated = {
   args: { tier: null, overall: null, size: 'lg' },
   parameters: {
-    docs: { description: { story: 'A cereal with no taste score has no Overall tier.' } },
+    docs: { description: { story: 'A cereal with no taste score has no Tier.' } },
   },
 };
 
