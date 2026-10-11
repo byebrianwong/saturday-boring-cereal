@@ -4,16 +4,15 @@ import { tierColor, overallOutOfTen } from '../lib/score';
 interface Props {
   tier: string | null;
   overall: number | null;
-  size?: 'lg' | 'sm';
 }
 
-const { tier, overall, size = 'lg' } = Astro.props;
+const { tier, overall } = Astro.props;
 const color = tier == null ? 'na' : tierColor(tier);
 const out10 = overall == null ? null : overallOutOfTen(overall);
 ---
 
-<div class:list={['stamp', size, color]} title={overall == null ? 'Unrated overall' : `Overall ${out10} / 10`}>
-  {size === 'lg' && <span class="cap">Tier</span>}
+<div class:list={['stamp', color]} title={overall == null ? 'Unrated overall' : `Overall ${out10} / 10`}>
+  <span class="cap">Tier</span>
   <span class="letter">{tier ?? '—'}</span>
   <span class="num">{out10 ? `${out10} / 10` : 'unrated'}</span>
 </div>
@@ -27,6 +26,14 @@ const out10 = overall == null ? null : overallOutOfTen(overall);
     text-align: center;
     color: #fff;
     line-height: 1;
+    width: 118px;
+    height: 118px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--seal) 88%, #fff), var(--seal) 55%, var(--seal-dark));
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 3px var(--seal-dark), 0 8px 18px rgba(0, 0, 0, 0.28);
+    transform: rotate(-7deg);
+    padding: 6px;
   }
 
   /* --- colour by tier --- */
@@ -51,19 +58,7 @@ const out10 = overall == null ? null : overallOutOfTen(overall);
     --seal-dark: #7c8186;
   }
 
-  /* --- large seal: the hero stamp on the detail page --- */
-  .stamp.lg {
-    width: 118px;
-    height: 118px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 32% 28%, color-mix(in srgb, var(--seal) 88%, #fff), var(--seal) 55%, var(--seal-dark));
-    border: 3px solid #fff;
-    box-shadow: 0 0 0 3px var(--seal-dark), 0 8px 18px rgba(0, 0, 0, 0.28);
-    transform: rotate(-7deg);
-    padding: 6px;
-  }
-
-  .stamp.lg .cap {
+  .stamp .cap {
     font-family: var(--fine);
     font-size: 10px;
     letter-spacing: 0.22em;
@@ -71,7 +66,7 @@ const out10 = overall == null ? null : overallOutOfTen(overall);
     opacity: 0.9;
   }
 
-  .stamp.lg .letter {
+  .stamp .letter {
     font-family: var(--shout);
     font-size: 52px;
     letter-spacing: -0.02em;
@@ -79,40 +74,11 @@ const out10 = overall == null ? null : overallOutOfTen(overall);
     margin: 1px 0 2px;
   }
 
-  .stamp.lg .num {
+  .stamp .num {
     font-family: var(--fine);
     font-size: 11px;
     letter-spacing: 0.04em;
     font-variant-numeric: tabular-nums;
     opacity: 0.95;
-  }
-
-  /* --- small stamp: the leaderboard chip --- */
-  .stamp.sm {
-    width: 44px;
-    padding: 5px 2px 4px;
-    border-radius: 7px;
-    background: linear-gradient(var(--seal), var(--seal-dark));
-    border: 2px solid #fff;
-    box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22);
-  }
-
-  .stamp.sm .letter {
-    font-family: var(--shout);
-    font-size: 20px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-  }
-
-  .stamp.sm .num {
-    font-family: var(--fine);
-    font-size: 8.5px;
-    letter-spacing: 0.02em;
-    font-variant-numeric: tabular-nums;
-    margin-top: 2px;
-    opacity: 0.92;
-  }
-
-  .stamp.sm.na .num {
-    font-size: 7.5px;
   }
 </style>

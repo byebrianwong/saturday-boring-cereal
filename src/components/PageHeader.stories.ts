@@ -18,13 +18,13 @@ export default {
   },
 };
 
-// Copy taken from src/pages/top.astro.
-export const Rankings = {
+// Copy taken from src/pages/cereals/index.astro.
+export const Aisle = {
   args: {
-    kicker: 'The official chart · Updated every Saturday',
+    kicker: 'Everything in stock · No samples',
     title: 'The ',
-    accent: 'Rankings',
-    lede: "Ranked by Taste, with each box's Tier stamped alongside.",
+    accent: 'Aisle',
+    lede: 'Every box on record. Look at them as boxes or read them as a table. Sort, filter by type or search by name. Press + on up to four boxes to send them to the price check.',
   },
 };
 
@@ -39,7 +39,7 @@ export const LongLede = {
 };
 
 export const Turquoise = {
-  args: { ...Rankings.args, tone: 'turq' },
+  args: { ...Aisle.args, tone: 'turq' },
   parameters: {
     docs: {
       description: { story: 'For a page whose next section is already orange. No page uses it today.' },
@@ -66,5 +66,5 @@ export const TagPage = {
 
 export const Phone = {
   ...phone,
-  args: Rankings.args,
+  args: Aisle.args,
 };

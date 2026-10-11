@@ -12,7 +12,6 @@ const { count, path } = Astro.props;
 
 const nav = [
   { href: '/cereals/', label: 'The Aisle' },
-  { href: '/top/', label: 'Rankings' },
   { href: '/compare/', label: 'Price Check' },
   { href: '/reviews/', label: 'Receipts' },
   { href: '/about/', label: 'Store Policy' },
@@ -104,8 +103,7 @@ const nav = [
   nav.site a:nth-child(1) { background: var(--yellow); }
   nav.site a:nth-child(2) { background: var(--orange); color: var(--white); }
   nav.site a:nth-child(3) { background: var(--turq); color: var(--white); }
-  nav.site a:nth-child(4) { background: var(--yellow); }
-  nav.site a:nth-child(5) { background: var(--cherry); color: var(--white); }
+  nav.site a:nth-child(4) { background: var(--cherry); color: var(--white); }
 
   nav.site a:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
 
