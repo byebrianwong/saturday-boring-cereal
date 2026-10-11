@@ -5,7 +5,7 @@ import AisleFilters from '../../components/AisleFilters.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import { byRatingDesc } from '../../lib/macros';
 import { per100gOf } from '../../lib/nutrition';
-import { scoreCereal, scoreTier, gradeColorTier, overallOutOfTen, macroTier, proteinDVOf } from '../../lib/score';
+import { scoreCereal, scoreTier, tierColor, overallOutOfTen, macroTier, proteinDVOf } from '../../lib/score';
 import type { MacroTintKey } from '../../lib/score';
 import { oneDecimal } from '../../lib/format';
 import { label } from '../../lib/taxonomy';
@@ -27,38 +27,38 @@ const rows = ranked.map((c) => {
     href: u(`/cereals/${c.id}/`),
     taste,
     tasteTier: taste == null ? 'na' : scoreTier(taste),
-    // Health is the nutrition share of the Overall grade: the weighted mean of
+    // Health is the nutrition share of the Tier score: the weighted mean of
     // the protein, sugar, fiber and saturated-fat subscores, 0–100. Shown out
     // of ten so it sits on the same scale as Taste.
     health: s.nutrition,
     healthTier: s.nutrition == null ? 'na' : scoreTier(s.nutrition),
     overall: s.overall,
-    grade: s.grade,
-    gradeTier: s.grade == null ? 'na' : gradeColorTier(s.grade),
+    tier: s.tier,
+    tierColor: s.tier == null ? 'na' : tierColor(s.tier),
     n,
     tags: [...d.formFactors, ...d.attributes],
   };
 });
 
-// Macro columns, in display order. The four nutrients the grade scores come
+// Macro columns, in display order. The four nutrients the Tier scores come
 // first: the two good ones (protein, fiber), then the two bad ones (sugar,
 // saturated fat). The rest follow, printed smaller and greyer because the
-// grade ignores them. `low` marks columns where less is better, so the first
-// click on the header sorts lowest first. `graded` columns also get a pale
+// Tier ignores them. `low` marks columns where less is better, so the first
+// click on the header sorts lowest first. `scored` columns also get a pale
 // good/mid/bad background that agrees with the Health score.
 const METRICS = [
-  { key: 'protein', label: 'Protein', title: 'Protein', unit: 'g', low: false, graded: true },
-  { key: 'dietaryFiber', label: 'Fiber', title: 'Dietary fiber', unit: 'g', low: false, graded: true },
-  { key: 'totalSugars', label: 'Sugar', title: 'Total sugars', unit: 'g', low: true, graded: true },
-  { key: 'saturatedFat', label: 'Sat fat', title: 'Saturated fat', unit: 'g', low: true, graded: true },
-  { key: 'calories', label: 'Cal', title: 'Calories', unit: '', low: true, graded: false },
-  { key: 'totalCarbs', label: 'Carbs', title: 'Total carbohydrate', unit: 'g', low: false, graded: false },
-  { key: 'totalFat', label: 'Fat', title: 'Total fat', unit: 'g', low: true, graded: false },
-  { key: 'sodium', label: 'Sodium', title: 'Sodium', unit: 'mg', low: true, graded: false },
+  { key: 'protein', label: 'Protein', title: 'Protein', unit: 'g', low: false, scored: true },
+  { key: 'dietaryFiber', label: 'Fiber', title: 'Dietary fiber', unit: 'g', low: false, scored: true },
+  { key: 'totalSugars', label: 'Sugar', title: 'Total sugars', unit: 'g', low: true, scored: true },
+  { key: 'saturatedFat', label: 'Sat fat', title: 'Saturated fat', unit: 'g', low: true, scored: true },
+  { key: 'calories', label: 'Cal', title: 'Calories', unit: '', low: true, scored: false },
+  { key: 'totalCarbs', label: 'Carbs', title: 'Total carbohydrate', unit: 'g', low: false, scored: false },
+  { key: 'totalFat', label: 'Fat', title: 'Total fat', unit: 'g', low: true, scored: false },
+  { key: 'sodium', label: 'Sodium', title: 'Sodium', unit: 'mg', low: true, scored: false },
 ] as const;
 
 type MetricKey = (typeof METRICS)[number]['key'];
-const GRADED_COUNT = METRICS.filter((m) => m.graded).length;
+const SCORED_COUNT = METRICS.filter((m) => m.scored).length;
 
 // Calories and sodium read as whole numbers; grams get one decimal.
 function fmt(v: number | null | undefined, unit: string): string | null {
@@ -99,8 +99,8 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
           <colgroup>
             <col class="col-name" />
             <col span="3" />
-            <col span={GRADED_COUNT} />
-            <col span={METRICS.length - GRADED_COUNT} />
+            <col span={SCORED_COUNT} />
+            <col span={METRICS.length - SCORED_COUNT} />
             <col class="col-type" />
             <col class="col-note" />
             <col />
@@ -109,8 +109,8 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
             <tr class="groups">
               <th class="g-name" scope="col"></th>
               <th class="g-scores" colspan="3" scope="colgroup">Scores · out of 10</th>
-              <th class="g-macros" colspan={GRADED_COUNT} scope="colgroup">Graded · per 100 g</th>
-              <th class="g-minor" colspan={METRICS.length - GRADED_COUNT} scope="colgroup">Not graded</th>
+              <th class="g-macros" colspan={SCORED_COUNT} scope="colgroup">Scored · per 100 g</th>
+              <th class="g-minor" colspan={METRICS.length - SCORED_COUNT} scope="colgroup">Not scored</th>
               <th class="g-rest" colspan="3" scope="colgroup">On the box</th>
             </tr>
             <tr class="heads">
@@ -123,11 +123,11 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
               <th class="h-big h-health" scope="col" data-sort="health" data-first="desc">
                 <button type="button">Health</button>
               </th>
-              <th class="h-grade" scope="col" data-sort="overall" data-first="desc">
-                <button type="button">Grade</button>
+              <th class="h-tier" scope="col" data-sort="overall" data-first="desc">
+                <button type="button">Tier</button>
               </th>
               {METRICS.map((m) => (
-                <th class:list={['h-num', { minor: !m.graded }]} scope="col" data-sort={m.key} data-first={m.low ? 'asc' : 'desc'} title={m.title}>
+                <th class:list={['h-num', { minor: !m.scored }]} scope="col" data-sort={m.key} data-first={m.low ? 'asc' : 'desc'} title={m.title}>
                   <button type="button">{m.label}</button>
                 </th>
               ))}
@@ -179,23 +179,23 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
                     <span class={`big ${r.healthTier}`}>{(r.health / 10).toFixed(1)}</span>
                   )}
                 </td>
-                <td class="c-grade">
-                  {r.grade == null ? (
-                    <span class="seal na" title="Unrated boxes get no grade">—</span>
+                <td class="c-tier">
+                  {r.tier == null ? (
+                    <span class="seal na" title="Unrated boxes get no tier">—</span>
                   ) : (
-                    <span class={`seal ${r.gradeTier}`} title={`Overall ${overallOutOfTen(r.overall!)} / 10`}>
-                      {r.grade}
+                    <span class={`seal ${r.tierColor}`} title={`Overall ${overallOutOfTen(r.overall!)} / 10`}>
+                      {r.tier}
                     </span>
                   )}
                 </td>
                 {METRICS.map((m) => {
                   const raw = r.n[m.key as MetricKey];
                   const v = fmt(raw, m.unit);
-                  // Protein is tinted by its %DV, the same number the grade uses.
+                  // Protein is tinted by its %DV, the same number the Tier score uses.
                   const tintValue = m.key === 'protein' ? proteinDVOf(r.n).dv : raw;
-                  const tier = m.graded ? macroTier(m.key as MacroTintKey, tintValue) : null;
+                  const tier = m.scored ? macroTier(m.key as MacroTintKey, tintValue) : null;
                   return (
-                    <td class:list={['c-num', { minor: !m.graded }, tier && `tint t-${tier}`]}>
+                    <td class:list={['c-num', { minor: !m.scored }, tier && `tint t-${tier}`]}>
                       {v ?? <span class="dash" title="Not listed on the label">—</span>}
                     </td>
                   );
@@ -554,7 +554,7 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
   .heads th[aria-sort='ascending'] button::after { content: '▲'; }
   .heads th[aria-sort='descending'] button::after { content: '▼'; }
 
-  .h-num, .h-grade, .h-big { text-align: center; }
+  .h-num, .h-tier, .h-big { text-align: center; }
 
   /* Taste and Health headings are allowed to shout. */
   .heads .h-big button {
@@ -648,8 +648,8 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
   .big.bad { background: var(--score-bad); }
   .big.na { background: var(--cream); color: var(--muted-light); box-shadow: none; border-style: dashed; }
 
-  /* The grade is a small flat seal: it summarises the two numbers beside it. */
-  .c-grade { text-align: center; }
+  /* The tier is a small flat seal: it summarises the two numbers beside it. */
+  .c-tier { text-align: center; }
 
   .seal {
     display: inline-flex;
@@ -685,7 +685,7 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
   .c-num.t-mid { background: color-mix(in srgb, var(--score-mid) 16%, var(--white)); }
   .c-num.t-bad { background: color-mix(in srgb, var(--score-bad) 11%, var(--white)); }
 
-  /* Columns the grade ignores: smaller and greyer, behind a heavier rule. */
+  /* Columns the Tier ignores: smaller and greyer, behind a heavier rule. */
   .c-num.minor { font-size: 12px; color: var(--muted); }
   .heads .h-num.minor button { color: var(--muted-light); }
   .heads .h-num.minor button:hover { color: var(--ink); }

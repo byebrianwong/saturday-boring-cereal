@@ -1,7 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { scoreCereal, scoreTier } from '../lib/score';
-import GradeStamp from './GradeStamp.astro';
+import TierStamp from './TierStamp.astro';
 import { u } from '../lib/url';
 
 interface Props {
@@ -19,7 +19,7 @@ const score = scoreCereal(cereal);
 
   <div class="grid">
     <div class="stamp-cell">
-      <GradeStamp grade={score.grade} overall={score.overall} size="lg" />
+      <TierStamp tier={score.tier} overall={score.overall} size="lg" />
     </div>
 
     <div class="bars">
