@@ -4,8 +4,10 @@ brand: Magic Spoon
 rating: 5
 dateReviewed: 2025-02-11
 emoji: '🥜'
-boxColor: "#7b4fb0"
-noAutoImage: true
+boxColor: "#e78e0e"
+boxImage: /images/cereals/magic-spoon-peanut-butter.jpg
+imageSource: other
+imageCredit: "Image: Magic Spoon, via Kroger (angled photo straightened to a flat front)"
 barcode: '0850002887464'
 labelImage: /images/labels/magic-spoon-peanut-butter.jpg
 labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0850002887464"

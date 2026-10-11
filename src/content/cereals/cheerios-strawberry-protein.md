@@ -5,11 +5,13 @@ rating: 7
 shortNote: Slight artificial strawberry flavor; fairly sweet
 dateReviewed: 2025-06-15
 emoji: '🍓'
-boxColor: "#f0b429"
+boxColor: "#e98bb5"
+boxImage: /images/cereals/cheerios-strawberry-protein.jpg
+imageSource: manufacturer
+imageCredit: "Image: General Mills (cheerios.com)"
 barcode: '0016000226357'
 labelImage: /images/labels/cheerios-strawberry-protein.jpg
 labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0016000226357"
-noAutoImage: true
 formFactors: [os]
 proteinSources: []
 attributes: []
