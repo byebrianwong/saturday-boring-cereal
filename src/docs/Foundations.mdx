@@ -1,0 +1,114 @@
+import { Meta, ColorPalette, ColorItem, Typeset } from '@storybook/addon-docs/blocks';
+
+<Meta title="Foundations" />
+
+# Foundations
+
+Everything here is defined in `src/styles/global.css`. Use the CSS variables
+(`var(--orange)`), not the hex values, so a colour change happens in one place.
+
+## Colours
+
+<ColorPalette>
+  <ColorItem
+    title="Advert colours"
+    subtitle="Loud chrome only: bands, banners, buttons, stickers"
+    colors={{
+      '--orange': '#ff6a13',
+      '--turq': '#12b5c9',
+      '--yellow': '#ffcf24',
+      '--cherry': '#e01b1b',
+    }}
+  />
+  <ColorItem
+    title="Darker shades"
+    subtitle="Hover states, outlines, the shadow side of a seal"
+    colors={{
+      '--orange-deep': '#e0550a',
+      '--turq-deep': '#0b8fa0',
+      '--cherry-deep': '#b31414',
+    }}
+  />
+  <ColorItem
+    title="Ink and paper"
+    subtitle="Text, borders and hard shadows on cream"
+    colors={{
+      '--ink': '#1b1206',
+      '--ink-soft': '#3a3025',
+      '--cream': '#fff8ea',
+      '--white': '#ffffff',
+    }}
+  />
+  <ColorItem
+    title="Quiet text"
+    subtitle="Data, small print, captions"
+    colors={{
+      '--muted': '#6f6151',
+      '--muted-light': '#9d8f7c',
+      '--rule': '#d8caae',
+    }}
+  />
+  <ColorItem
+    title="Score bands"
+    subtitle="Good, middling and bad, used by grades and subscore bars"
+    colors={{
+      '--score-good': '#1f9d3a',
+      '--score-mid': '#ff9a0e',
+      '--score-bad': '#e01b1b',
+    }}
+  />
+</ColorPalette>
+
+## Type
+
+There are no web fonts. All three families are system fonts, so they look
+different on machines that lack them. Chromatic's snapshot browser has Impact
+but not Arial Narrow, so in Chromatic snapshots the `--fine` text falls back to
+regular-width Arial and runs wider than it does on a Mac.
+
+<Typeset
+  fontFamily="Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif"
+  fontSizes={[56, 34, 22]}
+  fontWeight={400}
+  sampleText="--shout: headings, buttons, scores"
+/>
+
+<Typeset
+  fontFamily="'Arial Narrow', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  fontSizes={[16, 12, 9]}
+  fontWeight={400}
+  sampleText="--fine: data, notes, small print. Per 100 g: protein 12.5g, sugar 4g."
+/>
+
+<Typeset
+  fontFamily="'Courier New', Courier, monospace"
+  fontSizes={[14]}
+  fontWeight={400}
+  sampleText="--mono: rarely used"
+/>
+
+## Shared classes
+
+These classes in `global.css` are used across pages, so components and pages
+reuse them instead of restyling.
+
+<div style={{ display: 'flex', flexWrap: 'wrap', gap: 28, alignItems: 'center', padding: '20px 0' }}>
+  <span className="section-kicker">.section-kicker</span>
+  <span className="btn-turq">.btn-turq</span>
+  <span className="btn-ink">.btn-ink</span>
+  <span className="score-badge starburst">
+    <span className="sv">8.5</span>
+    <span className="so">.score-badge</span>
+  </span>
+</div>
+
+- `.starburst` clips any box into the 24-point sticker shape.
+- `.rays`, `.rays-fine` and `.rayband` are the sunburst backgrounds. They are
+  the most expensive thing to draw on the page, so keep them few and only ever
+  animate them with `transform`.
+- `.fineprint` is the two-column small-print box the Disclaimer uses.
+
+**A trap:** page CSS must not reuse the global component class names
+(`.macros`, `.score`, `.box`, `.tags`, `.brand`). Astro scopes page styles,
+so the page's rules win, but any property the page does not set still comes
+through from `global.css`.

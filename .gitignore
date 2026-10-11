@@ -6,3 +6,5 @@ dist/
 .gstack/
 .env
 .env.local
+storybook-static/
+*storybook.log
