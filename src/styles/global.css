@@ -463,6 +463,39 @@ img {
   margin-top: 3px;
 }
 
+/* Good / middling / poor on the card macros, using the same cut-offs as the
+   Tier score. Each cell gets the pale tint the /cereals/ table uses, plus a
+   solid bar along its bottom edge, because a tint alone is too faint to read
+   at card size. The number itself keeps its plain ink, so it doesn't shout. */
+.macros .t-good,
+.macros .t-mid,
+.macros .t-bad { padding-bottom: 11px; }
+.macros .t-good {
+  background: color-mix(in srgb, var(--score-good) 13%, var(--white));
+  box-shadow: inset 0 -5px 0 var(--score-good);
+}
+.macros .t-mid {
+  background: color-mix(in srgb, var(--score-mid) 16%, var(--white));
+  box-shadow: inset 0 -5px 0 var(--score-mid);
+}
+.macros .t-bad {
+  background: color-mix(in srgb, var(--score-bad) 11%, var(--white));
+  box-shadow: inset 0 -5px 0 var(--score-bad);
+}
+
+/* Text for screen readers only. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---------- score starburst ---------- */
 
 .score {
