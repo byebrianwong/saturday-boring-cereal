@@ -27,9 +27,9 @@ export const TopRated = {
 };
 
 // The rest use fixed numbers so each colour band has a story.
-export const TierB = { args: { tier: 'B', overall: 55 } };
-export const TierC = { args: { tier: 'C', overall: 51 } };
-export const TierF = { args: { tier: 'F', overall: 30 } };
+export const TierB = { args: { tier: 'B', overall: 56 } };
+export const TierC = { args: { tier: 'C', overall: 52 } };
+export const TierF = { args: { tier: 'F', overall: 40 } };
 
 export const Unrated = {
   args: { tier: null, overall: null },
