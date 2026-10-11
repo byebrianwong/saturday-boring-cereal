@@ -66,3 +66,21 @@ export type DVKey = keyof typeof DAILY_VALUES;
 export function percentDV(key: DVKey, value: number | null | undefined): number | null {
   return value == null ? null : (value / DAILY_VALUES[key]) * 100;
 }
+
+// "% of a day" for the Aisle's percent view. It uses the FDA Daily Values plus
+// two references the FDA doesn't set:
+// - Total sugars use 50 g, the added-sugar Daily Value. Sugar counts the same
+//   whether it was added or came from fruit, so the site always grades total
+//   sugars and gives them a percent too.
+// - Calories use 2,000 kcal, the day every %DV on a label is based on.
+// The replica Nutrition Facts panel doesn't use these, because a real label
+// leaves both blank.
+// Protein is not here: use `proteinDVOf` in score.ts.
+export const DAY_REFERENCES = { ...DAILY_VALUES, totalSugars: 50, calories: 2000 } as const;
+
+export type DayKey = keyof typeof DAY_REFERENCES;
+
+/** An amount as a percent of a day's reference amount (see DAY_REFERENCES). */
+export function percentOfDay(key: DayKey, value: number | null | undefined): number | null {
+  return value == null ? null : (value / DAY_REFERENCES[key]) * 100;
+}

@@ -4,7 +4,7 @@ import Layout from '../../layouts/Layout.astro';
 import AisleFilters from '../../components/AisleFilters.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import { byRatingDesc } from '../../lib/macros';
-import { per100gOf } from '../../lib/nutrition';
+import { per100gOf, percentOfDay, type Nutrition } from '../../lib/nutrition';
 import { scoreCereal, scoreTier, tierColor, overallOutOfTen, macroTier, proteinDVOf } from '../../lib/score';
 import type { MacroTintKey } from '../../lib/score';
 import { oneDecimal } from '../../lib/format';
@@ -66,6 +66,29 @@ function fmt(v: number | null | undefined, unit: string): string | null {
   return unit === 'g' ? `${oneDecimal(v)}g` : `${Math.round(v)}${unit}`;
 }
 
+type Metric = (typeof METRICS)[number];
+
+// One nutrient cell, in both units. The page shows one and hides the other,
+// and the Grams / % switch flips which. `pct` is the share of a day: protein
+// uses its %DV (marked "~" when estimated from grams), everything else uses
+// `percentOfDay`, which gives total sugars and calories a reference too.
+// Both are null when the label leaves the nutrient out.
+function amounts(n: Nutrition, m: Metric) {
+  const raw = n[m.key];
+  const day = m.key === 'protein' ? proteinDVOf(n) : { dv: percentOfDay(m.key, raw), estimated: false };
+  const pct = raw == null ? null : day.dv;
+  const est = m.key === 'protein' && day.estimated;
+  const g = fmt(raw, m.unit);
+  const p = pct == null ? null : `${est ? '~' : ''}${Math.round(pct)}%`;
+  const amount = m.unit === '' ? `${g} kcal` : g;
+  return {
+    g,
+    p,
+    pct,
+    title: g == null ? 'Not listed on the label' : `${m.title} per 100 g: ${amount}, ${p} of a day${est ? ' (estimated)' : ''}`,
+  };
+}
+
 // HTML lowercases attribute names, so camelCase keys are written as kebab-case
 // (data-s-total-carbs) and come back as camelCase through `dataset`.
 const kebab = (k: string) => k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
@@ -84,6 +107,9 @@ const dataAttrs = (r: (typeof rows)[number]) => ({
   'data-s-health': sortVal(r.health),
   'data-s-overall': sortVal(r.overall),
   ...Object.fromEntries(METRICS.map((m) => [`data-s-${kebab(m.key)}`, sortVal(r.n[m.key as MetricKey])])),
+  // The same nutrients as a percent of a day. The percent view sorts on these,
+  // so protein sorts by %DV, the number its tint and the Health score use.
+  ...Object.fromEntries(METRICS.map((m) => [`data-p-${kebab(m.key)}`, sortVal(amounts(r.n, m).pct)])),
 });
 
 // The Boxes view has no column headings to click, so it sorts from a menu.
@@ -119,6 +145,10 @@ const MEDALS = ['m1', 'm2', 'm3'];
       <button type="button" data-view="boxes" class="on" aria-pressed="true">Boxes</button>
       <button type="button" data-view="table" aria-pressed="false">Table</button>
     </div>
+    <div class="viewer" role="group" aria-label="Show nutrients as">
+      <button type="button" data-units="pct" class="on" aria-pressed="true" title="Share of a day's worth, per 100 g">% of day</button>
+      <button type="button" data-units="g" aria-pressed="false" title="Grams per 100 g, as on the label">Grams</button>
+    </div>
     <label class="finder">
       <span>Search</span>
       <input id="q" type="search" placeholder="Brand, name or note" autocomplete="off" />
@@ -135,7 +165,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
     <div class="count" id="count" aria-live="polite"></div>
   </div>
 
-  <section class="shelf wrap">
+  <section class="shelf wrap" id="shelf" data-units="pct">
     <ol class="tiles" id="tiles" aria-label="All cereals, as boxes">
       {rows.map((r, i) => (
         <li class="tile" {...dataAttrs(r)}>
@@ -186,10 +216,17 @@ const MEDALS = ['m1', 'm2', 'm3'];
               const raw = r.n[m.key as MetricKey];
               const tintValue = m.key === 'protein' ? proteinDVOf(r.n).dv : raw;
               const tier = macroTier(m.key as MacroTintKey, tintValue);
+              const a = amounts(r.n, m);
               return (
-                <div class:list={['tm', tier && `t-${tier}`]} title={`${m.title} per 100 g`}>
+                <div class:list={['tm', tier && `t-${tier}`]} title={a.title}>
                   <dt>{m.label}</dt>
-                  <dd>{fmt(raw, m.unit) ?? <span class="dash" title="Not listed on the label">—</span>}</dd>
+                  <dd>
+                    {a.g == null ? (
+                      <span class="dash">—</span>
+                    ) : (
+                      <><span class="u-pct">{a.p}</span><span class="u-g">{a.g}</span></>
+                    )}
+                  </dd>
                 </div>
               );
             })}
@@ -225,7 +262,10 @@ const MEDALS = ['m1', 'm2', 'm3'];
             <tr class="groups">
               <th class="g-name" scope="col"></th>
               <th class="g-scores" colspan="3" scope="colgroup">Scores · out of 10</th>
-              <th class="g-macros" colspan={SCORED_COUNT} scope="colgroup">Scored · per 100 g</th>
+              <th class="g-macros" colspan={SCORED_COUNT} scope="colgroup">
+                <span class="u-pct">Scored · % of a day, per 100 g</span>
+                <span class="u-g">Scored · grams per 100 g</span>
+              </th>
               <th class="g-minor" colspan={METRICS.length - SCORED_COUNT} scope="colgroup">Not scored</th>
               <th class="g-rest" colspan="3" scope="colgroup">On the box</th>
             </tr>
@@ -295,13 +335,17 @@ const MEDALS = ['m1', 'm2', 'm3'];
                 </td>
                 {METRICS.map((m) => {
                   const raw = r.n[m.key as MetricKey];
-                  const v = fmt(raw, m.unit);
                   // Protein is tinted by its %DV, the same number the Tier score uses.
                   const tintValue = m.key === 'protein' ? proteinDVOf(r.n).dv : raw;
                   const tier = m.scored ? macroTier(m.key as MacroTintKey, tintValue) : null;
+                  const a = amounts(r.n, m);
                   return (
-                    <td class:list={['c-num', { minor: !m.scored }, tier && `tint t-${tier}`]}>
-                      {v ?? <span class="dash" title="Not listed on the label">—</span>}
+                    <td class:list={['c-num', { minor: !m.scored }, tier && `tint t-${tier}`]} title={a.title}>
+                      {a.g == null ? (
+                        <span class="dash">—</span>
+                      ) : (
+                        <><span class="u-pct">{a.p}</span><span class="u-g">{a.g}</span></>
+                      )}
                     </td>
                   );
                 })}
@@ -335,7 +379,10 @@ const MEDALS = ['m1', 'm2', 'm3'];
 
     <p class="ledger-foot">
       Taste is one person’s score out of ten. Nutrition columns are per 100 g; a dash means the
-      label doesn’t list it. <a href={u('/about/#overall')}>How scoring works</a>
+      label doesn’t list it. % of a day uses the FDA’s Daily Values for a 2,000-calorie diet. Total
+      sugar has no Daily Value, so it is counted against 50 g, and calories against 2,000. ~ means
+      the label prints no protein %DV, so it is estimated from grams.
+      <a href={u('/about/#overall')}>How scoring works</a>
     </p>
   </section>
 
@@ -362,11 +409,25 @@ const MEDALS = ['m1', 'm2', 'm3'];
     document.querySelectorAll<HTMLButtonElement>('[data-filter-bar] [data-filter]')
   );
   const viewBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-view]'));
+  const shelf = document.getElementById('shelf')!;
+  const unitBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('button[data-units]'));
   const heads = Array.from(document.querySelectorAll<HTMLTableCellElement>('th[data-sort]'));
   const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('tr[data-id]'));
   const tiles = Array.from(tilesEl.querySelectorAll<HTMLLIElement>('li[data-id]'));
 
   type Dir = 'asc' | 'desc';
+  type Units = 'pct' | 'g';
+
+  // The Grams / % choice is also remembered in this browser, so it sticks
+  // between visits. Storage can be blocked, so every access is guarded.
+  const UNITS_KEY = 'aisle-units';
+  function storedUnits(): Units {
+    try {
+      return localStorage.getItem(UNITS_KEY) === 'g' ? 'g' : 'pct';
+    } catch {
+      return 'pct';
+    }
+  }
 
   // The sort menu lists every sort key and the direction each one starts in.
   const options = Array.from(sortBy.options);
@@ -375,11 +436,14 @@ const MEDALS = ['m1', 'm2', 'm3'];
   // State lives in the URL hash so a view, sort and filter can be linked.
   // `f` is the aisle filter (the home page's aisle signs already link with it).
   // `v` is the view; Boxes is the default, so only `v=table` is ever written.
-  const state = { v: 'boxes' as 'boxes' | 'table', f: 'all', s: 'taste', d: 'desc' as Dir, q: '' };
+  // `u` is the units; % of a day is the default, so only `u=g` is ever written.
+  const state = { v: 'boxes' as 'boxes' | 'table', u: 'pct' as Units, f: 'all', s: 'taste', d: 'desc' as Dir, q: '' };
 
   function readHash() {
     const h = new URLSearchParams(location.hash.slice(1));
     state.v = h.get('v') === 'table' ? 'table' : 'boxes';
+    const units = h.get('u');
+    state.u = units === 'g' || units === 'pct' ? units : storedUnits();
     const f = h.get('f');
     state.f = f && filterBtns.some((b) => b.dataset.filter === f) ? f : 'all';
     const s = h.get('s');
@@ -393,6 +457,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
   function writeHash() {
     const h = new URLSearchParams();
     if (state.v !== 'boxes') h.set('v', state.v);
+    if (state.u !== 'pct') h.set('u', state.u);
     if (state.f !== 'all') h.set('f', state.f);
     if (state.s !== 'taste' || state.d !== 'desc') {
       h.set('s', state.s);
@@ -403,7 +468,13 @@ const MEDALS = ['m1', 'm2', 'm3'];
     history.replaceState(null, '', str ? `#${str}` : location.pathname);
   }
 
-  const sortKey = () => `s${state.s[0].toUpperCase()}${state.s.slice(1)}`;
+  // Nutrient columns carry two sort values: grams (data-s-*) and percent of a
+  // day (data-p-*). Sort on the one being shown.
+  function sortKey(): string {
+    const name = `${state.s[0].toUpperCase()}${state.s.slice(1)}`;
+    const hasPct = rows.length > 0 && `p${name}` in rows[0].dataset;
+    return state.u === 'pct' && hasPct ? `p${name}` : `s${name}`;
+  }
 
   function matches(el: HTMLElement): boolean {
     if (state.f !== 'all' && !(el.dataset.tags ?? '').split(' ').includes(state.f)) return false;
@@ -474,6 +545,12 @@ const MEDALS = ['m1', 'm2', 'm3'];
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', String(on));
     }
+    shelf.dataset.units = state.u;
+    for (const b of unitBtns) {
+      const on = b.dataset.units === state.u;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
 
     sortBy.value = state.s;
     const asc = state.d === 'asc';
@@ -516,6 +593,18 @@ const MEDALS = ['m1', 'm2', 'm3'];
   for (const b of viewBtns) {
     b.addEventListener('click', () => {
       state.v = b.dataset.view as 'boxes' | 'table';
+      render();
+    });
+  }
+
+  for (const b of unitBtns) {
+    b.addEventListener('click', () => {
+      state.u = b.dataset.units as Units;
+      try {
+        localStorage.setItem(UNITS_KEY, state.u);
+      } catch {
+        // Blocked storage only means the choice isn't remembered.
+      }
       render();
     });
   }
@@ -649,6 +738,10 @@ const MEDALS = ['m1', 'm2', 'm3'];
     background: var(--yellow);
     box-shadow: inset 3px 3px 0 rgba(27, 18, 6, 0.25);
   }
+
+  /* Every nutrient cell holds both units; show the chosen one. */
+  .shelf[data-units='pct'] .u-g,
+  .shelf[data-units='g'] .u-pct { display: none; }
 
   /* Sort menu: same furniture as the search box. */
   .sorter {
