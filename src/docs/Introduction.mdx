@@ -48,8 +48,7 @@ macros inside it are small grey text.
 | Every page | (`src/layouts/Layout.astro`) | SiteHeader, SiteFooter |
 | Home, `/` | `index.astro` | ChampCard, RankCard, BreakfastStrip, Disclaimer |
 | The Aisle, `/cereals/` | `cereals/index.astro` | PageHeader, AisleFilters |
-| One cereal, `/cereals/<slug>/` | `cereals/[slug].astro` | ScorePanel (which contains GradeStamp), NutritionPanel |
-| Rankings, `/top/` | `top.astro` | PageHeader, GradeStamp |
+| One cereal, `/cereals/<slug>/` | `cereals/[slug].astro` | ScorePanel (which contains TierStamp), NutritionPanel |
 | Price Check, `/compare/` | `compare.astro` | none |
 | Receipts, `/reviews/` | `reviews.astro` | PageHeader, Disclaimer |
 | Store Policy, `/about/` | `about.astro` | PageHeader |
@@ -58,7 +57,7 @@ macros inside it are small grey text.
 ## What is not in Storybook
 
 - **Whole pages.** A lot of each page is markup written in the page file
-  itself: the sortable table on The Aisle, the comparison table on Price Check,
+  itself: the box grid and sortable table on The Aisle, the comparison table on Price Check,
   the big box on a cereal page. Those are not components, so they are not
   here. Run `npm run dev` to see them.
 - **Page scripts.** The filter buttons on The Aisle work because of a script

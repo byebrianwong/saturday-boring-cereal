@@ -72,6 +72,36 @@ const kebab = (k: string) => k.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
 
 // data-* values for sorting. Empty string means "not listed".
 const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
+
+// The data-* attributes the page script filters and sorts on. Table rows and
+// box tiles carry the same set, so one sort puts both views in the same order.
+const dataAttrs = (r: (typeof rows)[number]) => ({
+  'data-id': r.id,
+  'data-tags': r.tags.join(' '),
+  'data-search': `${r.d.brand} ${r.d.name} ${r.d.shortNote ?? ''}`.toLowerCase(),
+  'data-s-name': `${r.d.brand} ${r.d.name}`.toLowerCase(),
+  'data-s-taste': sortVal(r.taste),
+  'data-s-health': sortVal(r.health),
+  'data-s-overall': sortVal(r.overall),
+  ...Object.fromEntries(METRICS.map((m) => [`data-s-${kebab(m.key)}`, sortVal(r.n[m.key as MetricKey])])),
+});
+
+// The Boxes view has no column headings to click, so it sorts from a menu.
+// `first` is the direction a new pick starts in, the same as the headings.
+const SORTS = [
+  { key: 'taste', label: 'Taste', first: 'desc' },
+  { key: 'health', label: 'Health', first: 'desc' },
+  { key: 'overall', label: 'Tier', first: 'desc' },
+  ...METRICS.map((m) => ({ key: m.key, label: m.title, first: m.low ? 'asc' : 'desc' })),
+  { key: 'name', label: 'Name', first: 'asc' },
+];
+
+// A tile prints only the four nutrients the Tier scores.
+const TILE_METRICS = METRICS.filter((m) => m.scored);
+
+// Position numbers for the first paint, which is sorted by Taste. The script
+// renumbers on every sort. Boxes with no Taste score get no number.
+const MEDALS = ['m1', 'm2', 'm3'];
 ---
 
 <Layout title="The Aisle — Saturday Boring Cereal">
@@ -79,21 +109,107 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
     kicker="Everything in stock · No samples"
     title="The "
     accent="Aisle"
-    lede="Every box on record, one row each. Sort by any column heading. Filter by type or search by name. Press + on up to four boxes to send them to the price check."
+    lede="Every box on record. Look at them as boxes or read them as a table. Sort, filter by type or search by name. Press + on up to four boxes to send them to the price check."
   />
 
   <AisleFilters mode="buttons" />
 
   <div class="controls wrap">
+    <div class="viewer" role="group" aria-label="View">
+      <button type="button" data-view="boxes" class="on" aria-pressed="true">Boxes</button>
+      <button type="button" data-view="table" aria-pressed="false">Table</button>
+    </div>
     <label class="finder">
       <span>Search</span>
       <input id="q" type="search" placeholder="Brand, name or note" autocomplete="off" />
     </label>
+    <div class="sorter" id="sorter">
+      <label>
+        <span>Sort</span>
+        <select id="sortby">
+          {SORTS.map((s) => <option value={s.key} data-first={s.first}>{s.label}</option>)}
+        </select>
+      </label>
+      <button type="button" id="sortdir">Highest first</button>
+    </div>
     <div class="count" id="count" aria-live="polite"></div>
   </div>
 
   <section class="shelf wrap">
-    <div class="ledger-frame">
+    <ol class="tiles" id="tiles" aria-label="All cereals, as boxes">
+      {rows.map((r, i) => (
+        <li class="tile" {...dataAttrs(r)}>
+          <span class:list={['pos', MEDALS[i]]} hidden={r.taste == null}>{i + 1}</span>
+          <a class="tile-link" href={r.href}>
+            <span class="tile-img" style={`--bc: ${r.d.boxColor}`}>
+              {r.d.boxImage ? (
+                <img src={u(r.d.boxImage)} alt="" loading="lazy" />
+              ) : (
+                <span class="e" aria-hidden="true">{r.d.emoji}</span>
+              )}
+            </span>
+            <span class="tile-nm">
+              <small>{r.d.brand}</small>
+              <b>{r.d.name}</b>
+            </span>
+          </a>
+          <div class="tile-scores">
+            <span class="tsc">
+              {r.taste == null ? (
+                <span class="big na" title="No Taste score on file">—</span>
+              ) : (
+                <span class={`big ${r.tasteTier}`}>{(r.taste / 10).toFixed(1)}</span>
+              )}
+              <small>Taste</small>
+            </span>
+            <span class="tsc">
+              {r.health == null ? (
+                <span class="big na" title="The label lists no protein, sugar, fiber or saturated fat">—</span>
+              ) : (
+                <span class={`big ${r.healthTier}`}>{(r.health / 10).toFixed(1)}</span>
+              )}
+              <small>Health</small>
+            </span>
+            <span class="tsc">
+              {r.tier == null ? (
+                <span class="seal na" title="Unrated boxes get no tier">—</span>
+              ) : (
+                <span class={`seal ${r.tierColor}`} title={`Overall ${overallOutOfTen(r.overall!)} / 10`}>
+                  {r.tier}
+                </span>
+              )}
+              <small>Tier</small>
+            </span>
+          </div>
+          <dl class="tile-macros">
+            {TILE_METRICS.map((m) => {
+              const raw = r.n[m.key as MetricKey];
+              const tintValue = m.key === 'protein' ? proteinDVOf(r.n).dv : raw;
+              const tier = macroTier(m.key as MacroTintKey, tintValue);
+              return (
+                <div class:list={['tm', tier && `t-${tier}`]} title={`${m.title} per 100 g`}>
+                  <dt>{m.label}</dt>
+                  <dd>{fmt(raw, m.unit) ?? <span class="dash" title="Not listed on the label">—</span>}</dd>
+                </div>
+              );
+            })}
+          </dl>
+          <button
+            class="addcmp"
+            type="button"
+            data-id={r.id}
+            aria-pressed="false"
+            aria-label={`Add ${r.d.brand} ${r.d.name} to the price check`}
+            title="Add to the price check"
+          >+</button>
+        </li>
+      ))}
+      <li class="tile-none" id="tiles-none" hidden>
+        Out of stock. Nothing on this shelf matches. Try another aisle or a shorter search.
+      </li>
+    </ol>
+
+    <div class="ledger-frame" id="ledger-frame" hidden>
       <div class="ledger-scroll" tabindex="0" role="region" aria-label="All cereals, one per row">
         <table class="ledger" id="ledger">
           <colgroup>
@@ -138,18 +254,7 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
           </thead>
           <tbody id="rows">
             {rows.map((r) => (
-              <tr
-                data-id={r.id}
-                data-tags={r.tags.join(' ')}
-                data-search={`${r.d.brand} ${r.d.name} ${r.d.shortNote ?? ''}`.toLowerCase()}
-                data-s-name={`${r.d.brand} ${r.d.name}`.toLowerCase()}
-                data-s-taste={sortVal(r.taste)}
-                data-s-health={sortVal(r.health)}
-                data-s-overall={sortVal(r.overall)}
-                {...Object.fromEntries(
-                  METRICS.map((m) => [`data-s-${kebab(m.key)}`, sortVal(r.n[m.key as MetricKey])])
-                )}
-              >
+              <tr {...dataAttrs(r)}>
                 <th class="c-name" scope="row">
                   <a href={r.href}>
                     <span class="thumb" style={`--bc: ${r.d.boxColor}`}>
@@ -245,33 +350,49 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
 <script>
   const tbody = document.getElementById('rows')!;
   const none = document.getElementById('none')!;
+  const tilesEl = document.getElementById('tiles')!;
+  const tilesNone = document.getElementById('tiles-none')!;
+  const ledgerFrame = document.getElementById('ledger-frame')!;
+  const sorter = document.getElementById('sorter')!;
+  const sortBy = document.getElementById('sortby') as HTMLSelectElement;
+  const sortDir = document.getElementById('sortdir') as HTMLButtonElement;
   const count = document.getElementById('count')!;
   const q = document.getElementById('q') as HTMLInputElement;
   const filterBtns = Array.from(
     document.querySelectorAll<HTMLButtonElement>('[data-filter-bar] [data-filter]')
   );
+  const viewBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-view]'));
   const heads = Array.from(document.querySelectorAll<HTMLTableCellElement>('th[data-sort]'));
   const rows = Array.from(tbody.querySelectorAll<HTMLTableRowElement>('tr[data-id]'));
+  const tiles = Array.from(tilesEl.querySelectorAll<HTMLLIElement>('li[data-id]'));
 
-  // State lives in the URL hash so a sorted, filtered view can be linked.
+  type Dir = 'asc' | 'desc';
+
+  // The sort menu lists every sort key and the direction each one starts in.
+  const options = Array.from(sortBy.options);
+  const firstDir = (key: string): Dir => (options.find((o) => o.value === key)?.dataset.first as Dir) ?? 'desc';
+
+  // State lives in the URL hash so a view, sort and filter can be linked.
   // `f` is the aisle filter (the home page's aisle signs already link with it).
-  const state = { f: 'all', s: 'taste', d: 'desc' as 'asc' | 'desc', q: '' };
+  // `v` is the view; Boxes is the default, so only `v=table` is ever written.
+  const state = { v: 'boxes' as 'boxes' | 'table', f: 'all', s: 'taste', d: 'desc' as Dir, q: '' };
 
   function readHash() {
     const h = new URLSearchParams(location.hash.slice(1));
+    state.v = h.get('v') === 'table' ? 'table' : 'boxes';
     const f = h.get('f');
-    if (f && filterBtns.some((b) => b.dataset.filter === f)) state.f = f;
+    state.f = f && filterBtns.some((b) => b.dataset.filter === f) ? f : 'all';
     const s = h.get('s');
-    if (s && heads.some((th) => th.dataset.sort === s)) state.s = s;
+    state.s = s && options.some((o) => o.value === s) ? s : 'taste';
     const d = h.get('d');
-    if (d === 'asc' || d === 'desc') state.d = d;
-    else state.d = (heads.find((th) => th.dataset.sort === state.s)?.dataset.first as 'asc' | 'desc') ?? 'desc';
+    state.d = d === 'asc' || d === 'desc' ? d : firstDir(state.s);
     state.q = h.get('q') ?? '';
     q.value = state.q;
   }
 
   function writeHash() {
     const h = new URLSearchParams();
+    if (state.v !== 'boxes') h.set('v', state.v);
     if (state.f !== 'all') h.set('f', state.f);
     if (state.s !== 'taste' || state.d !== 'desc') {
       h.set('s', state.s);
@@ -282,16 +403,18 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
     history.replaceState(null, '', str ? `#${str}` : location.pathname);
   }
 
-  function matches(row: HTMLTableRowElement): boolean {
-    if (state.f !== 'all' && !(row.dataset.tags ?? '').split(' ').includes(state.f)) return false;
+  const sortKey = () => `s${state.s[0].toUpperCase()}${state.s.slice(1)}`;
+
+  function matches(el: HTMLElement): boolean {
+    if (state.f !== 'all' && !(el.dataset.tags ?? '').split(' ').includes(state.f)) return false;
     const terms = state.q.toLowerCase().trim().split(/\s+/).filter(Boolean);
-    const hay = row.dataset.search ?? '';
+    const hay = el.dataset.search ?? '';
     return terms.every((t) => hay.includes(t));
   }
 
   // Missing values always sort last, whichever way the column is sorted.
-  function compare(a: HTMLTableRowElement, b: HTMLTableRowElement): number {
-    const key = `s${state.s[0].toUpperCase()}${state.s.slice(1)}`;
+  function compare(a: HTMLElement, b: HTMLElement): number {
+    const key = sortKey();
     const av = a.dataset[key] ?? '';
     const bv = b.dataset[key] ?? '';
     if (av === '' && bv === '') return 0;
@@ -302,37 +425,97 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
     return dir * (Number(av) - Number(bv));
   }
 
+  // Stable sort, with taste as the tie-break, so equal values keep a sensible order.
+  const order = (a: HTMLElement, b: HTMLElement) =>
+    compare(a, b) || Number(b.dataset.sTaste || -1) - Number(a.dataset.sTaste || -1);
+
+  // Number the shown tiles in sort order. A box missing the sorted value gets
+  // no number, and neither does any tile when sorting by name. The top three
+  // get medal colours only when the sort runs best-first.
+  function numberTiles(sorted: HTMLLIElement[]) {
+    const key = sortKey();
+    const ranked = state.s !== 'name';
+    const bestFirst = state.d === firstDir(state.s);
+    let pos = 0;
+    for (const tile of sorted) {
+      const chip = tile.querySelector<HTMLElement>('.pos')!;
+      const numbered = ranked && !tile.hidden && (tile.dataset[key] ?? '') !== '';
+      chip.hidden = !numbered;
+      if (!numbered) continue;
+      pos++;
+      chip.textContent = String(pos);
+      chip.classList.remove('m1', 'm2', 'm3');
+      if (bestFirst && pos <= 3) chip.classList.add(`m${pos}`);
+    }
+  }
+
   function render() {
     let shown = 0;
-    for (const row of rows) {
-      const ok = matches(row);
-      row.hidden = !ok;
-      if (ok) shown++;
-    }
-    // Stable sort, with taste as the tie-break, so equal values keep a sensible order.
-    const sorted = [...rows].sort((a, b) => compare(a, b) || Number(b.dataset.sTaste || -1) - Number(a.dataset.sTaste || -1));
-    for (const row of sorted) tbody.insertBefore(row, none);
+    for (const el of [...rows, ...tiles]) el.hidden = !matches(el);
+    for (const row of rows) if (!row.hidden) shown++;
+
+    const sortedRows = [...rows].sort(order);
+    for (const row of sortedRows) tbody.insertBefore(row, none);
+    const sortedTiles = [...tiles].sort(order);
+    for (const tile of sortedTiles) tilesEl.insertBefore(tile, tilesNone);
+    numberTiles(sortedTiles);
+
     none.hidden = shown > 0;
+    tilesNone.hidden = shown > 0;
     count.textContent = `${shown} of ${rows.length} box${rows.length === 1 ? '' : 'es'} shown`;
+
+    const boxes = state.v === 'boxes';
+    tilesEl.hidden = !boxes;
+    ledgerFrame.hidden = boxes;
+    // The table sorts from its headings, so the menu only shows with the boxes.
+    sorter.hidden = !boxes;
+    for (const b of viewBtns) {
+      const on = b.dataset.view === state.v;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
+
+    sortBy.value = state.s;
+    const asc = state.d === 'asc';
+    sortDir.textContent = state.s === 'name' ? (asc ? 'A to Z' : 'Z to A') : asc ? 'Lowest first' : 'Highest first';
 
     for (const th of heads) {
       const on = th.dataset.sort === state.s;
       th.classList.toggle('on', on);
-      if (on) th.setAttribute('aria-sort', state.d === 'asc' ? 'ascending' : 'descending');
+      if (on) th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
       else th.removeAttribute('aria-sort');
     }
     for (const b of filterBtns) b.classList.toggle('on', b.dataset.filter === state.f);
     writeHash();
   }
 
+  function sortOn(key: string) {
+    if (state.s === key) state.d = state.d === 'asc' ? 'desc' : 'asc';
+    else {
+      state.s = key;
+      state.d = firstDir(key);
+    }
+    render();
+  }
+
   for (const th of heads) {
-    th.querySelector('button')!.addEventListener('click', () => {
-      const key = th.dataset.sort!;
-      if (state.s === key) state.d = state.d === 'asc' ? 'desc' : 'asc';
-      else {
-        state.s = key;
-        state.d = (th.dataset.first as 'asc' | 'desc') ?? 'desc';
-      }
+    th.querySelector('button')!.addEventListener('click', () => sortOn(th.dataset.sort!));
+  }
+
+  sortBy.addEventListener('change', () => {
+    state.s = sortBy.value;
+    state.d = firstDir(state.s);
+    render();
+  });
+
+  sortDir.addEventListener('click', () => {
+    state.d = state.d === 'asc' ? 'desc' : 'asc';
+    render();
+  });
+
+  for (const b of viewBtns) {
+    b.addEventListener('click', () => {
+      state.v = b.dataset.view as 'boxes' | 'table';
       render();
     });
   }
@@ -351,7 +534,7 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
 
   readHash();
   render();
-  // A link to another sort or filter on this same page only changes the hash.
+  // A link to another view, sort or filter on this same page only changes the hash.
   addEventListener('hashchange', () => {
     readHash();
     render();
@@ -443,6 +626,83 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
   .finder input:focus { outline: none; }
   .finder:focus-within { outline: 4px solid var(--turq); outline-offset: 3px; }
 
+  /* View switch: two ad buttons, the current one pressed in. */
+  .viewer { display: flex; }
+
+  .viewer button {
+    font-family: var(--shout);
+    font-size: 16px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--white);
+    border: 3px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 7px 16px 5px;
+    cursor: pointer;
+  }
+
+  .viewer button + button { border-left: 0; }
+  .viewer button:hover { background: #fff1c4; }
+
+  .viewer button.on {
+    background: var(--yellow);
+    box-shadow: inset 3px 3px 0 rgba(27, 18, 6, 0.25);
+  }
+
+  /* Sort menu: same furniture as the search box. */
+  .sorter {
+    display: flex;
+    align-items: stretch;
+    border: 3px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    background: var(--white);
+  }
+
+  .sorter[hidden] { display: none; }
+  .sorter label { display: flex; align-items: stretch; }
+
+  .sorter label span {
+    display: flex;
+    align-items: center;
+    background: var(--orange);
+    color: var(--white);
+    font-family: var(--shout);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 12px 4px;
+    border-right: 3px solid var(--ink);
+  }
+
+  .sorter select {
+    border: 0;
+    font-family: var(--fine);
+    font-size: 15px;
+    color: var(--ink);
+    padding: 8px 6px 8px 10px;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .sorter select:focus-visible { outline: 3px solid var(--turq); outline-offset: -3px; }
+
+  .sorter button {
+    border: 0;
+    border-left: 3px solid var(--ink);
+    background: var(--cream);
+    font-family: var(--fine);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink);
+    padding: 6px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .sorter button:hover { background: #fff1c4; }
+
   .count {
     font-family: var(--fine);
     font-size: 12px;
@@ -450,6 +710,195 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
     text-transform: uppercase;
     color: var(--muted);
   }
+
+  /* ---- the boxes ----
+     One tile per box. The box photo is the point of this view, so it gets
+     most of the tile. The frame is ad furniture; the numbers under it stay
+     as small and plain as they are in the table. */
+
+  .tiles {
+    list-style: none;
+    margin: 0 auto;
+    padding: 0;
+    max-width: 1280px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 30px 24px;
+  }
+
+  .tiles[hidden],
+  .ledger-frame[hidden] { display: none; }
+
+  .tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+    border: 3px solid var(--ink);
+    box-shadow: 5px 5px 0 var(--ink);
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+
+  .tile:has(.tile-link:hover) {
+    transform: translate(3px, 3px);
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .tile-link { display: block; color: var(--ink); }
+
+  /* Every box photo is a flat front at 3:4, so the frame matches it. */
+  .tile-img {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 3 / 4;
+    background: var(--bc, var(--cream));
+    border-bottom: 3px solid var(--ink);
+    overflow: hidden;
+  }
+
+  .tile-img img { width: 100%; height: 100%; object-fit: cover; }
+  .tile-img .e { font-size: 64px; line-height: 1; }
+
+  .tile-nm { display: block; padding: 10px 12px 0; }
+
+  .tile-nm small {
+    display: block;
+    font-family: var(--fine);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted-light);
+  }
+
+  .tile-nm b {
+    display: block;
+    margin-top: 3px;
+    font-family: var(--shout);
+    font-weight: normal;
+    font-size: 19px;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .tile-link:hover b { color: var(--cherry); }
+
+  .tile-scores {
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+    padding: 12px 12px 0;
+    margin-top: auto;
+  }
+
+  .tsc {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .tsc small {
+    font-family: var(--fine);
+    font-size: 9.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .tile .big {
+    min-width: 50px;
+    font-size: 22px;
+    padding: 5px 6px 2px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .tile .big.na { box-shadow: none; }
+
+  .tile .seal { width: 32px; height: 32px; }
+
+  /* The four scored nutrients, per 100 g: flat cells, pale tints. */
+  .tile-macros {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    margin: 12px 0 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .tm {
+    padding: 6px 2px 7px;
+    text-align: center;
+    border-right: 1px solid var(--rule);
+  }
+
+  .tm:last-child { border-right: 0; }
+
+  .tm dt {
+    font-family: var(--fine);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .tm dd {
+    margin: 2px 0 0;
+    font-family: var(--fine);
+    font-size: 13px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Position in the current sort. Top three get medal colours. */
+  .pos {
+    position: absolute;
+    top: -14px;
+    left: -14px;
+    z-index: 2;
+    min-width: 42px;
+    height: 42px;
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid var(--ink);
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--yellow);
+    font-family: var(--shout);
+    font-size: 20px;
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .pos[hidden] { display: none; }
+  .pos.m1 { background: #e0a400; color: var(--ink); width: 50px; height: 50px; font-size: 25px; }
+  .pos.m2 { background: #b9bec4; color: var(--ink); }
+  .pos.m3 { background: #c17a3a; color: var(--white); }
+
+  /* The + sits on the corner of the box photo. */
+  .tile .addcmp {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 34px;
+    height: 34px;
+    font-size: 20px;
+  }
+
+  .tile-none {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 28px 10px;
+    font-family: var(--fine);
+    font-size: 13px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .tile-none[hidden] { display: none; }
 
   /* ---- the ledger ----
      Loud frame, calm contents. The frame and the group bars carry the ad
@@ -681,9 +1130,12 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
 
   /* Pale tints, far quieter than the Taste and Health blocks: they hint at
      good, middling or poor without making the numbers shout. */
-  .c-num.t-good { background: color-mix(in srgb, var(--score-good) 13%, var(--white)); }
-  .c-num.t-mid { background: color-mix(in srgb, var(--score-mid) 16%, var(--white)); }
-  .c-num.t-bad { background: color-mix(in srgb, var(--score-bad) 11%, var(--white)); }
+  .c-num.t-good,
+  .tm.t-good { background: color-mix(in srgb, var(--score-good) 13%, var(--white)); }
+  .c-num.t-mid,
+  .tm.t-mid { background: color-mix(in srgb, var(--score-mid) 16%, var(--white)); }
+  .c-num.t-bad,
+  .tm.t-bad { background: color-mix(in srgb, var(--score-bad) 11%, var(--white)); }
 
   /* Columns the Tier ignores: smaller and greyer, behind a heavier rule. */
   .c-num.minor { font-size: 12px; color: var(--muted); }
@@ -838,6 +1290,18 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
     .col-name { width: 150px; }
     .c-name { min-width: 150px; padding: 8px; }
     .thumb { display: none; }
+    .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 22px 14px; }
+    .tile { box-shadow: 4px 4px 0 var(--ink); }
+    .tile-nm { padding: 8px 8px 0; }
+    .tile-nm b { font-size: 15px; }
+    .tile-scores { gap: 6px; padding: 10px 8px 0; }
+    .tile .big { min-width: 0; font-size: 17px; padding: 4px 4px 2px; }
+    .tile .seal { width: 26px; height: 26px; font-size: 15px; }
+    .tm dt { font-size: 8px; letter-spacing: 0.04em; }
+    .tm dd { font-size: 11.5px; }
+    .pos { top: -10px; left: -8px; min-width: 34px; height: 34px; font-size: 17px; }
+    .pos.m1 { width: 40px; height: 40px; font-size: 20px; }
+    .tile .addcmp { width: 30px; height: 30px; font-size: 18px; top: 6px; right: 6px; }
     .nm b { font-size: 13px; }
     .ledger-frame { box-shadow: 4px 4px 0 var(--ink); }
     .finder input { width: 160px; }

@@ -20,8 +20,8 @@ export const Home = {
   args: { count: catalog.length, path: '/' },
 };
 
-export const OnTheRankingsPage = {
-  args: { count: catalog.length, path: '/top/' },
+export const OnThePriceCheckPage = {
+  args: { count: catalog.length, path: '/compare/' },
   parameters: {
     docs: { description: { story: 'The current page\'s button stays pressed in, with an outline.' } },
   },

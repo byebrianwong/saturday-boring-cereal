@@ -47,6 +47,7 @@ const adminRoutes = {
 // it and serves at "/". Internal links go through src/lib/url.ts `u()`, which
 // reads BASE_URL, so both work unchanged.
 const onPages = process.env.PAGES === 'true';
+const base = onPages ? '/saturday-boring-cereal' : undefined;
 
 // `site` drives canonical + OpenGraph + RSS absolute URLs. Pick the real domain
 // for whichever host is building: GitHub Pages, Vercel (which exposes its stable
@@ -60,8 +61,14 @@ const site = onPages
 // https://astro.build/config
 export default defineConfig({
   site,
-  base: onPages ? '/saturday-boring-cereal' : undefined,
+  base,
   output: 'static',
+  // The Rankings page was folded into The Aisle, which opens sorted by Taste.
+  // Old links land there instead of on a 404. Astro does not add `base` to a
+  // redirect's destination, so it is added here.
+  redirects: {
+    '/top': `${base ?? ''}/cereals/`,
+  },
   integrations: [
     react(),
     markdoc(),
