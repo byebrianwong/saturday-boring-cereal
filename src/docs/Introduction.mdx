@@ -1,0 +1,96 @@
+import { Meta } from '@storybook/addon-docs/blocks';
+
+<Meta title="Start here" />
+
+# Saturday Boring Cereal
+
+One person's rankings of granolas and healthier cereals. It is a static
+[Astro](https://astro.build) site. Each cereal is one markdown file in
+`src/content/cereals/`. There is no database and no server.
+
+This Storybook shows every component in `src/components/`, rendered with real
+cereals from the catalog. Read this page first, then
+[Foundations](?path=/docs/foundations--docs) for colours and type, then browse
+the components in the sidebar.
+
+## The design rule: loud chrome, deadpan data
+
+The site is called *Boring*, but it is styled like a loud 1990s Saturday-morning
+cereal advert. The joke is the gap between the two. So:
+
+- **Loud styling goes only on chrome**: headings, badges, buttons, banners,
+  section bands. Impact type, starbursts, hard shadows, bright colours.
+- **Data stays small and plain**: macros, nutrition figures, tasting notes,
+  tables, methodology. Narrow type, muted colours, no decoration.
+
+If the numbers start shouting too, the joke stops working. Every component
+here follows this rule. Look at [ChampCard](?path=/story/cards-champcard--top-rated):
+the card is a yellow prize box with a red banner, but the tasting note and the
+macros inside it are small grey text.
+
+## Three data rules
+
+1. **Stored per serving, shown per 100 g.** A cereal file records nutrition
+   exactly as the box prints it, per serving. The site scales it to 100 g
+   (`src/lib/nutrition.ts`) so boxes with different serving sizes compare
+   fairly.
+2. **Missing means missing.** If a label does not list a value, the site says
+   "not listed". If there is no taste score, it says "unrated". Nothing is ever
+   estimated to fill a gap. Several stories exist only to show this.
+3. **Scores are worked out at build time.** The letter grades and subscore bars
+   come from `src/lib/score.ts`. Nothing about scoring is stored in the cereal
+   files, so changing a target there re-grades the whole catalog.
+
+## Where each component appears
+
+| Page | File in `src/pages/` | Components |
+| --- | --- | --- |
+| Every page | (`src/layouts/Layout.astro`) | SiteHeader, SiteFooter |
+| Home, `/` | `index.astro` | ChampCard, RankCard, BreakfastStrip, Disclaimer |
+| The Aisle, `/cereals/` | `cereals/index.astro` | PageHeader, AisleFilters |
+| One cereal, `/cereals/<slug>/` | `cereals/[slug].astro` | ScorePanel (which contains GradeStamp), NutritionPanel |
+| Rankings, `/top/` | `top.astro` | PageHeader, GradeStamp |
+| Price Check, `/compare/` | `compare.astro` | none |
+| Receipts, `/reviews/` | `reviews.astro` | PageHeader, Disclaimer |
+| Store Policy, `/about/` | `about.astro` | PageHeader |
+| One tag, `/tags/<tag>/` | `tags/[tag].astro` | PageHeader, MiniBox, PriceTag |
+
+## What is not in Storybook
+
+- **Whole pages.** A lot of each page is markup written in the page file
+  itself: the sortable table on The Aisle, the comparison table on Price Check,
+  the big box on a cereal page. Those are not components, so they are not
+  here. Run `npm run dev` to see them.
+- **Page scripts.** The filter buttons on The Aisle work because of a script
+  on that page. In Storybook they render but do nothing when clicked.
+- **The admin.** `/admin` and `/keystatic` only run under `npm run dev`. See
+  the README.
+
+## Where the story data comes from
+
+`.storybook/fixtures.ts` reads the real markdown files in
+`src/content/cereals/` and builds the same objects Astro's `getCollection()`
+returns. It also names a handful of examples, each picked because it shows a
+case a component must handle: the top-rated box, a box with no photo, an
+unrated box, a label with missing values. When a cereal file changes, its
+stories change with it.
+
+## Running it
+
+```bash
+npm run storybook        # http://localhost:6006
+npm run build-storybook  # static build in storybook-static/
+```
+
+Stories are rendered to HTML ahead of time. In `npm run storybook` they
+re-render when you change a control. In the built Storybook, and on Chromatic,
+each story is fixed at its written arguments and the controls do nothing.
+
+## Chromatic
+
+Every push runs `.github/workflows/chromatic.yml`, which builds this Storybook
+and uploads it to [Chromatic](https://www.chromatic.com). Chromatic takes a
+snapshot of every story and compares it with the last accepted one. A pull
+request shows a "UI Tests" check that stays pending until someone accepts or
+denies the visual changes. Stories marked as phone stories are snapshotted at
+375px wide instead of desktop width.

@@ -14,7 +14,27 @@ npm run dev        # site at http://localhost:4321; admin at /admin + /keystatic
 npm run build      # static output in dist/ (admin excluded — see below)
 npm run preview    # serve the built site
 npm test           # guards the frontmatter editor against corrupting content
+npm run storybook  # component catalog at http://localhost:6006
 ```
+
+## Storybook and Chromatic
+
+Storybook shows every component in `src/components/`, rendered with real cereals
+from `src/content/cereals/`. If you are new to the code, open it first: its
+"Start here" page explains the design rule, the data rules, and which component
+appears on which page.
+
+- Astro components need a community framework,
+  [`@storybook-astro/framework`](https://storybook-astro.org). It renders each story
+  to HTML at build time. Under `npm run storybook` the controls re-render the story;
+  in the built Storybook they do nothing.
+- Story data comes from [.storybook/fixtures.ts](.storybook/fixtures.ts), which reads
+  the real markdown files. `getCollection()` does not run in Storybook.
+- [Chromatic](https://www.chromatic.com/builds?appId=6acabd406e418aa473a862f5)
+  snapshots every story on every push
+  ([.github/workflows/chromatic.yml](.github/workflows/chromatic.yml)) and shows a
+  "UI Tests" check on pull requests. The project token is the
+  `CHROMATIC_PROJECT_TOKEN` repository secret.
 
 ## Deploy
 

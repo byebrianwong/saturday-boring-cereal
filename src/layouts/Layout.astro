@@ -2,6 +2,8 @@
 import { getCollection } from 'astro:content';
 import '../styles/global.css';
 import { u } from '../lib/url';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 
 interface Props {
   title?: string;
@@ -25,13 +27,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? Astro.url).href;
 // Per-page image (e.g. a cereal's box photo) or the default branded share card.
 const ogImage = new URL(image ?? u('/og.png'), Astro.site ?? Astro.url).href;
 
-const nav = [
-  { href: '/cereals/', label: 'The Aisle' },
-  { href: '/top/', label: 'Rankings' },
-  { href: '/compare/', label: 'Price Check' },
-  { href: '/reviews/', label: 'Receipts' },
-  { href: '/about/', label: 'Store Policy' },
-];
 const path = Astro.url.pathname;
 ---
 
@@ -58,223 +53,12 @@ const path = Astro.url.pathname;
     <meta name="twitter:image" content={ogImage} />
   </head>
   <body>
-    <div class="ticker">
-      <div class="ticker-inner">
-        {[0, 1].map(() => (
-          <>
-            <span>★ We interrupt your cartoons ★</span>
-            <span><b>As seen Saturday mornings</b></span>
-            <span>★ {count} boxes reviewed ★</span>
-            <span><b>Now fortified with opinions</b></span>
-            <span>★ Offer ends Saturday ★</span>
-          </>
-        ))}
-      </div>
-    </div>
-
-    <header class="site">
-      <div class="wrap">
-        <a class="brandline" href={u('/')}>
-          <span class="a">Saturday</span> <span class="b">Boring</span> <span class="c">Cereal</span>
-        </a>
-        <div class="brand-sub">One man · One aisle · One box at a time</div>
-        <nav class="site">
-          {nav.map((item) => (
-            <a href={u(item.href)} class:list={{ on: path.startsWith(u(item.href)) }}>{item.label}</a>
-          ))}
-        </nav>
-      </div>
-    </header>
+    <SiteHeader count={count} path={path} />
 
     <main>
       <slot />
     </main>
 
-    <footer class="site">
-      <div class="wrap">
-        <div class="fbrand">Saturday Boring Cereal</div>
-        <div class="fjoke">Now fortified with opinions</div>
-        <nav>
-          <a href={u('/cereals/')}>The Aisle</a>
-          <a href={u('/top/')}>Rankings</a>
-          <a href={u('/compare/')}>Price Check</a>
-          <a href={u('/reviews/')}>Receipts</a>
-          <a href={u('/about/')}>Store Policy</a>
-          <a href={u('/rss.xml')}>RSS</a>
-        </nav>
-        <div class="foot-rule"></div>
-        <div class="fine">
-          A single-person regulatory body · Established in a kitchen<br />
-          No sponsors. No samples. No mascots.
-        </div>
-      </div>
-    </footer>
+    <SiteFooter />
   </body>
 </html>
-
-<style>
-  header.site {
-    background: var(--white);
-    border-bottom: 5px solid var(--ink);
-    padding: 16px 0 14px;
-    text-align: center;
-    position: relative;
-    z-index: 6;
-  }
-
-  .brandline {
-    display: block;
-    font-family: var(--shout);
-    font-size: clamp(24px, 4vw, 34px);
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    line-height: 1;
-    color: var(--ink);
-  }
-
-  .brandline .a { color: var(--orange); }
-  .brandline .b { color: var(--turq); }
-  .brandline .c { color: var(--cherry); }
-
-  .brand-sub {
-    font-family: var(--fine);
-    font-size: 11px;
-    letter-spacing: 0.42em;
-    text-transform: uppercase;
-    color: #8a7a63;
-    margin-top: 7px;
-  }
-
-  nav.site {
-    margin-top: 14px;
-    display: flex;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  nav.site a {
-    font-family: var(--shout);
-    font-size: 17px;
-    letter-spacing: 0.09em;
-    text-transform: uppercase;
-    padding: 8px 18px 6px;
-    border: 3px solid var(--ink);
-    background: var(--white);
-    box-shadow: 3px 3px 0 var(--ink);
-    transition: transform 0.08s, box-shadow 0.08s;
-  }
-
-  /* Fixed colour per nav slot — the row reads as a strip of ad buttons. */
-  nav.site a:nth-child(1) { background: var(--yellow); }
-  nav.site a:nth-child(2) { background: var(--orange); color: var(--white); }
-  nav.site a:nth-child(3) { background: var(--turq); color: var(--white); }
-  nav.site a:nth-child(4) { background: var(--yellow); }
-  nav.site a:nth-child(5) { background: var(--cherry); color: var(--white); }
-
-  nav.site a:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
-
-  /* Current page presses in and stays pressed. */
-  nav.site a.on {
-    transform: translate(3px, 3px);
-    box-shadow: 0 0 0 var(--ink);
-    outline: 3px solid var(--ink);
-    outline-offset: 2px;
-  }
-
-  /* Phones: the header was eating a third of the screen. Drop the tagline and
-     run the nav as one short row that scrolls sideways instead of wrapping. */
-  @media (max-width: 640px) {
-    header.site { padding: 10px 0 0; border-bottom-width: 4px; }
-    .brandline { font-size: 22px; }
-    .brand-sub { display: none; }
-
-    nav.site {
-      margin: 8px -18px 0;
-      padding: 0 18px 10px;
-      gap: 6px;
-      flex-wrap: nowrap;
-      justify-content: flex-start;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-
-    nav.site::-webkit-scrollbar { display: none; }
-
-    nav.site a {
-      flex: none;
-      font-size: 13px;
-      padding: 5px 10px 4px;
-      border-width: 2px;
-      box-shadow: 2px 2px 0 var(--ink);
-    }
-
-    nav.site a.on {
-      transform: translate(2px, 2px);
-      outline-width: 2px;
-    }
-  }
-
-  footer.site {
-    background: var(--ink);
-    color: var(--cream);
-    padding: 44px 0 34px;
-    text-align: center;
-    border-top: 6px solid var(--ink);
-  }
-
-  .fbrand {
-    font-family: var(--shout);
-    font-size: clamp(28px, 5vw, 44px);
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    color: var(--yellow);
-    line-height: 1;
-  }
-
-  .fjoke {
-    font-family: var(--fine);
-    font-size: 13px;
-    letter-spacing: 0.34em;
-    text-transform: uppercase;
-    color: var(--turq);
-    margin-top: 10px;
-  }
-
-  footer nav {
-    margin: 24px 0 0;
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-
-  footer nav a {
-    font-family: var(--shout);
-    font-size: 15px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    padding: 7px 15px 5px;
-    border: 2px solid #5a4c36;
-    color: var(--cream);
-  }
-
-  footer nav a:hover { background: var(--yellow); color: var(--ink); border-color: var(--yellow); }
-
-  .foot-rule {
-    max-width: 1080px;
-    height: 3px;
-    background: #3d3221;
-    margin: 28px auto 0;
-  }
-
-  footer .fine {
-    margin-top: 20px;
-    font-family: var(--fine);
-    font-size: 10px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: #8d7f68;
-    line-height: 1.7;
-  }
-</style>

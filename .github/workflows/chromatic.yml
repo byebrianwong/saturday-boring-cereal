@@ -1,0 +1,30 @@
+name: Chromatic
+
+# Builds Storybook and uploads it to Chromatic on every push. Chromatic
+# snapshots each story and compares it with the last accepted snapshot. On a
+# pull request the result shows up as the "UI Tests" check.
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  chromatic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Chromatic reads git history to find the baseline for each commit.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: chromaui/action@v18.11.0
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          buildScriptName: build-storybook
+          # Visual changes wait for review in Chromatic instead of failing
+          # this job. Real errors (a story that cannot render) still fail it.
+          exitZeroOnChanges: true
