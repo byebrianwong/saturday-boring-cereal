@@ -74,7 +74,7 @@ export const examples = {
   noPhotoWithNote: cereal('cheerios-strawberry-protein'),
   /** No taste score (`rating: null`). Must read "unrated", never a made-up number. */
   unrated: cereal('grandy-organics-classic-granola'),
-  /** Lowest taste score (3), so the grade and bars land in the "bad" colours. */
+  /** Lowest taste score (3), so the tier and bars land in the "bad" colours. */
   lowScore: cereal('special-k-zero-cinnamon'),
   /** Calories and other label fields missing. Must read "not listed". */
   missingFields: cereal('trader-joes-homestyle-cherry-pistachio-pecan-granola'),

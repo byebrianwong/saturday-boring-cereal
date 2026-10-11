@@ -11,7 +11,7 @@ export default {
     docs: {
       description: {
         component:
-          '"The Verdict" on each cereal page: the Overall grade stamp and one bar per subscore. All of it comes from `scoreCereal()` in src/lib/score.ts, which grades per 100 g: Overall is 40% taste and 60% nutrition (protein, sugar, fiber, saturated fat). The method is written up on /about.',
+          '"The Verdict" on each cereal page: the Tier stamp and one bar per subscore. All of it comes from `scoreCereal()` in src/lib/score.ts, which scores per 100 g: Overall is 50% taste (squared, so low ratings count for much less) and 50% nutrition (protein, sugar, fiber, saturated fat). The method is written up on /about.',
       },
     },
   },
@@ -26,7 +26,7 @@ export const Unrated = {
   parameters: {
     docs: {
       description: {
-        story: 'No taste score: the Taste bar is empty, reads "unrated", and there is no Overall grade. The nutrition bars still show.',
+        story: 'No taste score: the Taste bar is empty, reads "unrated", and there is no Tier. The nutrition bars still show.',
       },
     },
   },
