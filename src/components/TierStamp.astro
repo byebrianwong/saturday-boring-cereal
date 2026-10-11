@@ -1,20 +1,20 @@
 ---
-import { gradeColorTier, overallOutOfTen } from '../lib/score';
+import { tierColor, overallOutOfTen } from '../lib/score';
 
 interface Props {
-  grade: string | null;
+  tier: string | null;
   overall: number | null;
   size?: 'lg' | 'sm';
 }
 
-const { grade, overall, size = 'lg' } = Astro.props;
-const tier = grade == null ? 'na' : gradeColorTier(grade);
+const { tier, overall, size = 'lg' } = Astro.props;
+const color = tier == null ? 'na' : tierColor(tier);
 const out10 = overall == null ? null : overallOutOfTen(overall);
 ---
 
-<div class:list={['stamp', size, tier]} title={overall == null ? 'Unrated overall' : `Overall ${out10} / 10`}>
-  {size === 'lg' && <span class="cap">Overall</span>}
-  <span class="grade">{grade ?? '—'}</span>
+<div class:list={['stamp', size, color]} title={overall == null ? 'Unrated overall' : `Overall ${out10} / 10`}>
+  {size === 'lg' && <span class="cap">Tier</span>}
+  <span class="letter">{tier ?? '—'}</span>
   <span class="num">{out10 ? `${out10} / 10` : 'unrated'}</span>
 </div>
 
@@ -71,7 +71,7 @@ const out10 = overall == null ? null : overallOutOfTen(overall);
     opacity: 0.9;
   }
 
-  .stamp.lg .grade {
+  .stamp.lg .letter {
     font-family: var(--shout);
     font-size: 52px;
     letter-spacing: -0.02em;
@@ -97,7 +97,7 @@ const out10 = overall == null ? null : overallOutOfTen(overall);
     box-shadow: 0 2px 0 rgba(0, 0, 0, 0.22);
   }
 
-  .stamp.sm .grade {
+  .stamp.sm .letter {
     font-family: var(--shout);
     font-size: 20px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);

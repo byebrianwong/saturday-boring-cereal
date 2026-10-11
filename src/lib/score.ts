@@ -8,7 +8,7 @@ function gramsWithDV(key: DVKey, value: number | null | undefined): string {
   return dv == null ? grams(value) : `${grams(value)} · ${Math.round(dv)}% DV`;
 }
 
-// The Overall Grade: one composite number so a box can be read at a glance,
+// The Tier: one composite number so a box can be read at a glance,
 // backed by transparent subscores. Everything here is derived at build time —
 // nothing is stored in frontmatter — so retuning a target below re-scores the
 // whole shelf at once. The methodology is posted on /about §6.
@@ -26,8 +26,15 @@ const SUGAR_CEILING = 20; // g of total sugar per 100 g that drops the sugar sub
 const FIBER_TARGET = 12; // g of fiber per 100 g that earns a full fiber subscore
 const SAT_FAT_CEILING = 8; // g of saturated fat per 100 g that drops its subscore to zero
 
-// Overall = 40% Taste, 60% Nutrition.
-const TASTE_WEIGHT = 0.4;
+// Overall = 50% Taste, 50% Nutrition.
+const TASTE_WEIGHT = 0.5;
+
+// Taste is curved before it is mixed in: the 0–10 rating is squared, so it
+// keeps full value at the top and loses more the lower it goes. 9 → 81 points,
+// 7 → 49, 5 → 25, 3 → 9. A 3 is a bad cereal, and squaring keeps it out of the
+// top tiers: even with perfect nutrition it reaches only 55 overall, below the
+// A cutoff. Raise the exponent to punish low taste harder; 1 makes it linear.
+const TASTE_CURVE = 2;
 
 // How much each nutrient counts toward the Nutrition share, in priority order:
 // protein first, then low sugar, then fiber, then low saturated fat. When a label
@@ -48,8 +55,8 @@ export interface Subscore {
 export interface Score {
   /** 0–100 composite; null when the cereal is unrated (no Taste score). */
   overall: number | null;
-  /** Letter grade for `overall`; null when unrated. */
-  grade: string | null;
+  /** Tier letter (S, A–D, F) for `overall`; null when unrated. */
+  tier: string | null;
   /** 0–100 nutrition-only mean; survives even when Taste is missing. */
   nutrition: number | null;
   /**
@@ -149,19 +156,21 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
 
   // Unrated cereals stay unrated overall — the site never invents a Taste score.
   let overall: number | null = null;
-  if (taste != null && nutrition != null) {
-    overall = TASTE_WEIGHT * taste + (1 - TASTE_WEIGHT) * nutrition;
-  } else if (taste != null) {
-    overall = taste;
+  // The Taste bar shows the plain rating; only the overall uses the curve.
+  const curvedTaste = taste == null ? null : Math.pow(taste / 100, TASTE_CURVE) * 100;
+  if (curvedTaste != null && nutrition != null) {
+    overall = TASTE_WEIGHT * curvedTaste + (1 - TASTE_WEIGHT) * nutrition;
+  } else if (curvedTaste != null) {
+    overall = curvedTaste;
   }
-  // Round once so the letter grade and the displayed x.x/10 are derived from the
-  // same number and can never straddle a band boundary (e.g. a 54.6 that shows
-  // "5.5" but grades D).
+  // Round once so the tier letter and the displayed x.x/10 are derived from the
+  // same number and can never straddle a band boundary (e.g. a 49.6 that shows
+  // "5.0" but lands in D).
   if (overall != null) overall = Math.round(overall);
 
   return {
     overall,
-    grade: overall == null ? null : gradeFor(overall),
+    tier: overall == null ? null : tierFor(overall),
     nutrition,
     subscores,
   };
@@ -169,19 +178,19 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
 
 // Tier-list bands (S is the top, above A) on the 0–100 overall. Deliberately
 // hard at the top: S is the blue ribbon for the single best box on the shelf, so
-// its cutoff sits just under the current top score (71) and above the runner-up
-// (68). Retune here when the targets above change.
+// its cutoff sits just under the current top score (65) and above the runner-up
+// (61). Retune here when the targets or the taste curve above change.
 const BANDS: Array<[number, string]> = [
-  [70, 'S'],
-  [66, 'A'],
-  [61, 'B'],
-  [57, 'C'],
+  [63, 'S'],
+  [58, 'A'],
+  [54, 'B'],
+  [50, 'C'],
   [45, 'D'],
   [0, 'F'],
 ];
 
-export function gradeFor(overall: number): string {
-  for (const [min, g] of BANDS) if (overall >= min) return g;
+export function tierFor(overall: number): string {
+  for (const [min, t] of BANDS) if (overall >= min) return t;
   return 'F';
 }
 
@@ -196,7 +205,7 @@ export type MacroTintKey = 'protein' | 'dietaryFiber' | 'totalSugars' | 'saturat
 
 /**
  * Good / mid / bad tier for one graded nutrient, per 100 g. Uses the same
- * targets as the grade, so a cell's tint agrees with the Health score; for
+ * targets as the Tier score, so a cell's tint agrees with the Health score; for
  * protein, pass the %DV from `proteinDVOf`, not grams. Returns null when the
  * label omits the value.
  */
@@ -218,11 +227,11 @@ export function macroTier(
 }
 
 /**
- * Colour tier for a letter grade's stamp. S gets its own "blue ribbon" look;
- * the rest ramp green→amber→red so the seal's colour matches its letter.
+ * Colour for a tier stamp. S gets its own "blue ribbon" look; the rest ramp
+ * green→amber→red so the seal's colour matches its letter.
  */
-export function gradeColorTier(grade: string): 'elite' | 'good' | 'mid' | 'bad' {
-  switch (grade) {
+export function tierColor(tier: string): 'elite' | 'good' | 'mid' | 'bad' {
+  switch (tier) {
     case 'S':
       return 'elite';
     case 'A':

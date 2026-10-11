@@ -5,7 +5,7 @@ import { byRatingDesc } from '../lib/macros';
 import { gramsShort } from '../lib/format';
 import { per100gOf } from '../lib/nutrition';
 import { scoreCereal } from '../lib/score';
-import GradeStamp from '../components/GradeStamp.astro';
+import TierStamp from '../components/TierStamp.astro';
 import PageHeader from '../components/PageHeader.astro';
 import { u } from '../lib/url';
 
@@ -27,7 +27,7 @@ const medal = ['gold', 'silver', 'bronze'];
     kicker="The official chart · Updated every Saturday"
     title="The "
     accent="Rankings"
-    lede="Ranked by Taste, with each box's Overall grade stamped alongside."
+    lede="Ranked by Taste, with each box's Tier stamped alongside."
   />
 
   <ol class="chart wrap">
@@ -50,7 +50,7 @@ const medal = ['gold', 'silver', 'bronze'];
             <div class="bar" style={`width: ${(c.data.rating! / 10) * 100}%`}></div>
             <span class="rowscore">{c.data.rating!.toFixed(1)}</span>
           </div>
-          <GradeStamp grade={scoreOf.get(c.id)!.grade} overall={scoreOf.get(c.id)!.overall} size="sm" />
+          <TierStamp tier={scoreOf.get(c.id)!.tier} overall={scoreOf.get(c.id)!.overall} size="sm" />
           <div class="rowmacros">
             {gramsShort(per100gOf(c).protein) && <span><b>{gramsShort(per100gOf(c).protein)}</b> pro</span>}
             {gramsShort(per100gOf(c).totalSugars) && <span><b>{gramsShort(per100gOf(c).totalSugars)}</b> sug</span>}
@@ -74,7 +74,7 @@ const medal = ['gold', 'silver', 'bronze'];
             <small>{c.data.brand}</small>
           </div>
           <div class="meter"><span class="rowscore na">unrated</span></div>
-          <GradeStamp grade={scoreOf.get(c.id)!.grade} overall={scoreOf.get(c.id)!.overall} size="sm" />
+          <TierStamp tier={scoreOf.get(c.id)!.tier} overall={scoreOf.get(c.id)!.overall} size="sm" />
           <div class="rowmacros"></div>
         </li>
       ))

@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
-import { scoreCereal, gradeColorTier, overallOutOfTen, proteinDVOf } from '../lib/score';
+import { scoreCereal, tierColor, overallOutOfTen, proteinDVOf } from '../lib/score';
 import { u } from '../lib/url';
 import { per100gOf, percentDV } from '../lib/nutrition';
 
@@ -24,10 +24,10 @@ const items = ranked.map((c) => {
   boxImage: c.data.boxImage ? u(c.data.boxImage) : null,
   rating: c.data.rating,
   href: u(`/cereals/${c.id}/`),
-  // Overall grade, precomputed so the client table can stamp it per column.
+  // Tier, precomputed so the client table can stamp it per column.
   overall: s.overall,
-  grade: s.grade,
-  tier: s.grade == null ? 'na' : gradeColorTier(s.grade),
+  tier: s.tier,
+  color: s.tier == null ? 'na' : tierColor(s.tier),
   out10: s.overall == null ? null : overallOutOfTen(s.overall),
   // Per 100 g, rounded the way the rest of the site displays it (so the
   // best-in-row star compares the same numbers people see). Serving size is the
@@ -113,7 +113,7 @@ const items = ranked.map((c) => {
     interface Row {
       id: string; brand: string; name: string; emoji: string;
       boxColor: string; boxImage: string | null; rating: number | null; href: string;
-      overall: number | null; grade: string | null; tier: string; out10: string | null;
+      overall: number | null; tier: string | null; color: string; out10: string | null;
       n: Record<string, number | null>;
       dv: Record<string, number | null>;
       proteinDVEstimated: boolean;
@@ -141,9 +141,9 @@ const items = ranked.map((c) => {
     const mg = (v: number | null) => (v == null ? nil : `${v}mg`);
     const plain = (v: number | null) => (v == null ? nil : String(v));
 
-    // Rows in display order: the nutrients the grade scores come first, good
+    // Rows in display order: the nutrients the Tier scores come first, good
     // ones (protein, fiber) then bad ones (sugars, saturated fat). The `minor`
-    // rows follow, smaller and greyer, because the grade ignores them. `best`
+    // rows follow, smaller and greyer, because the Tier ignores them. `best`
     // is which direction is "better" for the best-in-row star.
     const METRICS: Array<{
       key: string;
@@ -207,13 +207,13 @@ const items = ranked.map((c) => {
       const winners: Record<string, string | null> = {};
       for (const m of METRICS) if (m.best) winners[m.key] = bestId(m.key, m.best, chosen);
 
-      // Best overall grade among the chosen (needs 2+ graded; no star on a tie).
-      let gradeWinner: string | null = null;
-      const graded = chosen.filter((c): c is Row & { overall: number } => c.overall != null);
-      if (graded.length >= 2) {
-        const top = Math.max(...graded.map((c) => c.overall));
-        const tops = graded.filter((c) => c.overall === top);
-        if (tops.length === 1) gradeWinner = tops[0].id;
+      // Best overall score among the chosen (needs 2+ rated; no star on a tie).
+      let tierWinner: string | null = null;
+      const rated = chosen.filter((c): c is Row & { overall: number } => c.overall != null);
+      if (rated.length >= 2) {
+        const top = Math.max(...rated.map((c) => c.overall));
+        const tops = rated.filter((c) => c.overall === top);
+        if (tops.length === 1) tierWinner = tops[0].id;
       }
 
       const el = document.createElement('div');
@@ -234,14 +234,14 @@ const items = ranked.map((c) => {
             }</div>
             <button class="drop" data-id="${c.id}" title="Remove ${c.brand} ${c.name}" aria-label="Remove ${c.brand} ${c.name}">✕</button>
           </div>`).join('') +
-        // overall grade row — the headline, stamped per column
-        `<div class="rh grade-rh">Overall grade</div>` +
+        // tier row — the headline, stamped per column
+        `<div class="rh tier-rh">Tier</div>` +
         chosen.map((c) => {
-          const win = gradeWinner === c.id;
-          const stamp = c.grade == null
+          const win = tierWinner === c.id;
+          const stamp = c.tier == null
             ? `<span class="gstamp na">—<small>unrated</small></span>`
-            : `<span class="gstamp ${c.tier}">${c.grade}<small>${c.out10} / 10</small></span>`;
-          return `<div class="cell grade-cell${win ? ' win' : ''}">${stamp}${win ? '<span class="star">★</span>' : ''}</div>`;
+            : `<span class="gstamp ${c.color}">${c.tier}<small>${c.out10} / 10</small></span>`;
+          return `<div class="cell tier-cell${win ? ' win' : ''}">${stamp}${win ? '<span class="star">★</span>' : ''}</div>`;
         }).join('') +
         // metric rows
         METRICS.map((m, i) => {
@@ -587,17 +587,17 @@ const items = ranked.map((c) => {
   .board :global(.cell .amt) { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .board :global(.cell .pdv) { font-size: 11px; color: var(--muted-light); white-space: nowrap; }
 
-  /* Rows the grade ignores: smaller and greyer, below a heavier rule. */
+  /* Rows the Tier ignores: smaller and greyer, below a heavier rule. */
   .board :global(.rh.minor) { color: var(--muted-light); opacity: 0.75; }
   .board :global(.cell.minor) { font-size: 12.5px; color: var(--muted); padding-top: 9px; padding-bottom: 9px; }
   .board :global(.minor.first) { border-top: 3px solid var(--ink); }
 
-  .board :global(.grade-rh) {
+  .board :global(.tier-rh) {
     color: var(--ink);
     font-weight: bold;
   }
 
-  .board :global(.grade-cell) { padding: 11px 12px; }
+  .board :global(.tier-cell) { padding: 11px 12px; }
 
   /* Flat blocks, no gloss: the colour is a band, not a trophy. */
   .board :global(.gstamp) {
