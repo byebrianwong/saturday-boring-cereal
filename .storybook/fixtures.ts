@@ -60,6 +60,15 @@ export function cereal(slug: string): Cereal {
   return found;
 }
 
+/**
+ * A copy of a cereal with its box photo removed. Every cereal in the catalog
+ * has a photo now, so the placeholder examples are made by taking one away.
+ */
+function withoutPhoto(c: Cereal): Cereal {
+  const { boxImage, imageSource, imageCredit, ...data } = c.data;
+  return { ...c, data: { ...data, noAutoImage: true } } as Cereal;
+}
+
 // Named examples. Each one is picked because it shows a case a component has
 // to handle. If the catalog changes so one no longer shows that case, pick a
 // different slug here.
@@ -68,10 +77,10 @@ export const examples = {
   topRated: cereal('grandy-organics-peanut-butter-dark-chocolate-granola'),
   /** A typical entry: photo, full label, no tasting note. */
   typical: cereal('natures-path-heritage-flakes'),
-  /** No box photo anywhere (`noAutoImage: true`), so the emoji placeholder shows. */
-  noPhoto: cereal('magic-spoon-peanut-butter'),
-  /** No box photo, but it has a tasting note. */
-  noPhotoWithNote: cereal('cheerios-strawberry-protein'),
+  /** No box photo (removed by withoutPhoto), so the emoji placeholder shows. */
+  noPhoto: withoutPhoto(cereal('magic-spoon-peanut-butter')),
+  /** No box photo (removed by withoutPhoto), but it has a tasting note. */
+  noPhotoWithNote: withoutPhoto(cereal('cheerios-strawberry-protein')),
   /** No taste score (`rating: null`). Must read "unrated", never a made-up number. */
   unrated: cereal('grandy-organics-classic-granola'),
   /** Lowest taste score (3), so the tier and bars land in the "bad" colours. */

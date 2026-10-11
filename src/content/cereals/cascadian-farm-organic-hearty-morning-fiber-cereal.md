@@ -6,7 +6,9 @@ shortNote: Hearty-ish flakes, some clusters, fairly sweet
 dateReviewed: 2025-02-11
 emoji: '🥣'
 boxColor: "#6fa8d6"
-noAutoImage: true
+boxImage: /images/cereals/cascadian-farm-organic-hearty-morning-fiber-cereal.jpg
+imageSource: manufacturer
+imageCredit: "Image: Cascadian Farm / General Mills (cascadianfarm.com)"
 barcode: '0021908455525'
 labelImage: /images/labels/cascadian-farm-organic-hearty-morning-fiber-cereal.jpg
 labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0021908455525"
