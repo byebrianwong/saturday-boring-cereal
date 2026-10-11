@@ -24,7 +24,7 @@ export const Rankings = {
     kicker: 'The official chart · Updated every Saturday',
     title: 'The ',
     accent: 'Rankings',
-    lede: "Ranked by Taste, with each box's Overall grade stamped alongside.",
+    lede: "Ranked by Taste, with each box's Tier stamped alongside.",
   },
 };
 
