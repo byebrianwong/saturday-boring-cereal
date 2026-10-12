@@ -199,7 +199,7 @@ img {
   font-size: 19px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  animation: slide 26s linear infinite;
+  animation: slide 30s linear infinite;
   will-change: transform;
 }
 

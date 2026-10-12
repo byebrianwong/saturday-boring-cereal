@@ -1,5 +1,4 @@
 import SiteHeader from './SiteHeader.astro';
-import { catalog } from '../../.storybook/fixtures';
 import { phone } from '../../.storybook/helpers';
 
 export default {
@@ -10,18 +9,18 @@ export default {
     docs: {
       description: {
         component:
-          'The top of every page: a scrolling ticker, the three-colour wordmark, and the nav as a row of ad buttons. `Layout.astro` renders it and passes the real box count from the catalog.',
+          'The top of every page: a scrolling ticker, the three-colour wordmark, and the nav as a row of ad buttons. `Layout.astro` renders it on every page.',
       },
     },
   },
 };
 
 export const Home = {
-  args: { count: catalog.length, path: '/' },
+  args: { path: '/' },
 };
 
 export const OnThePriceCheckPage = {
-  args: { count: catalog.length, path: '/compare/' },
+  args: { path: '/compare/' },
   parameters: {
     docs: { description: { story: 'The current page\'s button stays pressed in, with an outline.' } },
   },
@@ -29,7 +28,7 @@ export const OnThePriceCheckPage = {
 
 export const Phone = {
   ...phone,
-  args: { count: catalog.length, path: '/cereals/' },
+  args: { path: '/cereals/' },
   parameters: {
     ...phone.parameters,
     docs: {

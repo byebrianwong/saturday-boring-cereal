@@ -1,5 +1,4 @@
 ---
-import { getCollection } from 'astro:content';
 import '../styles/global.css';
 import { u } from '../lib/url';
 import SiteHeader from '../components/SiteHeader.astro';
@@ -10,10 +9,6 @@ interface Props {
   description?: string;
   image?: string;
 }
-
-// Shelf size, shown in the ticker. Read here so every page's ticker stays
-// truthful without each one having to pass the number down.
-const count = (await getCollection('cereals')).length;
 
 const {
   title = 'Saturday Boring Cereal',
@@ -53,7 +48,7 @@ const path = Astro.url.pathname;
     <meta name="twitter:image" content={ogImage} />
   </head>
   <body>
-    <SiteHeader count={count} path={path} />
+    <SiteHeader path={path} />
 
     <main>
       <slot />
