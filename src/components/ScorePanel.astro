@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { scoreCereal, scoreTier } from '../lib/score';
+import { scoreCereal, scoreTier, TASTE_WEIGHT, type Subscore } from '../lib/score';
 import TierStamp from './TierStamp.astro';
 import { u } from '../lib/url';
 
@@ -10,6 +10,13 @@ interface Props {
 
 const { cereal } = Astro.props;
 const score = scoreCereal(cereal);
+
+// Taste is half the overall score on its own, so it gets its own row above the
+// four nutrition bars, which share the other half between them.
+const taste = score.subscores.find((s) => s.key === 'taste')!;
+const nutrition = score.subscores.filter((s) => s.key !== 'taste');
+const tastePct = Math.round(TASTE_WEIGHT * 100);
+const tierOf = (s: Subscore) => (s.score == null ? 'na' : scoreTier(s.score));
 ---
 
 <section class="verdict">
@@ -23,11 +30,21 @@ const score = scoreCereal(cereal);
     </div>
 
     <div class="bars">
-      {
-        score.subscores.map((s) => {
-          const tier = s.score == null ? 'na' : scoreTier(s.score);
-          return (
-            <div class:list={['sub', tier]}>
+      <div class:list={['sub', 'taste', tierOf(taste)]}>
+        <div class="lab">
+          <span class="name">{taste.label} <span class="share">{tastePct}% of the score</span></span>
+          <span class:list={['det', { missing: taste.score == null }]}>{taste.detail}</span>
+        </div>
+        <div class="track">
+          {taste.score != null && <div class="fill" style={`width: ${Math.max(taste.score, 3)}%`} />}
+        </div>
+      </div>
+
+      <div class="group">
+        <div class="grouphead">Nutrition <span class="share">{100 - tastePct}% of the score</span></div>
+        {
+          nutrition.map((s) => (
+            <div class:list={['sub', tierOf(s)]}>
               <div class="lab">
                 <span class="name">{s.label}</span>
                 <span class:list={['det', { missing: s.score == null }]}>{s.detail}</span>
@@ -36,9 +53,9 @@ const score = scoreCereal(cereal);
                 {s.score != null && <div class="fill" style={`width: ${Math.max(s.score, 3)}%`} />}
               </div>
             </div>
-          );
-        })
-      }
+          ))
+        }
+      </div>
     </div>
   </div>
 
@@ -75,7 +92,32 @@ const score = scoreCereal(cereal);
   .bars {
     display: flex;
     flex-direction: column;
-    gap: 11px;
+    gap: 14px;
+  }
+
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+    padding-top: 12px;
+    border-top: 1px dashed #d8cba8;
+  }
+
+  .grouphead {
+    font-family: var(--fine);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+
+  .share {
+    margin-left: 4px;
+    font-weight: 400;
+    letter-spacing: 0.04em;
+    text-transform: none;
+    color: var(--muted);
   }
 
   .lab {
@@ -114,6 +156,29 @@ const score = scoreCereal(cereal);
     background: var(--cream);
     border-radius: 999px;
     overflow: hidden;
+  }
+
+  /* The nutrition bars are thinner than Taste, which counts as much as all four together. */
+  .group .track {
+    height: 7px;
+  }
+
+  .taste .name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .taste .name .share {
+    font-size: 11px;
+  }
+
+  .taste .det {
+    font-size: 15px;
+  }
+
+  .taste .track {
+    height: 16px;
   }
 
   .fill {

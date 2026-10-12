@@ -27,7 +27,7 @@ const FIBER_TARGET = 12; // g of fiber per 100 g that earns a full fiber subscor
 const SAT_FAT_CEILING = 8; // g of saturated fat per 100 g that drops its subscore to zero
 
 // Overall = 50% Taste, 50% Nutrition.
-const TASTE_WEIGHT = 0.5;
+export const TASTE_WEIGHT = 0.5;
 
 // Taste is curved before it is mixed in: the 0–10 rating is squared, so it
 // keeps full value at the top and loses more the lower it goes. 9 → 81 points,
