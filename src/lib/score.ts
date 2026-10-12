@@ -36,7 +36,7 @@ const SAT_FAT_CEILING = 8; // g of saturated fat per 100 g that drops its subsco
 const OUTLIER_PENALTY = 60;
 
 // Overall = 50% Taste, 50% Nutrition.
-const TASTE_WEIGHT = 0.5;
+export const TASTE_WEIGHT = 0.5;
 
 // Taste is curved before it is mixed in: the 0–10 rating is squared, so it
 // keeps full value at the top and loses more the lower it goes. 9 → 81 points,

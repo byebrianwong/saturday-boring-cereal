@@ -11,7 +11,7 @@ export default {
     docs: {
       description: {
         component:
-          '"The Verdict" on each cereal page: the Tier stamp and one bar per subscore. All of it comes from `scoreCereal()` in src/lib/score.ts, which scores per 100 g: Overall is 50% taste (squared, so low ratings count for much less) and 50% nutrition (protein, sugar, fiber, saturated fat). The method is written up on /about.',
+          '"The Verdict" on each cereal page: the Tier stamp, a large Taste bar, and four smaller nutrition bars grouped under one heading. Taste gets its own row because it is half the overall score by itself. All of it comes from `scoreCereal()` in src/lib/score.ts, which scores per 100 g: Overall is 50% taste (squared, so low ratings count for much less) and 50% nutrition (protein, sugar, fiber, saturated fat). The method is written up on /about.',
       },
     },
   },
