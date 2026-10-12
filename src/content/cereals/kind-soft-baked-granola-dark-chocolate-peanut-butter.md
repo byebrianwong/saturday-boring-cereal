@@ -5,6 +5,8 @@ rating: 8
 dateReviewed: 2026-01-06
 emoji: '🥜'
 boxColor: "#8a6d3b"
+labelImage: /images/labels/kind-soft-baked-granola-dark-chocolate-peanut-butter.jpg
+labelCredit: "Label photo: KIND, via Kroger (kroger.com)"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: []

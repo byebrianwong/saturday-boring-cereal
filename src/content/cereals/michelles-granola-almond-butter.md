@@ -6,6 +6,8 @@ shortNote: Tastes sugary
 dateReviewed: 2026-02-15
 emoji: '🌰'
 boxColor: "#f2a13c"
+labelImage: /images/labels/michelles-granola-almond-butter.jpg
+labelCredit: "Label photo: Michele's Granola (michelesgranola.com), 2.25 lb bag"
 formFactors: []
 proteinSources: []
 attributes: [low-sugar]

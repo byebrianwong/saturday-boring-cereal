@@ -6,6 +6,8 @@ shortNote: Light crispy granola type
 dateReviewed: 2025-11-07
 emoji: '🥣'
 boxColor: "#e0653a"
+labelImage: /images/labels/calbee-frugra-reduced-sugar-fruit-and-granola.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0071146010819"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [high-protein, low-sugar]

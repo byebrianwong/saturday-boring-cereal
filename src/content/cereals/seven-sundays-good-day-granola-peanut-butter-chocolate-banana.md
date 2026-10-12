@@ -7,6 +7,8 @@ dateReviewed: 2026-09-20
 emoji: '🥣'
 boxColor: "#c98d4e"
 barcode: '0850053830181'
+labelImage: /images/labels/seven-sundays-good-day-granola-peanut-butter-chocolate-banana.jpg
+labelCredit: "Label photo: Seven Sundays (sevensundays.com)"
 boxImage: /images/cereals/seven-sundays-good-day-granola-peanut-butter-chocolate-banana.jpg
 imageSource: manufacturer
 imageCredit: "Image: sevensundays.com"

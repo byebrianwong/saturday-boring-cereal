@@ -5,6 +5,8 @@ rating: 8
 dateReviewed: 2025-02-11
 emoji: '🍯'
 boxColor: "#e8a33d"
+labelImage: /images/labels/honey-bunches-of-oats-honey-roasted.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0884912359155"
 formFactors: [flakes, clusters]
 proteinSources: []
 attributes: []

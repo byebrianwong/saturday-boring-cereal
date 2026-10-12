@@ -6,6 +6,8 @@ dateReviewed: 2026-01-06
 emoji: '🥜'
 boxColor: "#e07ba3"
 barcode: '0005909583340'
+labelImage: /images/labels/trader-joes-peanut-butter-protein-granola.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/00595834"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [high-protein]

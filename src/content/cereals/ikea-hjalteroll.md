@@ -6,6 +6,8 @@ dateReviewed: 2025-11-17
 emoji: '🥣'
 boxColor: "#f2c230"
 barcode: '7315120008465'
+labelImage: /images/labels/ikea-hjalteroll.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/7315120008465"
 boxImage: /images/cereals/ikea-hjalteroll.jpg
 imageSource: manufacturer
 imageCredit: "Image: IKEA (ikea.com)"

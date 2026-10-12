@@ -6,6 +6,8 @@ shortNote: Gets a little artificially tasting at the end
 dateReviewed: 2026-02-08
 emoji: '🍪'
 boxColor: "#b5651d"
+labelImage: /images/labels/kodiak-protein-packed-cookie-butter-granola.jpg
+labelCredit: "Label photo: Kodiak Cakes (kodiakcakes.com)"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [high-protein]
