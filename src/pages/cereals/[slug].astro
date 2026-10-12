@@ -121,6 +121,11 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
         <p class="empty">No note on file for this one — just the rating and the numbers, which is the whole point.</p>
       )
     )}
+    {(hasBody || data.shortNote) && (
+      <p class="signoff">
+        —<a href="https://byebrianwong.com/about" rel="author">Brian Wong</a>
+      </p>
+    )}
   </article>
 </Layout>
 
@@ -409,6 +414,25 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
 
   .body :global(p) {
     margin-bottom: 12px;
+  }
+
+  .signoff {
+    margin-top: 4px;
+    text-align: right;
+    font-family: var(--fine);
+    font-style: italic;
+    font-size: 15px;
+    color: #4a3418;
+  }
+
+  .signoff a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .signoff a:hover {
+    color: var(--cherry);
   }
 
   .body :global(h2),
