@@ -26,7 +26,11 @@ const protein = proteinDVOf(n);
 const proteinDVText =
   protein.dv == null ? '' : protein.estimated ? `~${percent(protein.dv)}` : percent(protein.dv);
 
-const rows: Array<{
+// Sodium sits last, not in its usual US-label spot, so the macros read as one block.
+// An indented row the label leaves out (trans fat, mono fat and so on) is dropped.
+// A main row stays and reads "not listed", because a missing main value is a gap
+// worth seeing.
+const allRows: Array<{
   label: string;
   value: string;
   dv: string;
@@ -39,13 +43,14 @@ const rows: Array<{
   { label: 'Trans Fat', value: grams(n.transFat), dv: '', level: 1 },
   { label: 'Polyunsaturated Fat', value: grams(n.polyunsaturatedFat), dv: '', level: 1 },
   { label: 'Monounsaturated Fat', value: grams(n.monounsaturatedFat), dv: '', level: 1 },
-  { label: 'Sodium', value: milligrams(n.sodium), dv: dv(percentDV('sodium', n.sodium)), bold: true },
   { label: 'Total Carbohydrate', value: grams(n.totalCarbs), dv: dv(percentDV('totalCarbs', n.totalCarbs)), bold: true },
   { label: 'Dietary Fiber', value: grams(n.dietaryFiber), dv: dv(percentDV('dietaryFiber', n.dietaryFiber)), level: 1 },
   { label: 'Total Sugars', value: grams(n.totalSugars), dv: '', level: 1 },
   { label: 'Added Sugars', value: grams(n.addedSugars), dv: dv(percentDV('addedSugars', n.addedSugars)), level: 2 },
   { label: 'Protein', value: grams(n.protein), dv: proteinDVText, bold: true },
+  { label: 'Sodium', value: milligrams(n.sodium), dv: dv(percentDV('sodium', n.sodium)), bold: true },
 ];
+const rows = allRows.filter((r) => !(r.level && r.value === 'not listed'));
 ---
 
 <div class="nf">
@@ -66,7 +71,7 @@ const rows: Array<{
       return (
         <div class:list={['row', `l${r.level ?? 0}`, { bold: r.bold }]}>
           <span>
-            {r.level === 2 && !missing ? (
+            {r.level === 2 ? (
               <>
                 Includes <span class="v">{r.value}</span> {r.label}
               </>
