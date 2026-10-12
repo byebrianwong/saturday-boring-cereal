@@ -34,7 +34,7 @@ export const Phone = {
     ...phone.parameters,
     docs: {
       description: {
-        story: 'Below 640px the tagline goes and the nav becomes one row that scrolls sideways.',
+        story: 'Below 640px the nav becomes one row that scrolls sideways.',
       },
     },
   },
