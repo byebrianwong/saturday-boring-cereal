@@ -14,6 +14,7 @@ labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://wo
 formFactors: [os]
 proteinSources: [milk-protein]
 attributes: [high-protein, low-sugar, grain-free, keto, gluten-free]
+sweeteners: [allulose, monk-fruit]
 nutrition:
   servingSize: 36
   calories: 170

@@ -23,6 +23,17 @@ const proteinSourceOptions = [
   { label: 'Grain-Only', value: 'grain-only' },
 ];
 
+const sweetenerOptions = [
+  { label: 'Sucralose', value: 'sucralose' },
+  { label: 'Aspartame', value: 'aspartame' },
+  { label: 'Acesulfame K', value: 'acesulfame-k' },
+  { label: 'Saccharin', value: 'saccharin' },
+  { label: 'Allulose', value: 'allulose' },
+  { label: 'Monk fruit', value: 'monk-fruit' },
+  { label: 'Stevia', value: 'stevia' },
+  { label: 'Erythritol', value: 'erythritol' },
+];
+
 const attributeOptions = [
   { label: 'Gluten-Free', value: 'gluten-free' },
   { label: 'Grain-Free', value: 'grain-free' },
@@ -91,6 +102,11 @@ export default config({
         formFactors: fields.multiselect({ label: 'Form factors', options: formFactorOptions }),
         proteinSources: fields.multiselect({ label: 'Protein sources', options: proteinSourceOptions }),
         attributes: fields.multiselect({ label: 'Attributes', options: attributeOptions }),
+        sweeteners: fields.multiselect({
+          label: 'Sugar substitutes',
+          description: 'Any named in the ingredient list. A box with one is left out of the "least sugar" record.',
+          options: sweetenerOptions,
+        }),
         nutrition: fields.object(
           {
             servingSize: fields.number({
