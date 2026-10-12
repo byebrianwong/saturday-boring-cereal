@@ -5,6 +5,8 @@ rating: 7
 dateReviewed: 2025-07-15
 emoji: '🍫'
 boxColor: "#8a6d3b"
+labelImage: /images/labels/kind-dark-chocolate-clusters.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0602652171994"
 formFactors: [clusters]
 proteinSources: []
 attributes: [high-protein]

@@ -7,6 +7,8 @@ dateReviewed: 2026-01-25
 emoji: '🫐'
 boxColor: "#6fa8d6"
 barcode: '0021908133171'
+labelImage: /images/labels/cascadian-farm-blueberry-vanilla-no-sugar-added-granola.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0021908133171"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [organic, no-added-sugar]
