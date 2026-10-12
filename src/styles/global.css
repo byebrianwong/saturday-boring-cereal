@@ -573,41 +573,6 @@ img {
 .tag.r { background: var(--cherry); color: var(--white); }
 .tag.w { background: var(--white); }
 
-/* ---------- fine print / disclaimer ----------
-   Reviews rendered as advert legalese. The deadpan payload of the whole
-   design — keep it small, dense and unexcited. */
-
-.fineprint {
-  margin: 26px auto 0;
-  max-width: 1080px;
-  border: 3px solid var(--ink);
-  background: var(--cream);
-  padding: 20px 24px 18px;
-  text-align: left;
-  column-count: 2;
-  column-gap: 34px;
-  column-rule: 1px solid var(--rule);
-}
-
-.fineprint p {
-  margin: 0 0 9px;
-  font-family: var(--fine);
-  font-size: 10.5px;
-  line-height: 1.35;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  text-align: justify;
-  -webkit-hyphens: auto;
-  hyphens: auto;
-  break-inside: avoid;
-}
-
-.fineprint .rev { color: var(--cherry); font-weight: bold; }
-.fineprint .sc { background: var(--ink); color: var(--yellow); padding: 1px 4px; font-weight: bold; letter-spacing: 0.06em; }
-.fineprint .quote { color: var(--ink); font-weight: bold; background: var(--yellow); padding: 0 3px; }
-.fineprint .nil { color: #8c7f6d; font-style: italic; }
-
 /* ---------- prose ----------
    Long-form pages (about, methodology, review bodies). The content stays
    calm; only the headings are allowed to shout. */
@@ -739,10 +704,6 @@ img {
 }
 
 /* ---------- responsive ---------- */
-
-@media (max-width: 1100px) {
-  .fineprint { column-count: 1; }
-}
 
 @media (max-width: 860px) {
   .wrap { padding: 0 18px; }
