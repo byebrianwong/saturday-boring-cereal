@@ -2,8 +2,8 @@
 name: Superseed Granola, Blueberry
 brand: Manitoba Harvest
 rating: 7
-shortNote: Pretty average granola taste, nothing special
-dateReviewed: 2025-06-15
+shortNote: Can sometimes have a grassy hempy taste
+dateReviewed: 2026-02-15
 emoji: '🫐'
 boxColor: "#4e8a5c"
 barcode: '697658692239'
