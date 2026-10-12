@@ -1,7 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { u } from '../lib/url';
-import { rating } from '../lib/format';
+import { scoreCereal, overallOutOfTen } from '../lib/score';
 import { cardMacros } from '../lib/macros';
 
 interface Props {
@@ -14,14 +14,18 @@ const d = cereal.data;
 // Only values the label actually lists. The tint is a quiet hint of good,
 // middling or poor; the number itself stays plain.
 const macros = cardMacros(cereal);
+
+// The sticker shows the Tier score (taste and health combined), not the plain
+// taste rating, because the home page ranks by it.
+const { overall, tier } = scoreCereal(cereal);
 ---
 
 <a class="champ" href={u(`/cereals/${cereal.id}/`)}>
   <span class="banner">★ #1 in the aisle · Grand prize box ★</span>
 
   <span class="score starburst">
-    <span class="sv">{rating(d.rating)}</span>
-    <span class="so">Out of 10</span>
+    <span class="sv">{overall == null ? '—' : overallOutOfTen(overall)}</span>
+    <span class="so">{tier == null ? 'Unrated' : `Tier ${tier}`}</span>
   </span>
 
   <span class="champ-body">

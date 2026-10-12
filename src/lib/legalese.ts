@@ -55,7 +55,7 @@ const CLOSERS = [
   'Serving size measured on a kitchen scale and not estimated by eye, spoon, or hope.',
   'Figures transcribed from the packaging panel at time of purchase and may be reformulated without warning or apology.',
   'The panel on the front of the box is an advert. The panel on the side is the truth. Only one of them is quoted here.',
-  'Scored by one person, in one kitchen, on one Saturday, with no supervision whatsoever.',
+  'Tasted and scored by a human, in a kitchen, on a Saturday, with no supervision whatsoever.',
 ];
 
 export function legaleseFor(cereal: CollectionEntry<'cereals'>, index = 0): LegaleseParts {

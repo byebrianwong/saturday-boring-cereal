@@ -248,3 +248,12 @@ export function tierColor(tier: string): 'elite' | 'good' | 'mid' | 'bad' {
 export function overallOutOfTen(overall: number): string {
   return (overall / 10).toFixed(1);
 }
+
+/**
+ * Sort by Tier score (taste and health combined), best first. Unrated cereals
+ * go last; ties fall back to the plain taste rating.
+ */
+export function byOverallDesc(a: CollectionEntry<'cereals'>, b: CollectionEntry<'cereals'>): number {
+  const diff = (scoreCereal(b).overall ?? -1) - (scoreCereal(a).overall ?? -1);
+  return diff || (b.data.rating ?? -1) - (a.data.rating ?? -1);
+}

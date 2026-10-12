@@ -1,6 +1,6 @@
 # Saturday Boring Cereal 🥣
 
-One man's rankings of granolas and healthier cereals, styled as a grocery aisle.
+My rankings of granolas and healthier cereals, scored on taste and macros combined.
 Astro static site + Keystatic admin, no database, no server.
 
 **Live:** https://saturday-boring-cereal.vercel.app

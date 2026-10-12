@@ -36,7 +36,7 @@ export async function GET(context: APIContext) {
   <channel>
     <title>Saturday Boring Cereal — Receipts</title>
     <link>${esc(new URL(u('/'), site).href)}</link>
-    <description>One man's rankings of granolas and healthier cereals, printed at the register.</description>
+    <description>Granolas and healthier cereals, scored on taste and macros, printed at the register.</description>
     <language>en-us</language>
 ${items}
   </channel>
