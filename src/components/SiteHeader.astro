@@ -2,13 +2,11 @@
 import { u } from '../lib/url';
 
 interface Props {
-  /** How many cereals are on the shelf. Shown in the ticker. */
-  count: number;
   /** The current page's path, so its nav button shows as pressed. */
   path: string;
 }
 
-const { count, path } = Astro.props;
+const { path } = Astro.props;
 
 const nav = [
   { href: '/cereals/', label: 'The Aisle' },
@@ -21,11 +19,9 @@ const nav = [
   <div class="ticker-inner">
     {[0, 1].map(() => (
       <>
-        <span>★ We interrupt your cartoons ★</span>
-        <span><b>As seen Saturday mornings</b></span>
-        <span>★ {count} boxes reviewed ★</span>
-        <span><b>Now fortified with opinions</b></span>
-        <span>★ Offer ends Saturday ★</span>
+        <span>★ Now fortified with reviews ★</span>
+        <span><b>We interrupt your Saturday morning cartoons to bring you these important messages</b></span>
+        <span>★ More fiber, less frosted ★</span>
       </>
     ))}
   </div>
