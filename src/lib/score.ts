@@ -31,9 +31,9 @@ const SAT_FAT_CEILING = 8; // g of saturated fat per 100 g that drops its subsco
 // Past the ceiling, the Nutrition score loses OUTLIER_PENALTY × (excess)² points,
 // where excess is how far over the ceiling the box is, as a fraction of it.
 // Squaring keeps a small overshoot nearly free and makes a big one expensive:
-// 10% over costs 0.8 points, 25% over costs 5, 50% over costs 20, and double
-// the ceiling costs 80. Nutrition is half of Overall, so Overall loses half that.
-const OUTLIER_PENALTY = 80;
+// 10% over costs 0.6 points, 25% over costs 3.8, 50% over costs 15, and double
+// the ceiling costs 60. Nutrition is half of Overall, so Overall loses half that.
+const OUTLIER_PENALTY = 60;
 
 // Overall = 50% Taste, 50% Nutrition.
 const TASTE_WEIGHT = 0.5;
@@ -210,18 +210,18 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
 }
 
 // Tier-list bands (S is the top, above A) on the 0–100 overall. Deliberately
-// hard at the top: S is the blue ribbon for the single best box on the shelf, so
-// its cutoff sits at the current top score (61, IKEA Hjälteroll) and above the
-// runner-up (60). D is wide so a box that tastes fine but has one outlier
-// nutrient (Cheerios Strawberry Protein, 34, with 60% over the sugar limit)
-// lands in D, not F. F is for boxes below that.
+// hard at the top: S is the blue ribbon for the best box on the shelf, so its
+// cutoff sits at the current top score (61, shared by IKEA Hjälteroll and
+// Calbee Frugra) and above the runner-up (60). D is wide so a box that tastes
+// fine but has one outlier nutrient (Cheerios Strawberry Protein, 38, with 60%
+// over the sugar limit) lands in D, not F. F is for boxes below that.
 // Retune here when the targets, the taste curve or the outlier penalty change.
 const BANDS: Array<[number, string]> = [
   [61, 'S'],
   [58, 'A'],
   [54, 'B'],
   [50, 'C'],
-  [34, 'D'],
+  [38, 'D'],
   [0, 'F'],
 ];
 
