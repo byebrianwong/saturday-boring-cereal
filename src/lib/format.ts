@@ -39,16 +39,6 @@ export function shortDate(d: Date): string {
   });
 }
 
-export function receiptDate(d: Date): string {
-  return d
-    .toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: '2-digit',
-      timeZone: 'UTC',
-    })
-    .toUpperCase();
-}
 
 /** Ratings render with one decimal: 8 -> "8.0"; null (no Taste score) -> "—" */
 export function rating(v: number | null | undefined): string {

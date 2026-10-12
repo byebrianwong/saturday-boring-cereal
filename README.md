@@ -323,13 +323,12 @@ deploys anywhere (Cloudflare Pages / Netlify / Vercel).
 src/
   content/cereals/     one .md per cereal (frontmatter + review body)
   content.config.ts    content collection schema (Zod) + taxonomy enums
-  components/          MiniBox (3D box), PriceTag, Receipt, NutritionPanel, AisleFilters
+  components/          MiniBox (3D box), PriceTag, NutritionPanel, AisleFilters
   layouts/Layout.astro store sign header + footer
   pages/
-    index.astro        landing: 3D hero box, aisle signs, top-shelf ranks, receipt
+    index.astro        landing: 3D hero box, aisle signs, top-shelf ranks
     cereals/index.astro the explorer (client-side filter + sort, deep-linkable #f=granola)
     cereals/[slug].astro detail: big box, Nutrition Facts panel, tasting note
-    reviews.astro      all reviews as one long receipt
     about.astro        methodology, written as store policy
   admin/               the Stock Room — dev-only, injected as routes, never built
     index.astro        search → pick product → pick photo → score + note → save

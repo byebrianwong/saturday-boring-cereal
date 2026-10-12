@@ -10,7 +10,7 @@ export default {
     docs: {
       description: {
         component:
-          'A US-style Nutrition Facts label. Cereal files store nutrition per serving, exactly as the box prints it. This panel scales it to 100 g by default, so boxes with different serving sizes can be compared. A value the label does not list shows as "not listed", never as a guess.',
+          'A US-style Nutrition Facts label. Cereal files store nutrition per serving, exactly as the box prints it. This panel scales it to 100 g by default, so boxes with different serving sizes can be compared. A main nutrient the label does not list shows as "not listed", never as a guess. An indented one the label leaves out, such as trans fat, is left off the panel. Sodium sits last so the macros read as one block.',
       },
     },
   },
@@ -37,7 +37,7 @@ export const MissingValues = {
   parameters: {
     docs: {
       description: {
-        story: 'This cereal\'s file leaves out several values, including calories, sodium and total carbohydrate, so those rows read "not listed".',
+        story: 'This cereal\'s file leaves out several values, including calories, sodium and total carbohydrate, so those rows read "not listed". Indented rows it leaves out are dropped.',
       },
     },
   },
