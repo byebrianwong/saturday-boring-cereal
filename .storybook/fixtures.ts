@@ -88,8 +88,3 @@ export const examples = {
   /** Calories and other label fields missing. Must read "not listed". */
   missingFields: cereal('trader-joes-homestyle-cherry-pistachio-pecan-granola'),
 };
-
-/** The catalog newest review first. Same order as the Receipts page and the home page's recent reviews. */
-export const newestFirst: Cereal[] = [...catalog].sort(
-  (a, b) => b.data.dateReviewed.getTime() - a.data.dateReviewed.getTime(),
-);
