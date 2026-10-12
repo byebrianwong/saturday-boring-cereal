@@ -63,11 +63,13 @@ export default defineConfig({
   site,
   base,
   output: 'static',
-  // The Rankings page was folded into The Aisle, which opens sorted by Taste.
-  // Old links land there instead of on a 404. Astro does not add `base` to a
-  // redirect's destination, so it is added here.
+  // Retired pages send old links to The Aisle instead of a 404. The Rankings
+  // page was folded into it (it opens sorted by Taste), and the Receipts page
+  // (/reviews/) was removed. Astro does not add `base` to a redirect's
+  // destination, so it is added here.
   redirects: {
     '/top': `${base ?? ''}/cereals/`,
+    '/reviews': `${base ?? ''}/cereals/`,
   },
   integrations: [
     react(),
