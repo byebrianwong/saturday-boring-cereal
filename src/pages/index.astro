@@ -4,14 +4,15 @@ import Layout from '../layouts/Layout.astro';
 import RankCard from '../components/RankCard.astro';
 import ChampCard from '../components/ChampCard.astro';
 import BreakfastStrip from '../components/BreakfastStrip.astro';
-import { byRatingDesc } from '../lib/macros';
+import { byOverallDesc, scoreCereal, overallOutOfTen } from '../lib/score';
 import { label } from '../lib/taxonomy';
 import { u } from '../lib/url';
 import { per100gOf } from '../lib/nutrition';
 import { gramsShort } from '../lib/format';
 
 const cereals = await getCollection('cereals');
-const ranked = [...cereals].sort(byRatingDesc);
+// The home page shows the top of the Tier list: taste and health combined.
+const ranked = [...cereals].sort(byOverallDesc);
 const champ = ranked[0];
 const runnersUp = ranked.slice(1, 9);
 
@@ -26,15 +27,14 @@ const browseTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]);
 
 // The "but wait, there's less" stats. Every one is derived from the real shelf
 // so the boast is technically accurate, which is the joke.
-const rated = cereals.filter((c) => c.data.rating != null);
+const overalls = cereals.map((c) => scoreCereal(c).overall).filter((v): v is number => v != null);
 const sugars = cereals.map((c) => per100gOf(c).totalSugars).filter((v): v is number => v != null);
 const proteins = cereals.map((c) => per100gOf(c).protein).filter((v): v is number => v != null);
-const topScore = Math.max(...rated.map((c) => c.data.rating as number));
 const stats = [
   { n: String(cereals.length), k: 'Boxes on the record' },
   { n: sugars.length ? (gramsShort(Math.min(...sugars)) as string) : '—', k: 'Lowest sugar per 100g' },
   { n: proteins.length ? (gramsShort(Math.max(...proteins)) as string) : '—', k: 'Highest protein per 100g' },
-  { n: topScore.toFixed(1), k: 'Top score awarded' },
+  { n: overalls.length ? overallOutOfTen(Math.max(...overalls)) : '—', k: 'Top Tier score' },
 ];
 
 // Tag chips cycle through the ad palette rather than encoding meaning.
@@ -56,12 +56,16 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
         <div class="l3">Review-a-thon!</div>
       </div>
 
-      <div class="tagline">“The only aisle where boring is a brag.”</div>
+      <div class="tagline">Tasted by a human. Scored on the macros.</div>
 
       <p class="subcopy">
-        One man walks the healthy-cereal aisle so you don’t have to. Every box tasted, weighed, and
-        priced in <strong>cold, hard macros.</strong> {cereals.length} boxes scored out of ten. A new
-        one every Saturday, whether anybody asked or not.
+        Saturday morning cartoons and a bowl of cereal was truly a time. I still enjoy cereal (and
+        cartoons!), but today there are so many new cereals claiming to be “healthy” that it’s hard
+        to know what’s what. I personally, <strong>AS A HUMAN</strong> (not fake AI reviewed), eat
+        all these cereals and weigh their taste and (macro-based) health combined. Health is focused
+        on the real macros: higher protein, higher fiber, lower sugar, and lower saturated fat. That’s
+        not common in a cereal, but there are some diamonds out there. Feel free to send me more reqs
+        for healthy cereals to try!
       </p>
 
       <div class="cta-row">
@@ -72,7 +76,7 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
         <div class="offer-flash starburst">
           <div class="in">
             But wait<br />there’s<br />less!
-            <em>Sugar, that is</em>
+            <em>Sugar, hopefully</em>
           </div>
         </div>
       </div>
@@ -122,10 +126,11 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
   <section class="section" id="rankings">
     <div class="wrap">
       <div class="section-kicker">Now showing · The top {runnersUp.length + 1}</div>
-      <h2 class="section-title">The <em>Scoreboard</em></h2>
+      <h2 class="section-title">The <em>Tiers</em></h2>
       <p class="section-lede">
-        Ranked #1 to #{runnersUp.length + 1} out of {cereals.length}. Score out of ten. Protein, fiber
-        and sugar taken off the actual side panel — not off the front — and shown per 100 grams.
+        Ranked #1 to #{runnersUp.length + 1} out of {cereals.length} by Tier score: taste and health
+        combined, out of ten. Protein, fiber and sugar taken off the actual side panel — not off the
+        front — and shown per 100 grams.
       </p>
       <p class="macro-key">
         <span class="k-good">Green</span> is good for a cereal, <span class="k-mid">orange</span> is
@@ -177,8 +182,8 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
     <div class="wrap signoff-in">
       <h2>New box every Saturday</h2>
       <p class="sub">
-        No sponsors, no samples, no mascots. Just one person, one aisle, and a kitchen scale that has
-        never once been asked to lie.
+        No sponsors, no samples, no mascots. Just me, a spoon, and a kitchen scale that has never
+        once been asked to lie.
       </p>
       <a class="cta signoff-cta" href={u('/cereals/')}>
         Walk the aisle

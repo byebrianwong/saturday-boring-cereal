@@ -36,7 +36,7 @@ const nav = [
     <a class="brandline" href={u('/')}>
       <span class="a">Saturday</span> <span class="b">Boring</span> <span class="c">Cereal</span>
     </a>
-    <div class="brand-sub">One man · One aisle · One box at a time</div>
+    <div class="brand-sub">Taste + macros · A new box every Saturday</div>
     <nav class="site">
       {nav.map((item) => (
         <a href={u(item.href)} class:list={{ on: path.startsWith(u(item.href)) }}>{item.label}</a>

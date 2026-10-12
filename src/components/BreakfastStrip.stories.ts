@@ -8,7 +8,7 @@ export default {
     docs: {
       description: {
         component:
-          'The "part of this complete breakfast" strip on the home page, a joke on the line old cereal adverts ran under a table of other food. It takes no props.',
+          'The "part of a complete breakfast" strip on the home page: bowl + cereal + milk, a nod to the line old cereal adverts ran under a picture of the meal. It takes no props.',
       },
     },
   },
