@@ -14,6 +14,7 @@ imageCredit: "Photo: Open Food Facts contributors, CC-BY-SA; product © WK Kello
 formFactors: [flakes]
 proteinSources: []
 attributes: [high-protein, low-sugar]
+sweeteners: [allulose, sucralose, monk-fruit]
 nutrition:
   servingSize: 39
   calories: 160

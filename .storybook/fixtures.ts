@@ -37,6 +37,7 @@ function toEntry(path: string, raw: string): Cereal {
       formFactors: [],
       proteinSources: [],
       attributes: [],
+      sweeteners: [],
       ...fm,
       dateReviewed: new Date(fm.dateReviewed),
       dateUpdated: fm.dateUpdated ? new Date(fm.dateUpdated) : undefined,
