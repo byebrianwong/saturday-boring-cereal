@@ -20,7 +20,6 @@ To accept more: open the link, confirm, set `"approved": true`, then `node scrip
 | ⛔️ form: bar | kind-soft-baked-granola-dark-chocolate-peanut-butter | USDA | [KIND, HEALTHY GRAINS GRANOLA BAR, PEANUT BUTTER DARK CHOCOLATE, PEANUT BUTTER DARK CHOCOLATE](https://fdc.nal.usda.gov/fdc-app.html#/food-details/2585588/nutrients) | 150 | 1 |  | 75 |  |
 | ⚠️ low | kodiak-protein-packed-cookie-butter-granola | USDA | [PEANUT BUTTER PROTEIN PACK](https://fdc.nal.usda.gov/fdc-app.html#/food-details/2058537/nutrients) | 265 | 5.5 |  | 300 |  |
 | ⚠️ low | magic-spoon-peanut-butter | USDA | [BIG SPOON ROASTERS, NUT BUTTERS, PEANUT CASHEW, PEANUT CASHEW](https://fdc.nal.usda.gov/fdc-app.html#/food-details/1854275/nutrients) |  |  |  |  |  |
-| ⚠️ low | manitoba-harvest-hemp-foods-superseed-granola | USDA | [SPROUTED HONEY HEMP GRANOLA, HONEY HEMP](https://fdc.nal.usda.gov/fdc-app.html#/food-details/2472857/nutrients) | 260 | 1 |  | 89 |  |
 | ✅ approved | manitoba-harvest-organic-superseed-granola-blueberry | USDA | [ORGANIC BLUEBERRY GRANOLA, BLUEBERRY](https://fdc.nal.usda.gov/fdc-app.html#/food-details/1970863/nutrients) | 275 | 5.5 | 9 | 153 |  |
 | ✅ approved | michelles-granola-almond-butter | USDA | [ALMOND BUTTER GRANOLA, ALMOND BUTTER](https://fdc.nal.usda.gov/fdc-app.html#/food-details/2279404/nutrients) | 140 | 0 | 4 | 89 |  |
 | ✅ approved | natures-path-heritage-flakes | USDA | [HERITAGE FLAKES CEREAL, HERITAGE FLAKES](https://fdc.nal.usda.gov/fdc-app.html#/food-details/2678723/nutrients) | 160 | 0 | 5 | 170 |  |
