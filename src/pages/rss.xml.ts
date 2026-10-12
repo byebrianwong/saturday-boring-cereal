@@ -34,7 +34,7 @@ export async function GET(context: APIContext) {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Saturday Boring Cereal — Receipts</title>
+    <title>Saturday Boring Cereal — Reviews</title>
     <link>${esc(new URL(u('/'), site).href)}</link>
     <description>Granolas and healthier cereals, scored on taste and macros, printed at the register.</description>
     <language>en-us</language>

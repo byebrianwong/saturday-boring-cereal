@@ -3,7 +3,6 @@ import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 import RankCard from '../components/RankCard.astro';
 import ChampCard from '../components/ChampCard.astro';
-import Disclaimer from '../components/Disclaimer.astro';
 import BreakfastStrip from '../components/BreakfastStrip.astro';
 import { byOverallDesc, scoreCereal, overallOutOfTen } from '../lib/score';
 import { label } from '../lib/taxonomy';
@@ -37,10 +36,6 @@ const stats = [
   { n: proteins.length ? (gramsShort(Math.max(...proteins)) as string) : '—', k: 'Highest protein per 100g' },
   { n: overalls.length ? overallOutOfTen(Math.max(...overalls)) : '—', k: 'Top Tier score' },
 ];
-
-const recent = [...cereals]
-  .sort((a, b) => b.data.dateReviewed.getTime() - a.data.dateReviewed.getTime())
-  .slice(0, 6);
 
 // Tag chips cycle through the ad palette rather than encoding meaning.
 const tagColour = ['y', 'o', 't', 'r', 'w'];
@@ -180,9 +175,6 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
       </div>
     </div>
   </section>
-
-  <!-- ============ RECENT REVIEWS, AS ADVERT LEGALESE ============ -->
-  <Disclaimer cereals={recent} />
 
   <!-- ============ SIGN-OFF ============ -->
   <section class="signoff">
