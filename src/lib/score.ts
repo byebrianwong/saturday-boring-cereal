@@ -26,6 +26,15 @@ const SUGAR_CEILING = 20; // g of total sugar per 100 g that drops the sugar sub
 const FIBER_TARGET = 12; // g of fiber per 100 g that earns a full fiber subscore
 const SAT_FAT_CEILING = 8; // g of saturated fat per 100 g that drops its subscore to zero
 
+// Outlier penalty for sugar and saturated fat. A subscore can't go below zero,
+// so without this a box at 3x the ceiling scores the same as one just over it.
+// Past the ceiling, the Nutrition score loses OUTLIER_PENALTY × (excess)² points,
+// where excess is how far over the ceiling the box is, as a fraction of it.
+// Squaring keeps a small overshoot nearly free and makes a big one expensive:
+// 10% over costs 0.6 points, 25% over costs 3.8, 50% over costs 15, and double
+// the ceiling costs 60. Nutrition is half of Overall, so Overall loses half that.
+const OUTLIER_PENALTY = 60;
+
 // Overall = 50% Taste, 50% Nutrition.
 const TASTE_WEIGHT = 0.5;
 
@@ -57,7 +66,10 @@ export interface Score {
   overall: number | null;
   /** Tier letter (S, A–D, F) for `overall`; null when unrated. */
   tier: string | null;
-  /** 0–100 nutrition-only mean; survives even when Taste is missing. */
+  /**
+   * 0–100 nutrition-only score: the weighted mean of the nutrient subscores,
+   * minus any outlier penalty. Survives even when Taste is missing.
+   */
   nutrition: number | null;
   /**
    * Always taste, then the good nutrients (protein, fiber), then the bad ones
@@ -76,6 +88,21 @@ function up(value: number | null | undefined, target: number): number | null {
 /** Lower raw value → higher score (sugar, saturated fat). */
 function down(value: number | null | undefined, ceiling: number): number | null {
   return value == null ? null : clamp01(1 - value / ceiling) * 100;
+}
+
+/** How far past the ceiling a value is, as a fraction of it: 12 over 8 → 0.5. */
+function excessOver(value: number | null | undefined, ceiling: number): number {
+  return value == null ? 0 : Math.max(0, value / ceiling - 1);
+}
+
+/** Nutrition points lost for being `excess` past a ceiling (see OUTLIER_PENALTY). */
+function outlierPenalty(excess: number): number {
+  return OUTLIER_PENALTY * excess ** 2;
+}
+
+/** Extra text for a sugar or saturated-fat bar that is past its ceiling. */
+function overNote(excess: number): string {
+  return excess > 0 ? ` · ${Math.round(excess * 100)}% over the limit` : '';
 }
 
 /** Weighted mean of the [score, weight] pairs whose score is listed. */
@@ -108,6 +135,8 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
   const sugar = down(n.totalSugars, SUGAR_CEILING);
   const fiber = up(n.dietaryFiber, FIBER_TARGET);
   const satFat = down(n.saturatedFat, SAT_FAT_CEILING);
+  const sugarExcess = excessOver(n.totalSugars, SUGAR_CEILING);
+  const satFatExcess = excessOver(n.saturatedFat, SAT_FAT_CEILING);
 
   const subscores: Subscore[] = [
     {
@@ -137,22 +166,26 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
       key: 'sugar',
       label: 'Sugar',
       score: sugar,
-      detail: grams(n.totalSugars),
+      detail: grams(n.totalSugars) + overNote(sugarExcess),
     },
     {
       key: 'satFat',
       label: 'Sat. fat',
       score: satFat,
-      detail: gramsWithDV('saturatedFat', n.saturatedFat),
+      detail: gramsWithDV('saturatedFat', n.saturatedFat) + overNote(satFatExcess),
     },
   ];
 
-  const nutrition = weightedMean([
+  const mean = weightedMean([
     [protein, NUTRITION_WEIGHTS.protein],
     [sugar, NUTRITION_WEIGHTS.sugar],
     [fiber, NUTRITION_WEIGHTS.fiber],
     [satFat, NUTRITION_WEIGHTS.satFat],
   ]);
+  const nutrition =
+    mean == null
+      ? null
+      : Math.max(0, mean - outlierPenalty(sugarExcess) - outlierPenalty(satFatExcess));
 
   // Unrated cereals stay unrated overall — the site never invents a Taste score.
   let overall: number | null = null;
@@ -177,15 +210,18 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
 }
 
 // Tier-list bands (S is the top, above A) on the 0–100 overall. Deliberately
-// hard at the top: S is the blue ribbon for the single best box on the shelf, so
-// its cutoff sits just under the current top score (65) and above the runner-up
-// (61). Retune here when the targets or the taste curve above change.
+// hard at the top: S is the blue ribbon for the best box on the shelf, so its
+// cutoff sits at the current top score (61, shared by IKEA Hjälteroll and
+// Calbee Frugra) and above the runner-up (60). D is wide so a box that tastes
+// fine but has one outlier nutrient (Cheerios Strawberry Protein, 38, with 60%
+// over the sugar limit) lands in D, not F. F is for boxes below that.
+// Retune here when the targets, the taste curve or the outlier penalty change.
 const BANDS: Array<[number, string]> = [
-  [63, 'S'],
+  [61, 'S'],
   [58, 'A'],
   [54, 'B'],
   [50, 'C'],
-  [45, 'D'],
+  [38, 'D'],
   [0, 'F'],
 ];
 
