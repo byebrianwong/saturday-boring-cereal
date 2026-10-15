@@ -510,7 +510,16 @@ img {
 }
 
 .score .sv { font-family: var(--shout); line-height: 0.86; letter-spacing: -0.02em; }
+.score .sc,
 .score .so { font-family: var(--fine); letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.95; }
+.score .so { font-variant-numeric: tabular-nums; }
+
+/* The home page stickers lead with the Tier letter and take the Tier's colour,
+   the same colours as the seals on /cereals/ (see tierColor in src/lib/score.ts). */
+.score.tier-elite { background: var(--turq); }
+.score.tier-good { background: var(--score-good); }
+.score.tier-mid { background: var(--score-mid); color: var(--ink); }
+.score.tier-bad { background: var(--score-bad); }
 
 /* Static (non-absolute) starburst, for listings and detail pages. */
 .score-badge {
