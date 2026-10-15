@@ -1,7 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { u } from '../lib/url';
-import { scoreCereal, overallOutOfTen } from '../lib/score';
+import { scoreCereal, overallOutOfTen, tierColor } from '../lib/score';
 import { cardMacros } from '../lib/macros';
 
 interface Props {
@@ -15,17 +15,19 @@ const d = cereal.data;
 // middling or poor; the number itself stays plain.
 const macros = cardMacros(cereal);
 
-// The sticker shows the Tier score (taste and health combined), not the plain
-// taste rating, because the home page ranks by it.
+// The sticker leads with the Tier letter, not the score. A 5.9 and a 5.8 are
+// the same for anyone choosing a box; the letter says which group it is in.
+// The score (taste and health combined) stays on as small print.
 const { overall, tier } = scoreCereal(cereal);
 ---
 
 <a class="champ" href={u(`/cereals/${cereal.id}/`)}>
   <span class="banner">★ #1 in the aisle · Grand prize box ★</span>
 
-  <span class="score starburst">
-    <span class="sv">{overall == null ? '—' : overallOutOfTen(overall)}</span>
-    <span class="so">{tier == null ? 'Unrated' : `Tier ${tier}`}</span>
+  <span class:list={['score starburst', tier == null ? 'unrated' : `tier-${tierColor(tier)}`]}>
+    <span class="sc">Tier</span>
+    <span class="sv">{tier ?? '—'}</span>
+    <span class="so">{overall == null ? 'Unrated' : `${overallOutOfTen(overall)} / 10`}</span>
   </span>
 
   <span class="champ-body">
@@ -155,10 +157,12 @@ const { overall, tier } = scoreCereal(cereal);
     text-align: center;
   }
 
+  .champ .score .sc,
   .champ .score .sv,
   .champ .score .so { display: block; }
-  .champ .score .sv { font-size: 62px; }
-  .champ .score .so { font-size: 11px; margin-top: 6px; }
+  .champ .score .sc { font-size: 12px; }
+  .champ .score .sv { font-size: 84px; }
+  .champ .score .so { font-size: 12px; margin-top: 2px; }
 
   @media (max-width: 860px) {
     .champ { padding: 24px 18px 20px; }
@@ -168,7 +172,8 @@ const { overall, tier } = scoreCereal(cereal);
     .champ-copy .quip { text-align: left; }
     .banner { font-size: 15px; white-space: normal; width: 90%; text-align: center; }
     .champ .score { width: 110px; height: 110px; right: -12px; top: -22px; }
-    .champ .score .sv { font-size: 40px; }
-    .champ .score .so { font-size: 9px; }
+    .champ .score .sc { font-size: 8px; }
+    .champ .score .sv { font-size: 52px; }
+    .champ .score .so { font-size: 8px; }
   }
 </style>
