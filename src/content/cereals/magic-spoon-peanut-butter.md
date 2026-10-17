@@ -14,6 +14,7 @@ labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://wo
 formFactors: [os]
 proteinSources: [milk-protein]
 attributes: [high-protein, low-sugar, grain-free, keto, gluten-free]
+sweeteners: [allulose, monk-fruit]
 ingredients: Milk Protein Blend (Caseins, Whey Protein Concentrates), Sweetener Blend (Allulose, Monk Fruit Extract), Oil Blend (High Oleic Sunflower Oil, Avocado Oil), Tapioca Starch, Peanut Oil, Inulins (from Chicory Root and/or Agave), Peanut Flour, Peanut Extract, Natural Flavors, Salt.
 ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0850002887464"
 nutrition:

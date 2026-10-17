@@ -1,0 +1,195 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { u } from '../lib/url';
+
+// One card in the home page's "But wait, there's more — and less" row. It
+// either names the record-holding cereal with its box, or (with `stack`)
+// shows a few boxes fanned out behind a count, for "Boxes on the record".
+interface Props {
+  /** What the record is, e.g. "Most protein". */
+  label: string;
+  /** The number, already formatted, e.g. "51.3g". */
+  value: string;
+  /** Small print under the number, e.g. "per 100g". */
+  note?: string;
+  /** A rule the record follows, on its own line, e.g. "No sugar substitutes". */
+  caveat?: string;
+  /** The cereal that holds the record. */
+  cereal?: CollectionEntry<'cereals'>;
+  /** Boxes to fan out instead of a single cereal. The first three are shown. */
+  stack?: CollectionEntry<'cereals'>[];
+  /** Where the card links. Defaults to the cereal's page. */
+  href?: string;
+}
+
+const { label, value, note, caveat, cereal, stack, href } = Astro.props;
+const link = href ?? (cereal ? `/cereals/${cereal.id}/` : undefined);
+const Tag = link ? 'a' : 'div';
+const boxes = stack ? stack.slice(0, 3) : cereal ? [cereal] : [];
+---
+
+<Tag class:list={['rec', { fan: stack }]} href={link ? u(link) : undefined}>
+  <span class="lbl">{label}</span>
+
+  <span class="boxes">
+    {boxes.map((c) => (
+      <span class="box">
+        {c.data.boxImage ? (
+          <img src={u(c.data.boxImage)} alt={`${c.data.brand} ${c.data.name} box`} loading="lazy" />
+        ) : (
+          <span class="fallback" style={`background:${c.data.boxColor}`}>
+            <span class="em">{c.data.emoji}</span>
+          </span>
+        )}
+      </span>
+    ))}
+  </span>
+
+  <span class="n">{value}</span>
+  {note && <span class="note">{note}</span>}
+  {caveat && <span class="caveat">{caveat}</span>}
+
+  {cereal && !stack ? (
+    <>
+      <span class="brand">{cereal.data.brand}</span>
+      <span class="name">{cereal.data.name}</span>
+    </>
+  ) : (
+    <span class="name more">See them all →</span>
+  )}
+</Tag>
+
+<style>
+  .rec {
+    position: relative;
+    width: 236px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    background: var(--white);
+    border: 4px solid var(--ink);
+    box-shadow: 6px 6px 0 var(--ink);
+    padding: 0 16px 16px;
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+
+  a.rec:hover {
+    transform: translate(3px, 3px);
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  /* The label is a flag hanging off the top edge, like a price sticker. */
+  .lbl {
+    margin-top: -16px;
+    background: var(--yellow);
+    border: 3px solid var(--ink);
+    font-family: var(--shout);
+    font-size: 17px;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--ink);
+    padding: 6px 12px 4px;
+    transform: rotate(-2deg);
+  }
+
+  .boxes {
+    margin-top: 14px;
+    height: 150px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+  }
+
+  .box {
+    width: 112px;
+    height: 150px;
+    background: var(--cream);
+    border: 3px solid var(--ink);
+    overflow: hidden;
+    display: block;
+    flex: none;
+  }
+
+  .box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .fallback .em { font-size: 44px; line-height: 1; }
+
+  /* Fanned stack for the count card: three boxes overlapping, tilted out. */
+  .fan .box { width: 84px; height: 114px; }
+  .fan .box:nth-child(1) { transform: translateX(34px) rotate(-9deg); }
+  .fan .box:nth-child(2) { position: relative; z-index: 2; height: 140px; width: 104px; }
+  .fan .box:nth-child(3) { transform: translateX(-34px) rotate(9deg); }
+
+  .n {
+    margin-top: 12px;
+    font-family: var(--shout);
+    font-size: 46px;
+    line-height: 1;
+    color: var(--cherry);
+  }
+
+  .note {
+    font-family: var(--fine);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #7c6c56;
+    margin-top: 3px;
+  }
+
+  .caveat {
+    margin-top: 6px;
+    font-family: var(--fine);
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--yellow);
+    padding: 2px 6px;
+  }
+
+  .brand {
+    font-family: var(--fine);
+    font-size: 10px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--orange);
+    font-weight: bold;
+    margin-top: 10px;
+  }
+
+  .name {
+    font-family: var(--shout);
+    font-size: 19px;
+    line-height: 0.95;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-top: 4px;
+  }
+
+  .name.more { margin-top: 10px; }
+
+  @media (max-width: 860px) {
+    .rec { width: min(236px, 42vw); padding: 0 10px 12px; }
+    .boxes, .box { height: 120px; }
+    .box { width: 90px; }
+    .fan .box { width: 62px; height: 86px; }
+    .fan .box:nth-child(2) { width: 80px; height: 112px; }
+    .fan .box:nth-child(1) { transform: translateX(26px) rotate(-9deg); }
+    .fan .box:nth-child(3) { transform: translateX(-26px) rotate(9deg); }
+    .n { font-size: 34px; }
+    .name { font-size: 15px; }
+  }
+</style>

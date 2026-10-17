@@ -271,7 +271,7 @@ const TOP_ORDER = [
   'name', 'brand', 'rating', 'shortNote', 'dateReviewed', 'dateUpdated',
   'emoji', 'boxColor', 'barcode', 'boxImage', 'imageSource', 'imageCredit',
   'noAutoImage', 'purchaseLocation', 'price', 'formFactors', 'proteinSources',
-  'attributes', 'ingredients', 'ingredientsSource',
+  'attributes', 'sweeteners', 'ingredients', 'ingredientsSource',
 ];
 
 // Keys that vanish from the file when cleared, rather than being written as

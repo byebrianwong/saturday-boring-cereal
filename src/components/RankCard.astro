@@ -1,7 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { u } from '../lib/url';
-import { scoreCereal, overallOutOfTen } from '../lib/score';
+import { scoreCereal, overallOutOfTen, tierColor } from '../lib/score';
 import { cardMacros } from '../lib/macros';
 
 interface Props {
@@ -18,17 +18,19 @@ const d = cereal.data;
 // middling or poor; the number itself stays plain.
 const macros = cardMacros(cereal);
 
-// The sticker shows the Tier score (taste and health combined), not the plain
-// taste rating, because the home page ranks by it.
+// The sticker leads with the Tier letter, not the score. A 5.9 and a 5.8 are
+// the same for anyone choosing a box; the letter says which group it is in.
+// The score (taste and health combined) stays on as small print.
 const { overall, tier } = scoreCereal(cereal);
 ---
 
 <a class={`cd ${size}`} href={u(`/cereals/${cereal.id}/`)}>
   <span class="rank-chip">{rank}</span>
 
-  <span class={`score starburst${overall == null ? ' unrated' : ''}`}>
-    <span class="sv">{overall == null ? '—' : overallOutOfTen(overall)}</span>
-    <span class="so">{tier == null ? 'Unrated' : `Tier ${tier}`}</span>
+  <span class:list={['score starburst', tier == null ? 'unrated' : `tier-${tierColor(tier)}`]}>
+    <span class="sc">Tier</span>
+    <span class="sv">{tier ?? '—'}</span>
+    <span class="so">{overall == null ? 'Unrated' : `${overallOutOfTen(overall)} / 10`}</span>
   </span>
 
   <span class="box">
@@ -77,6 +79,7 @@ const { overall, tier } = scoreCereal(cereal);
   .macros .mk { display: block; }
 
   .score { text-align: center; }
+  .score .sc,
   .score .sv,
   .score .so { display: block; }
   .score.unrated { background: var(--muted); }
@@ -86,16 +89,18 @@ const { overall, tier } = scoreCereal(cereal);
   .cd.big .box { height: 236px; }
   .cd.big .name { font-size: 31px; min-height: 56px; }
   .cd.big .score { width: 118px; height: 118px; right: -26px; top: -26px; }
-  .cd.big .score .sv { font-size: 42px; }
-  .cd.big .score .so { font-size: 8.5px; margin-top: 4px; }
+  .cd.big .score .sc { font-size: 9px; }
+  .cd.big .score .sv { font-size: 54px; }
+  .cd.big .score .so { font-size: 9px; margin-top: 2px; }
 
   /* ---- tier 3 ---- */
   .cd.sm { width: 340px; }
   .cd.sm .box { height: 180px; }
   .cd.sm .name { font-size: 24px; min-height: 44px; }
   .cd.sm .score { width: 96px; height: 96px; right: -20px; top: -20px; }
-  .cd.sm .score .sv { font-size: 33px; }
-  .cd.sm .score .so { font-size: 7.5px; margin-top: 3px; }
+  .cd.sm .score .sc { font-size: 8px; }
+  .cd.sm .score .sv { font-size: 44px; }
+  .cd.sm .score .so { font-size: 8px; margin-top: 1px; }
   .cd.sm .rank-chip { width: 46px; height: 46px; font-size: 23px; top: -16px; left: -16px; }
   .cd.sm .macros .mv { font-size: 20px; }
 

@@ -15,6 +15,15 @@ export const ATTRIBUTES = [
   'high-fiber', 'vegan', 'organic', 'no-added-sugar', 'nut-free',
 ] as const;
 
+// Sugar substitutes named in the ingredient list. Used to keep a box that hits
+// near-zero sugar by swapping in a sweetener out of the "least sugar" record.
+// Natural ones (allulose, monk fruit, stevia) count too: the record is for
+// boxes that are low in sugar without tasting sweeter than the label says.
+export const SWEETENERS = [
+  'sucralose', 'aspartame', 'acesulfame-k', 'saccharin',
+  'allulose', 'monk-fruit', 'stevia', 'erythritol',
+] as const;
+
 // Per-serving nutrition. Nullable fields mirror what labels actually omit:
 // the UI must say "not listed" for nulls, never invent a value (esp. proteinDV).
 const nutrition = z.object({
@@ -73,6 +82,7 @@ const cereals = defineCollection({
     formFactors: z.array(z.enum(FORM_FACTORS)).default([]),
     proteinSources: z.array(z.enum(PROTEIN_SOURCES)).default([]),
     attributes: z.array(z.enum(ATTRIBUTES)).default([]),
+    sweeteners: z.array(z.enum(SWEETENERS)).default([]),
     nutrition,
   }),
 });
