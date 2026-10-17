@@ -11,6 +11,8 @@ labelCredit: "Label photo: Kodiak Cakes (kodiakcakes.com)"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [high-protein]
+ingredients: "100% whole grain rolled oats, wheat protein isolate, pea protein concentrate with tapioca starch, soluble tapioca fiber, cane sugar, coconut oil, tapioca syrup, almond butter (almonds), milk protein isolate, light brown sugar refiner's syrup, natural flavors, cinnamon, sea salt, brown rice flour, baking soda. Contains almonds, milk, and wheat."
+ingredientsSource: "kodiakcakes.com — https://kodiakcakes.com/products/cookie-butter-granola"
 nutrition:
   servingSize: 64
   calories: 270

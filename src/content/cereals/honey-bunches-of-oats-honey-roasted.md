@@ -10,6 +10,8 @@ labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://wo
 formFactors: [flakes, clusters]
 proteinSources: []
 attributes: []
+ingredients: "Corn, Whole Grain Wheat, Sugar, Whole Grain Rolled Oats, Rice, Canola and/or Soybean Oil, Wheat Flour, Malted Barley Flour, Corn Syrup, Salt, Molasses, Honey, Caramel Color, Barley Malt Extract, Natural and Artificial Flavor, Annatto Extract (color), BHT added to preserve freshness. Vitamins & Minerals: Reduced Iron, Niacinamide (Vitamin B3), Vitamin A Palmitate, Pyridoxine Hydrochloride (Vitamin B6), Zinc Oxide, Thiamin Mononitrate (Vitamin B1), Riboflavin (Vitamin B2), Folic Acid, Vitamin D3, Vitamin B12. Contains Wheat."
+ingredientsSource: "postconsumerbrands.com — https://postconsumerbrands.com/brands/honey-bunches-of-oats/products/honey-bunches-of-oats-honey-roasted-cereal"
 nutrition:
   servingSize: 41
   calories: 160

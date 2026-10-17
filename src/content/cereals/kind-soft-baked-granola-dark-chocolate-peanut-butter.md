@@ -10,6 +10,8 @@ labelCredit: "Label photo: KIND, via Kroger (kroger.com)"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: []
+ingredients: Oats, Tapioca Syrup, Cane Sugar, Peanut Butter (Peanuts, Sea Salt), Semi-Sweet Chocolate (Sugar, Unsweetened Chocolate, Cocoa Butter, Soy Lecithin, Vanilla Extract), Canola Oil, Peanuts, Tapioca Starch, Peanut Oil, Brown Rice, Vegetable Glycerin, Chicory Root Fiber, Cocoa Powder, Natural Flavor, Sea Salt, Brown Rice Syrup, Vitamin E (Tocopherols To Maintain Freshness). Contains peanuts and soy.
+ingredientsSource: "Hannaford product page — https://hannaford.com/groceries/product/kind-soft-baked-gluten-free-dark-choc-peanut-butter-chewy-granola-clusters-11-oz-bag/340415"
 nutrition:
   servingSize: 55
   calories: 230

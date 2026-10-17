@@ -14,6 +14,8 @@ imageCredit: "Image: General Mills (Cascadian Farm), via Kroger"
 formFactors: []
 proteinSources: []
 attributes: [organic]
+ingredients: "Oats*, Sunflower Oil*, Dried Blueberries*, Coconut Oil*, Sea Salt, Natural Flavor. Vitamin E (mixed tocopherols) Added to Preserve Freshness. *Organic. CONTAINS WHEAT, ALMOND AND COCONUT. MAY CONTAIN SOY AND SESAME INGREDIENTS."
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0021908120232"
 nutrition:
   servingSize: 54
   calories: 240

@@ -14,6 +14,8 @@ imageCredit: "Image: Nature's Path (naturespath.com)"
 formFactors: [flakes]
 proteinSources: []
 attributes: [organic]
+ingredients: "whole wheat meal*, whole grain rolled oats*, cane sugar*, wheat bran*, flax meal*, soy oil*, freeze-dried berry blend* (freeze-dried strawberries*, freeze-dried raspberries*), brown rice flour*, oat bran*, flax seeds*, barley malt extract*, natural strawberry flavor, sea salt, oat syrup solids* (oat syrup solids*, tocopherols [vitamin e]), tocopherols (vitamin e), molasses*, cinnamon*."
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0058449777656"
 nutrition:
   servingSize: 58
   calories: 240

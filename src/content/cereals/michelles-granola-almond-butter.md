@@ -11,6 +11,8 @@ labelCredit: "Label photo: Michele's Granola (michelesgranola.com), 2.25 lb bag"
 formFactors: []
 proteinSources: []
 attributes: [low-sugar]
+ingredients: Organic gluten-free oats, organic brown sugar, expeller-pressed canola oil, almonds, almond butter, organic unsweetened coconut, organic sunflower seeds, organic ground flax, pure vanilla extract, sea salt, cinnamon. Contains almonds.
+ingredientsSource: "michelesgranola.com — https://michelesgranola.com/products/almond-butter"
 nutrition:
   servingSize: 28
   calories: 140

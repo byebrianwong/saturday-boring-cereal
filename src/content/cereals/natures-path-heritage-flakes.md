@@ -14,6 +14,8 @@ imageCredit: "Image: Nature's Path (naturespath.com)"
 formFactors: [flakes]
 proteinSources: []
 attributes: [organic, low-sugar]
+ingredients: "Kamut khorasan wheat flour*, wheat bran*, whole wheat meal*, cane sugar*, whole oat flour*, spelt flour*, barley flour*, whole millet*, barley malt extract*, quinoa*, sea salt, honey*."
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0058449770206"
 nutrition:
   servingSize: 40
   calories: 160
