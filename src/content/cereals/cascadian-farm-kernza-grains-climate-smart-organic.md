@@ -12,6 +12,8 @@ labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://wo
 formFactors: [flakes]
 proteinSources: []
 attributes: [organic]
+ingredients: "Whole Grain Wheat*, Kernza Wheat*, Cane Sugar*, Rice*, Whole Grain Oats*, Sunflower Oil*, Honey*, Molasses*, Crisp Rice*, Sea Salt, Rice Flour*, Natural Flavor*. Vitamin E"
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/00021908123813"
 nutrition:
   servingSize: 56
   calories: 230

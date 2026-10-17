@@ -15,6 +15,8 @@ imageCredit: "Image: Quaker Oats / PepsiCo (quakeroats.com)"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [high-protein]
+ingredients: Whole grain oats, whole grain wheat, sugar, canola oil, milk protein isolate, whey protein, molasses, almonds, salt, natural flavor, sunflower oil, tocopherols. CONTAINS ALMOND, WHEAT, MILK
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0030000576106"
 nutrition:
   servingSize: 62
   calories: 250

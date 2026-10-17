@@ -15,6 +15,8 @@ labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://wo
 formFactors: [os]
 proteinSources: []
 attributes: []
+ingredients: Whole Grain Oats, Sugar, Pea Protein, Corn Starch, Strawberry Puree, Apple Puree Concentrate, Corn Syrup, Canola Oil, Sunflower Oil, Salt, Tripotassium Phosphate, Vegetable Juice Color, Fruit Juice Color, Natural Flavor, Vitamin E (mixed tocopherols), Calcium Carbonate, Vitamin C (sodium ascorbate), Iron, Zinc, Niacinamide, Vitamin B6 (pyridoxine hydrochloride), Vitamin B1 (thiamin mononitrate), Vitamin A (palmitate), Vitamin B2 (riboflavin), Folic Acid, Vitamin B12, Vitamin D3.
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0016000226357"
 nutrition:
   servingSize: 37
   calories: 150

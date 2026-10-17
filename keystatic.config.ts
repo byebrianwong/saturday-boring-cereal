@@ -88,6 +88,15 @@ export default config({
             'Tick when no flat, straight-on package front exists for this product. Keeps the emoji placeholder and stops `npm run enrich` adding an angled one.',
           defaultValue: false,
         }),
+        ingredients: fields.text({
+          label: 'Ingredients',
+          description: 'Copied as the box prints it, on one line. Leave blank if not found; the page says “not listed”.',
+          multiline: true,
+        }),
+        ingredientsSource: fields.text({
+          label: 'Ingredients source',
+          description: 'Where the list was copied from, with a link, e.g. “naturespath.com — https://…”.',
+        }),
         formFactors: fields.multiselect({ label: 'Form factors', options: formFactorOptions }),
         proteinSources: fields.multiselect({ label: 'Protein sources', options: proteinSourceOptions }),
         attributes: fields.multiselect({ label: 'Attributes', options: attributeOptions }),

@@ -15,6 +15,8 @@ labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://wo
 formFactors: [flakes, clusters]
 proteinSources: []
 attributes: [organic, high-fiber]
+ingredients: "WHOLE GRAIN WHEAT*, WHOLE GRAIN OATS*, CANE SUGAR*, RICE*, WHEAT BRAN*, OAT FIBER*, SUNFLOWER OIL*, HONEY*, SEA SALT, INVERT CANE SYRUP*, MOLASSES*, VANILLA EXTRACT*. VITAMIN E (MIXED TOCOPHEROLS) ADDED TO PRESERVE FRESHNESS."
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0021908455525"
 nutrition:
   servingSize: 64
   calories: 220

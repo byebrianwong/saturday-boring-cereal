@@ -11,6 +11,8 @@ labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://wo
 formFactors: [flakes]
 proteinSources: []
 attributes: [organic]
+ingredients: "Kamut khorasan wheat flour*, rolled oats*, wheat bran*, cane sugar*, whole wheat meal*, whole oat flour*, soy oil*, spelt (wheat) flakes*, spelt (wheat) flour*, barley flour*, whole millet*, rolled kamut khorasan wheat*, inulin*, barley malt extract*, sea salt, quinoa*, honey*, rice starch*, molasses*, cinnamon*, natural vanilla flavor, tocopherols (vitamin e)."
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0058449771753"
 nutrition:
   servingSize: 55
   calories: 230

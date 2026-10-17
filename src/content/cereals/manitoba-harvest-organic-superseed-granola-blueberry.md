@@ -12,6 +12,8 @@ labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://wo
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [organic, high-protein]
+ingredients: "Whole grain rolled oats*, shelled hemp seeds*, tapioca syrup*, raw cane sugar invert syrup*, pumpkin seeds*, pea protein crisps* (pea protein*, rice starch*), brown rice crisps*, extra virgin coconut oil*, dried blueberries* (blueberries*, cane sugar*, sunflower oil*), cane sugar*, hemp protein powder* (hemp protein concentrate*, natural plant extracts), coconut flakes*, oat flour*, pea protein concentrate*, natural flavor, chia seeds*, puffed quinoa*, salt."
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/697658692239"
 nutrition:
   servingSize: 60
   calories: 280

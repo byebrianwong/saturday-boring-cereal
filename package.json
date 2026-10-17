@@ -17,6 +17,7 @@
     "rate": "node scripts/rate.mjs",
     "image": "node scripts/image.mjs",
     "label": "node scripts/label.mjs",
+    "ingredients": "node scripts/ingredients.mjs",
     "enrich": "node scripts/enrich.mjs",
     "enrich:apply": "node scripts/enrich.mjs --apply"
   },

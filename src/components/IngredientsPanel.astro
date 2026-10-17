@@ -1,0 +1,55 @@
+---
+interface Props {
+  /** The ingredient list as the box prints it. Missing means nobody has found it yet. */
+  ingredients?: string;
+  /** Where the list was copied from, e.g. "Open Food Facts contributors, CC-BY-SA — <url>". */
+  source?: string;
+}
+
+const { ingredients, source } = Astro.props;
+---
+
+<div class="ing">
+  <p class="text">
+    <strong>Ingredients:</strong>
+    {ingredients ? ingredients : <span class="missing">not listed. Nothing has been invented to fill it.</span>}
+  </p>
+  {ingredients && source && <p class="foot">Copied from: {source}</p>}
+</div>
+
+<style>
+  /* Printed the way a box prints it: a plain white block under the
+     Nutrition Facts panel, small black type, no styling on the list itself. */
+  .ing {
+    background: #fff;
+    color: #000;
+    font-family: var(--fine);
+    border: 2px solid #000;
+    padding: 12px 16px;
+  }
+
+  .text {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  strong {
+    font-weight: 900;
+    text-transform: uppercase;
+  }
+
+  .missing {
+    font-style: italic;
+    color: #555;
+  }
+
+  .foot {
+    font-size: 10px;
+    line-height: 1.4;
+    color: #444;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px solid #000;
+    overflow-wrap: anywhere;
+  }
+</style>

@@ -14,6 +14,8 @@ imageCredit: "Photo: Open Food Facts contributors, CC-BY-SA; product © WK Kello
 formFactors: [flakes]
 proteinSources: []
 attributes: [high-protein, low-sugar]
+ingredients: "Soy protein isolate*, pea protein isolate*, expeller pressed canola oil, allulose syrup, lentil protein*, modified food starch. Contains 2% or less of oat fiber, natural flavor, cinnamon, sucralose, monk fruit extract, salt, BHT for freshness."
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0038000254505"
 nutrition:
   servingSize: 39
   calories: 160

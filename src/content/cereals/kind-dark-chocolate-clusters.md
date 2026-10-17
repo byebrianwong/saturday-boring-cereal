@@ -10,6 +10,8 @@ labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://wo
 formFactors: [clusters]
 proteinSources: []
 attributes: [high-protein]
+ingredients: Oats, Tapioca Syrup, Soy Protein Isolate, Semi-Sweet Chocolate (Sugar, Unsweetened Chocolate, Cocoa Butter, Soy Lecithin, Vanilla Extract), Cane Sugar, Canola Oil, Millet, Cocoa Powder, Brown Rice, Buckwheat, Natural Flavor, Amaranth, Quinoa, Sea Salt, Brown Rice Syrup, Vitamin E (Tocopherols To Maintain Freshness). Contains soy.
+ingredientsSource: "Stop & Shop product page — https://stopandshop.com/groceries/product/kind-healthy-grains-dark-chocolate-clusters-protein-granola-11-oz-bag/221778"
 nutrition:
   servingSize: 65
   calories: 240

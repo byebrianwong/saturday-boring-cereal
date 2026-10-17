@@ -15,6 +15,8 @@ imageCredit: "Image: grandyorganics.com"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: []
+ingredients: "Organic Certified Gluten Free Oats*, Organic Cane Sugar, Organic Dark Chocolate (Organic Cane Sugar, Organic Chocolate Liquor, Organic Cocoa Butter, Organic Soy Lecithin, Vanilla Extract), Organic High Oleic Sunflower Oil, Organic Peanuts, Organic Soluble Tapioca Fiber Syrup, Organic Peanut Butter, Organic Peanut Flour, Organic Oat Syrup Solids, Organic Tapioca Starch, Vitamin E. *Regenerative Organic Certified®. Contains: Peanuts, Soy."
+ingredientsSource: "grandyorganics.com — https://grandyorganics.com/products/peanut-butter-dark-chocolate-granola"
 nutrition:
   servingSize: 28
   servingDescription: 0.25 cup (28 g)

@@ -14,6 +14,8 @@ imageCredit: "Image: Nature's Path (naturespath.com)"
 formFactors: [flakes, clusters]
 proteinSources: []
 attributes: [organic]
+ingredients: "Whole wheat meal*, rolled oats*, cane sugar*, wheat bran*, pecans*, flax meal*, soy oil*, brown rice flour*, oat bran*, barley malt extract*, sea salt, maple syrup*, coconut*, flax seeds*, natural maple flavor, oat syrup solids* (oat syrup solids*, tocopherols [vitamin e]), tocopherols (vitamin e), molasses*, cinnamon*."
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0058449771432"
 nutrition:
   servingSize: 60
   calories: 250

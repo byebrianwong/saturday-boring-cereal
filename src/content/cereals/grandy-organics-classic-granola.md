@@ -14,6 +14,8 @@ imageCredit: "Image: Grandy Organics (grandyorganics.com)"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [organic]
+ingredients: Organic Whole Grain Oats, Organic Honey, Organic High Oleic Sunflower Oil, Organic Sunflower Seeds, Organic Sesame Seeds, Organic Pumpkin Seeds, Organic Unsweetened Coconut, Organic Walnuts, Organic Cashews, Organic Wheat Bran, Vitamin E, and Sea Salt.
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0648960015018"
 nutrition:
   servingSize: 56
   calories: 270

@@ -127,6 +127,18 @@ eq('a blank nutrition value stays an explicit null, never removed',
 }
 
 {
+  // Both keys are absent and both go just above `nutrition:`. Each insert
+  // moves that block down a line, and the second must still land after the first.
+  const out = updateFrontmatter(FIXTURE, {
+    top: { ingredients: 'Oats, sugar.', ingredientsSource: 'the box' },
+  }).split('\n');
+  const at = (k) => out.findIndex((l) => l.startsWith(`${k}:`));
+  eq('two keys inserted above the nutrition block keep schema order',
+    JSON.stringify([at('attributes'), at('ingredients'), at('ingredientsSource'), at('nutrition')].map((i) => i - at('attributes'))),
+    '[0,1,2,3]');
+}
+
+{
   const out = updateFrontmatter(FIXTURE, { top: { rating: 9 }, nutrition: { protein: 6 } });
   eq('the review body survives an edit', out.endsWith('\nA review body. It must survive untouched.\n'), true);
   eq('an unmodelled key survives an edit', lineOf(out, 'purchaseLocation'), 'purchaseLocation: Whole Foods');

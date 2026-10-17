@@ -14,6 +14,8 @@ imageCredit: "Image: Trader Joe's (traderjoes.com)"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: []
+ingredients: Rolled oats, maple syrup, brown sugar, extra virgin olive oil, sweetened dried tart Montmorency cherries (cherries, sugar), pumpkin seeds, coconut flakes, pistachios, pecans, sea salt. Contains coconut, pecan, pistachio.
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/00810005"
 nutrition:
   servingSize: 60
   calories: null

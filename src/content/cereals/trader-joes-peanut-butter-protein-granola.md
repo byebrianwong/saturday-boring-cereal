@@ -11,6 +11,8 @@ labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://wo
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [high-protein]
+ingredients: ROLLED OATS, PEANUTS, PEANUT BUTTER, CANE SUGAR, PEA PROTEIN CRISPS (PEA PROTEIN, RICE FLOUR), BROWN RICE SYRUP, WATER, CANOLA OIL, PEA PROTEIN, OAT SYRUP SOLIDS, NATURAL FLAVORS, SEA SALT, MIXED TOCOPHEROLS (VITAMIN E FOR FRESHNESS). CONTAINS PEANUTS.
+ingredientsSource: "traderjoes.com — https://www.traderjoes.com/home/products/pdp/peanut-butter-protein-granola-059583"
 nutrition:
   servingSize: 60
   calories: 280
