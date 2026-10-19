@@ -239,6 +239,11 @@ export function cerealMarkdown({
   lines.push(`formFactors: [${formFactors.join(', ')}]`);
   lines.push(`proteinSources: [${proteinSources.join(', ')}]`);
   lines.push(`attributes: [${attributes.join(', ')}]`);
+  const ing = ingredientsFrom(picked);
+  if (ing) {
+    lines.push(`ingredients: ${yamlQuote(ing.ingredients)}`);
+    lines.push(`ingredientsSource: ${yamlQuote(ing.ingredientsSource)}`);
+  }
   lines.push('nutrition:');
   lines.push(`  servingSize: ${picked.servingSize}`);
   if (picked.servingDescription) lines.push(`  servingDescription: ${yamlQuote(picked.servingDescription)}`);
@@ -248,6 +253,25 @@ export function cerealMarkdown({
   lines.push('---');
   lines.push('');
   return lines.join('\n') + '\n';
+}
+
+// The ingredient list a picked search result carries, with a source line, or
+// null when it has none. Open Food Facts text is typed in by volunteers, so it
+// is credited to them and linked for checking.
+export function ingredientsFrom(picked) {
+  const text = cleanIngredients(picked.ingredients);
+  if (!text) return null;
+  const source = picked.source === 'usda_fdc'
+    ? `USDA FoodData Central — ${picked.url}`
+    : `Open Food Facts contributors, CC-BY-SA — ${picked.url}`;
+  return { ingredients: text, ingredientsSource: source };
+}
+
+// One line, single spaces. The frontmatter stores it on one line, and the
+// page prints it as a paragraph.
+export function cleanIngredients(text) {
+  const t = String(text ?? '').replace(/[_\s]+/g, ' ').trim();
+  return t || null;
 }
 
 // --- images -------------------------------------------------------------------
@@ -290,7 +314,7 @@ const TOP_ORDER = [
   'name', 'brand', 'category', 'rating', 'shortNote', 'dateReviewed', 'dateUpdated',
   'emoji', 'boxColor', 'barcode', 'boxImage', 'imageSource', 'imageCredit',
   'noAutoImage', 'purchaseLocation', 'price', 'formFactors', 'proteinSources',
-  'attributes',
+  'attributes', 'sweeteners', 'ingredients', 'ingredientsSource',
 ];
 
 // Keys that vanish from the file when cleared, rather than being written as
@@ -299,7 +323,8 @@ const TOP_ORDER = [
 // `category` is: a file without it is a cereal, so clearing it means cereal.
 const OPTIONAL_TOP = new Set([
   'category', 'shortNote', 'dateUpdated', 'barcode', 'boxImage', 'imageSource',
-  'imageCredit', 'noAutoImage', 'purchaseLocation', 'price',
+  'imageCredit', 'noAutoImage', 'purchaseLocation', 'price', 'ingredients',
+  'ingredientsSource',
 ]);
 
 const ALWAYS_QUOTED = new Set(['barcode']); // a leading zero must survive YAML
@@ -336,7 +361,7 @@ export function updateFrontmatter(raw, { top = {}, nutrition = {} } = {}) {
   if (!split) throw new Error('file has no frontmatter block');
   let { head, body } = split;
 
-  const nutStart = head.findIndex((l) => /^nutrition:\s*$/.test(l));
+  let nutStart = head.findIndex((l) => /^nutrition:\s*$/.test(l));
   let nutEnd = nutStart === -1 ? -1 : nutStart + 1;
   if (nutStart !== -1) while (nutEnd < head.length && /^\s+\S/.test(head[nutEnd])) nutEnd++;
 
@@ -349,7 +374,7 @@ export function updateFrontmatter(raw, { top = {}, nutrition = {} } = {}) {
     if (value === null && OPTIONAL_TOP.has(key)) {
       if (at !== -1) {
         head.splice(at, 1);
-        if (nutStart !== -1 && at < nutStart) nutEnd--;
+        if (nutStart !== -1 && at < nutStart) { nutStart--; nutEnd--; }
       }
       continue;
     }
@@ -367,7 +392,9 @@ export function updateFrontmatter(raw, { top = {}, nutrition = {} } = {}) {
       if (r !== -1 && r < rank) insertAt = i + 1;
     }
     head.splice(insertAt, 0, line);
-    if (nutStart !== -1 && insertAt <= nutStart) nutEnd++;
+    // Keep both ends of the nutrition block current, or the next insert
+    // stops scanning one line short and lands above this one.
+    if (nutStart !== -1 && insertAt <= nutStart) { nutStart++; nutEnd++; }
   }
 
   // --- nutrition block ---
@@ -449,6 +476,8 @@ function parseScalar(rawValue) {
  *   formFactors?: string[],
  *   proteinSources?: string[],
  *   attributes?: string[],
+ *   ingredients?: string,
+ *   ingredientsSource?: string,
  *   nutrition: Record<string, any>,
  *   body: string,
  * } & Record<string, any>}

@@ -12,6 +12,8 @@ labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://wo
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: [organic, no-added-sugar]
+ingredients: Whole grain oats, date powder, sunflower oil, crisp rice, coconut oil, dried blueberries, rice flour, natural flavor, sea salt, vitamin E (mixed tocopherols).
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0021908133171"
 nutrition:
   servingSize: 52
   calories: 250

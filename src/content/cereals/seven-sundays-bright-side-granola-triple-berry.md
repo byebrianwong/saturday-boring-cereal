@@ -14,6 +14,8 @@ imageCredit: "Image: Seven Sundays (sevensundays.com)"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: []
+ingredients: gluten free oats, upcycled oat protein, dates, maple syrup, coconut oil, sorghum flakes, sunflower seeds, almonds, pumpkin seeds, pecans, blueberries, chia seeds, flax seeds, strawberries, raspberries, sea salt, lemon extract
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0850053830259"
 nutrition:
   servingSize: 40
   calories: 180

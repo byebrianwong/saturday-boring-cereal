@@ -93,6 +93,11 @@ const cereals = defineCollection({
     labelImage: z.string().optional(),
     labelCredit: z.string().optional(),
     barcode: z.string().optional(),
+    // The ingredient list as the box prints it, and where it was copied from.
+    // Unset means nobody has found it yet: the page says "not listed" rather
+    // than guessing. Set with `npm run ingredients`.
+    ingredients: z.string().optional(),
+    ingredientsSource: z.string().optional(),
     purchaseLocation: z.string().optional(),
     price: z.number().optional(),
     formFactors: z.array(z.enum(FORM_FACTORS)).default([]),

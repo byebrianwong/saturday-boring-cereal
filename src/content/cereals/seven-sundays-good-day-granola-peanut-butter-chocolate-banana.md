@@ -15,6 +15,8 @@ imageCredit: "Image: sevensundays.com"
 formFactors: [granola]
 proteinSources: [nut-seed]
 attributes: []
+ingredients: "gluten free oats, upcycled oat protein, dates, maple syrup, peanut butter, sorghum flakes, sunflower seeds, almonds, pecans, pumpkin seeds, coconut oil, dark chocolate (coconut sugar, chocolate liquor, cocoa butter), bananas, chia seeds, flax seeds, sea salt, vanilla extract. Contains: Peanuts, Tree nuts (almonds, pecans)."
+ingredientsSource: "sevensundays.com — https://sevensundays.com/products/gluten-free-granola-good-day"
 nutrition:
   servingSize: 40
   servingDescription: 0.5 cup (40 g)

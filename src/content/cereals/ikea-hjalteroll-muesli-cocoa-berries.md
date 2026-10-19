@@ -12,6 +12,8 @@ imageCredit: "Image: IKEA (ikea.com)"
 formFactors: []
 proteinSources: []
 attributes: [high-fiber]
+ingredients: whole grain oat flakes, oligofructose syrup, whole grain spelt flakes, sunflower oil (sunflower oil, tocopherols), coconut chips, cocoa powder, sugars (concentrated apple juice), freeze-dried strawberries, freeze-dried raspberries, salt, palm kernel oil
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/7315121983778"
 nutrition:
   servingSize: 97
   calories: 440
