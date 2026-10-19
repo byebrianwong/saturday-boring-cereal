@@ -27,20 +27,25 @@ interface Props {
 const { image, emoji, boxColor, alt, size = 'md', note, lazy = true } = Astro.props;
 ---
 
-<span class={`wrapper-shot ${size}`} style={`--bc: ${boxColor}`}>
+<span class={`wrapper-shot ws-${size}`} style={`--bc: ${boxColor}`}>
   {
     image ? (
-      <img src={u(image)} alt={alt} loading={lazy ? 'lazy' : undefined} />
+      <img class="ws-photo" src={u(image)} alt={alt} loading={lazy ? 'lazy' : undefined} />
     ) : (
       <>
-        <span class="em" aria-hidden="true">{emoji}</span>
-        {note && <span class="note">{note}</span>}
+        <span class="ws-em" aria-hidden="true">{emoji}</span>
+        {note && <span class="ws-note">{note}</span>}
       </>
     )
   }
 </span>
 
 <style>
+  /* Every selector here starts with .wrapper-shot or a ws- class. Storybook's
+     Astro framework adds component CSS without Astro's scoping, so a bare
+     `.em` or `img` here would restyle other components in the same story
+     (it blew MiniBox's emoji up to fill the card). */
+
   /* Chrome, like the 3D box it stands in for: hard border, offset shadow and
      a slight tilt, as if the bar was dropped on the counter. */
   .wrapper-shot {
@@ -61,23 +66,23 @@ const { image, emoji, boxColor, alt, size = 'md', note, lazy = true } = Astro.pr
     container-type: inline-size;
   }
 
-  .wrapper-shot:has(img) { padding: 0; background: var(--white); }
+  .wrapper-shot:has(.ws-photo) { padding: 0; background: var(--white); }
 
-  img {
+  .wrapper-shot .ws-photo {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
   }
 
-  .em {
+  .wrapper-shot .ws-em {
     font-size: 22cqw;
     line-height: 1;
     filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.3));
   }
 
   /* Data, so it stays small and plain. */
-  .note {
+  .wrapper-shot .ws-note {
     font-family: var(--fine);
     font-size: 9px;
     letter-spacing: 0.2em;
@@ -86,7 +91,7 @@ const { image, emoji, boxColor, alt, size = 'md', note, lazy = true } = Astro.pr
     color: rgba(255, 255, 255, 0.92);
   }
 
-  .xs {
+  .wrapper-shot.ws-xs {
     width: 100%;
     border-width: 1.5px;
     box-shadow: none;
@@ -94,16 +99,16 @@ const { image, emoji, boxColor, alt, size = 'md', note, lazy = true } = Astro.pr
     padding: 0;
   }
 
-  .xs .note { display: none; }
+  .wrapper-shot.ws-xs .ws-note { display: none; }
 
-  .sm {
+  .wrapper-shot.ws-sm {
     border-width: 2px;
     box-shadow: 3px 3px 0 var(--ink);
   }
 
-  .sm .note { display: none; }
+  .wrapper-shot.ws-sm .ws-note { display: none; }
 
-  .lg {
+  .wrapper-shot.ws-lg {
     width: 100%;
     border-width: 4px;
     box-shadow: 8px 8px 0 var(--ink);
@@ -112,9 +117,9 @@ const { image, emoji, boxColor, alt, size = 'md', note, lazy = true } = Astro.pr
 
   /* On the product's own page the placeholder carries the name, like the
      printing on a real wrapper. */
-  .lg .em { font-size: 15cqw; }
+  .wrapper-shot.ws-lg .ws-em { font-size: 15cqw; }
 
-  .lg .note {
+  .wrapper-shot.ws-lg .ws-note {
     font-family: var(--shout);
     font-size: 22px;
     letter-spacing: 0.02em;
