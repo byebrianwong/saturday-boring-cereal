@@ -1,9 +1,10 @@
 ---
 name: Peanut Butter Dark Chocolate Granola
 brand: Grandy Organics
-rating: 9
+rating: 9.5
 shortNote: Tastes more like a snack than a granola, tasty dark chocolate
 dateReviewed: 2026-09-20
+dateUpdated: 2026-10-12
 emoji: '🥣'
 boxColor: "#c98d4e"
 barcode: '0648960035207'
