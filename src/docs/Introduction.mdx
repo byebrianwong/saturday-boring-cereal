@@ -41,14 +41,21 @@ macros inside it are small grey text.
    come from `src/lib/score.ts`. Nothing about scoring is stored in the cereal
    files, so changing a target there re-grades the whole catalog.
 
+Bars and snacks live in the same folder, marked `category: bar` or
+`category: snack` (a file without the line is a cereal). They get the same
+score, but every ranking — the Tiers, the shelf records, the position numbers
+on The Aisle — counts only within one category. A bar's photo is a wide 5:2
+wrapper, drawn by [WrapperShot](?path=/docs/cards-wrappershot--docs) inside
+the same frames the cereal boxes use.
+
 ## Where each component appears
 
 | Page | File in `src/pages/` | Components |
 | --- | --- | --- |
 | Every page | (`src/layouts/Layout.astro`) | SiteHeader, SiteFooter |
 | Home, `/` | `index.astro` | ChampCard, RankCard, BreakfastStrip |
-| The Aisle, `/cereals/` | `cereals/index.astro` | PageHeader, AisleFilters |
-| One cereal, `/cereals/<slug>/` | `cereals/[slug].astro` | ScorePanel (which contains TierStamp), NutritionPanel |
+| The Aisle, `/cereals/` | `cereals/index.astro` | PageHeader, CategorySwitch (once bars or snacks are in stock), AisleFilters |
+| One product, `/cereals/<slug>/`, `/bars/<slug>/` or `/snacks/<slug>/` | `[aisle]/[slug].astro` | ScorePanel (which contains TierStamp), NutritionPanel |
 | Price Check, `/compare/` | `compare.astro` | none |
 | Store Policy, `/about/` | `about.astro` | PageHeader |
 | One tag, `/tags/<tag>/` | `tags/[tag].astro` | PageHeader, MiniBox, PriceTag |

@@ -4,13 +4,19 @@ import Layout from '../../layouts/Layout.astro';
 import NutritionPanel from '../../components/NutritionPanel.astro';
 import IngredientsPanel from '../../components/IngredientsPanel.astro';
 import ScorePanel from '../../components/ScorePanel.astro';
-import { label } from '../../lib/taxonomy';
+import WrapperShot from '../../components/WrapperShot.astro';
+import { CATEGORY_INFO, inWrapper, label } from '../../lib/taxonomy';
 import { rating as fmtRating, shortDate } from '../../lib/format';
 import { u } from '../../lib/url';
 
+// One page per product, under its category's path: /cereals/<slug>/,
+// /bars/<slug>/ or /snacks/<slug>/.
 export async function getStaticPaths() {
   const cereals = await getCollection('cereals');
-  return cereals.map((c) => ({ params: { slug: c.id }, props: { cereal: c } }));
+  return cereals.map((c) => ({
+    params: { aisle: CATEGORY_INFO[c.data.category].path, slug: c.id },
+    props: { cereal: c },
+  }));
 }
 
 const { cereal } = Astro.props;
@@ -29,7 +35,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
 >
 
   <div class="crumb wrap">
-    <a href={u('/cereals/')}>← BACK TO THE AISLE</a>
+    <a href={u(data.category === 'cereal' ? '/cereals/' : `/cereals/#c=${data.category}`)}>← BACK TO THE AISLE</a>
   </div>
 
   <header class="title wrap">
@@ -39,24 +45,38 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
 
   <div class="product wrap">
     <div class="left">
-      <div class="scene">
-        <div class="box3d" style={`--bc: ${data.boxColor}`}>
-          <div class:list={['face front', { hasphoto: data.boxImage }]}>
-            {
-              data.boxImage ? (
-                <img class="photo" src={u(data.boxImage)} alt={`${data.brand} ${data.name}`} />
-              ) : (
-                <>
-                  <div class="em">{data.emoji}</div>
-                  <div class="prodbrand">{data.brand}</div>
-                  <div class="prodname">{data.name}</div>
-                </>
-              )
-            }
-          </div>
-          <div class="face side"></div>
+      {inWrapper(cereal) ? (
+        <div class="scene flat">
+          <WrapperShot
+            image={data.boxImage}
+            emoji={data.emoji}
+            boxColor={data.boxColor}
+            alt={`${data.brand} ${data.name}`}
+            size="lg"
+            note={data.name}
+            lazy={false}
+          />
         </div>
-      </div>
+      ) : (
+        <div class="scene">
+          <div class="box3d" style={`--bc: ${data.boxColor}`}>
+            <div class:list={['face front', { hasphoto: data.boxImage }]}>
+              {
+                data.boxImage ? (
+                  <img class="photo" src={u(data.boxImage)} alt={`${data.brand} ${data.name}`} />
+                ) : (
+                  <>
+                    <div class="em">{data.emoji}</div>
+                    <div class="prodbrand">{data.brand}</div>
+                    <div class="prodname">{data.name}</div>
+                  </>
+                )
+              }
+            </div>
+            <div class="face side"></div>
+          </div>
+        </div>
+      )}
       <div class="bigtag ptag">
         {
           data.rating == null ? (
@@ -188,6 +208,14 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
     display: flex;
     justify-content: center;
     padding-top: 20px;
+  }
+
+  /* A bar lies flat in its wrapper instead of standing as a box. The extra
+     room keeps the tilted wrapper's corners and shadow clear of the tag. */
+  .scene.flat {
+    padding: 56px 18px 34px;
+    max-width: 440px;
+    margin: 0 auto;
   }
 
   .box3d {

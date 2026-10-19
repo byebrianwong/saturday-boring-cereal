@@ -1,6 +1,8 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { u } from '../lib/url';
+import { inWrapper, productPath } from '../lib/taxonomy';
+import WrapperShot from './WrapperShot.astro';
 import { scoreCereal, overallOutOfTen, tierColor } from '../lib/score';
 import { cardMacros } from '../lib/macros';
 
@@ -21,7 +23,7 @@ const macros = cardMacros(cereal);
 const { overall, tier } = scoreCereal(cereal);
 ---
 
-<a class="champ" href={u(`/cereals/${cereal.id}/`)}>
+<a class="champ" href={u(productPath(cereal))}>
   <span class="banner">★ #1 in the aisle · Grand prize box ★</span>
 
   <span class:list={['score starburst', tier == null ? 'unrated' : `tier-${tierColor(tier)}`]}>
@@ -32,7 +34,16 @@ const { overall, tier } = scoreCereal(cereal);
 
   <span class="champ-body">
     <span class="box">
-      {d.boxImage ? (
+      {inWrapper(cereal) ? (
+        <WrapperShot
+          image={d.boxImage}
+          emoji={d.emoji}
+          boxColor={d.boxColor}
+          alt={`${d.brand} ${d.name} wrapper`}
+          note="No image on file"
+          lazy={false}
+        />
+      ) : d.boxImage ? (
         <img src={u(d.boxImage)} alt={`${d.brand} ${d.name} box`} />
       ) : (
         <span class="fallback" style={`background:${d.boxColor}`}>
@@ -52,7 +63,7 @@ const { overall, tier } = scoreCereal(cereal);
       )}
       <span class="macros">
         {macros.map((m) => (
-          <span class={`t-${m.tier}`} title={`${m.verdict} for a cereal`}>
+          <span class={`t-${m.tier}`} title={`${m.verdict}, by the Tier score's cut-offs`}>
             <span class="mv">{m.value}</span>
             <span class="mk">{m.label}</span>
             <span class="sr-only">({m.verdict})</span>

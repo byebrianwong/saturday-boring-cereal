@@ -49,8 +49,8 @@ export function splitBrandName(picked) {
   if (brand) {
     name = name.replace(new RegExp(`^${brand.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s,-]+`, 'i'), '').trim();
   }
-  // Every product here is a cereal, and the catalog names read "Peanut Butter",
-  // not "Peanut Butter Cereal" — drop the redundant tail unless it's the name.
+  // Cereal names in the catalog read "Peanut Butter", not "Peanut Butter
+  // Cereal" — drop the redundant tail unless it's the name.
   name = name.replace(/\s+cereal\s*$/i, '').trim() || name;
   name = name.replace(/\s*,\s*$/, '').replace(/\s+/g, ' ').trim() || picked.matchedName;
 
@@ -60,21 +60,60 @@ export function splitBrandName(picked) {
 // --- tag inference ------------------------------------------------------------
 // Best-effort only. Callers surface the result so a wrong guess is visible and
 // editable rather than silently baked into the file.
-export function inferTags(picked, brand, name) {
-  const { FORM_FACTORS, PROTEIN_SOURCES, ATTRIBUTES } = readTaxonomy();
-  const keep = (vals, allowed) => (allowed ? vals.filter((v) => allowed.includes(v)) : vals);
-  const haystack = `${brand} ${name} ${picked.ingredients || ''} ${(picked.labels || []).join(' ')}`.toLowerCase();
-  const hasLabel = (frag) => (picked.labels || []).some((l) => l.includes(frag));
+// Cereal, bar or snack. The product's own name decides first, because "bar"
+// in a name is never wrong. Then the database's shelf placement (Open Food
+// Facts tags like en:protein-bars, or USDA's "Snack, Energy & Granola Bars").
+// Puffs and crisps are cereal forms too, so they only mark a snack when the
+// database says snack. Anything unclear is a cereal: it's a cereal site.
+export function inferCategory(picked, brand, name) {
+  const title = `${brand} ${name}`.toLowerCase();
+  const shelf = (picked.categories || []).join(' ').toLowerCase();
+  if (/\bbars?\b/.test(title)) return 'bar';
+  if (/\bcereal/.test(title)) return 'cereal';
+  if (/\b(chips?|bites|cookies?|jerky|crackers?|meat sticks?|pretzels?|popcorn)\b/.test(title)) return 'snack';
+  if (/\bbars?\b/.test(shelf)) return 'bar';
+  if (/cereal|muesli|granola/.test(shelf)) return 'cereal';
+  if (/snack|chips|crisps|cookie|biscuit|cracker|jerky|meat/.test(shelf)) return 'snack';
+  return 'cereal';
+}
 
-  const formMap = {
+// Form-factor guesses per category. Cereal forms look at the ingredients too
+// (an "oat" cereal says so there); bar and snack forms read the name only,
+// because their ingredient lists name chocolate chips, nuts and fruit that
+// don't make the product a chip, nut bar or fruit bar.
+const FORM_GUESSES = {
+  cereal: {
     granola: /granola/, flakes: /flake/, clusters: /cluster/, puffs: /puff/,
     squares: /square/, shredded: /shredded/, biscuits: /biscuit/, muesli: /muesli/,
     oats: /\boat(meal|s)?\b/, crisps: /crisp/, os: /\b(o's|os|cheerio|loops|rings)\b/,
-  };
-  const formFactors = keep(
-    Object.entries(formMap).filter(([, re]) => re.test(haystack)).map(([k]) => k),
-    FORM_FACTORS
-  );
+  },
+  bar: {
+    'protein-bar': /protein/, 'granola-bar': /granola|\boats?\b|cereal/,
+    'nut-bar': /\bnuts?\b|almond|peanut|cashew|pecan|walnut/, 'fruit-bar': /fruit|\bdates?\b/,
+  },
+  snack: {
+    chips: /\bchips?\b/, puffs: /puff/, crisps: /crisp/, bites: /\bbites?\b/,
+    cookies: /cookie/, jerky: /jerky|meat stick/, crackers: /cracker/,
+  },
+};
+
+// Pass `category` to skip the guess (a --category flag, or the Stock Room's
+// picker); the form factors are then guessed for that category.
+export function inferTags(picked, brand, name, { category: chosen } = {}) {
+  const { FORMS_BY_CATEGORY, PROTEIN_SOURCES, ATTRIBUTES } = readTaxonomy();
+  const keep = (vals, allowed) => (allowed ? vals.filter((v) => allowed.includes(v)) : vals);
+  const haystack = `${brand} ${name} ${picked.ingredients || ''} ${(picked.labels || []).join(' ')}`.toLowerCase();
+  const title = `${brand} ${name}`.toLowerCase();
+  const hasLabel = (frag) => (picked.labels || []).some((l) => l.includes(frag));
+
+  const category = chosen || inferCategory(picked, brand, name);
+  const formText = category === 'cereal' ? haystack : title;
+  const guessed = Object.entries(FORM_GUESSES[category]).filter(([, re]) => re.test(formText)).map(([k]) => k);
+  // A bar with 10 g of protein or more is a protein bar whatever it's called.
+  if (category === 'bar' && picked.protein != null && picked.protein >= 10 && !guessed.includes('protein-bar')) {
+    guessed.unshift('protein-bar');
+  }
+  const formFactors = keep(guessed, FORMS_BY_CATEGORY?.[category] ?? null);
 
   const sources = [];
   if (/pea protein/.test(haystack)) sources.push('pea-protein');
@@ -96,7 +135,7 @@ export function inferTags(picked, brand, name) {
   if (/\bketo\b/.test(haystack)) attrs.push('keto');
   const attributes = keep([...new Set(attrs)], ATTRIBUTES);
 
-  return { formFactors, proteinSources, attributes };
+  return { category, formFactors, proteinSources, attributes };
 }
 
 // --- file composition ---------------------------------------------------------
@@ -153,8 +192,9 @@ export function sanitize(picked) {
 }
 
 // Compose the markdown. Key order matches the existing catalog:
-// name, brand, rating, shortNote, dates, emoji, boxColor, barcode, image keys,
-// tags, then the nutrition block.
+// name, brand, category, rating, shortNote, dates, emoji, boxColor, barcode,
+// image keys, tags, then the nutrition block. `category` is written only for
+// bars and snacks: a file without it is a cereal, like every file before it.
 /**
  * @param {{
  *   brand: string,
@@ -163,6 +203,7 @@ export function sanitize(picked) {
  *   note?: string,
  *   picked: any,
  *   slug: string,
+ *   category?: string,
  *   formFactors?: string[],
  *   proteinSources?: string[],
  *   attributes?: string[],
@@ -175,7 +216,7 @@ export function sanitize(picked) {
  * }} opts
  */
 export function cerealMarkdown({
-  brand, name, rating = null, note = '', picked, slug,
+  brand, name, rating = null, note = '', picked, slug, category = 'cereal',
   formFactors = [], proteinSources = [], attributes = [],
   emoji = '🥣', boxColor = '#c98d4e', hasImage = false, imageSource, imageCredit,
   date = new Date().toISOString().slice(0, 10),
@@ -183,6 +224,7 @@ export function cerealMarkdown({
   const lines = ['---'];
   lines.push(`name: ${yamlQuote(name)}`);
   lines.push(`brand: ${yamlQuote(brand)}`);
+  if (category && category !== 'cereal') lines.push(`category: ${category}`);
   lines.push(`rating: ${rating == null ? 'null' : rating}`);
   if (note) lines.push(`shortNote: ${yamlQuote(note)}`);
   lines.push(`dateReviewed: ${date}`);
@@ -241,14 +283,15 @@ export function offFullSize(url) {
 }
 
 // Fetch and normalize a box photo, preferring the full-size original and
-// falling back to whatever URL was given.
-export async function prepareImage(url, { fit = 'cover' } = {}) {
+// falling back to whatever URL was given. `shape` is 'box' or, for a bar,
+// 'wrapper' (see shapeFor in image-core.mjs).
+export async function prepareImage(url, { fit = 'cover', shape = 'box' } = {}) {
   const tries = [...new Set([offFullSize(url), url])];
   let lastErr;
   for (const candidate of tries) {
     try {
       const input = await loadImage(candidate);
-      const result = await normalizeBoxImage(input, { trim: true, fit });
+      const result = await normalizeBoxImage(input, { trim: true, fit, shape });
       return { ...result, url: candidate };
     } catch (e) {
       lastErr = e;
@@ -268,7 +311,7 @@ export async function prepareImage(url, { fit = 'cover' } = {}) {
 // Frontmatter key order, matching what the catalog already uses. Only consulted
 // when a key is absent and has to be inserted.
 const TOP_ORDER = [
-  'name', 'brand', 'rating', 'shortNote', 'dateReviewed', 'dateUpdated',
+  'name', 'brand', 'category', 'rating', 'shortNote', 'dateReviewed', 'dateUpdated',
   'emoji', 'boxColor', 'barcode', 'boxImage', 'imageSource', 'imageCredit',
   'noAutoImage', 'purchaseLocation', 'price', 'formFactors', 'proteinSources',
   'attributes', 'sweeteners', 'ingredients', 'ingredientsSource',
@@ -277,8 +320,9 @@ const TOP_ORDER = [
 // Keys that vanish from the file when cleared, rather than being written as
 // `null`. `rating` is deliberately NOT one of them: the schema is .nullable()
 // and an unrated cereal is a real state the site renders as "unrated".
+// `category` is: a file without it is a cereal, so clearing it means cereal.
 const OPTIONAL_TOP = new Set([
-  'shortNote', 'dateUpdated', 'barcode', 'boxImage', 'imageSource',
+  'category', 'shortNote', 'dateUpdated', 'barcode', 'boxImage', 'imageSource',
   'imageCredit', 'noAutoImage', 'purchaseLocation', 'price', 'ingredients',
   'ingredientsSource',
 ]);
@@ -415,6 +459,7 @@ function parseScalar(rawValue) {
  * @returns {{
  *   name?: string,
  *   brand?: string,
+ *   category?: string,
  *   rating?: number | null,
  *   shortNote?: string,
  *   dateReviewed?: string,
@@ -474,6 +519,7 @@ export function listCereals() {
         slug,
         brand: c.brand ?? '',
         name: c.name ?? '',
+        category: c.category ?? 'cereal',
         rating: c.rating ?? null,
         emoji: c.emoji ?? '🥣',
         boxImage: c.boxImage ?? null,

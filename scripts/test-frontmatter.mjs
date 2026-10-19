@@ -15,7 +15,7 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CEREALS } from './lib/enrich-core.mjs';
-import { parseCereal, updateFrontmatter } from './lib/compose-core.mjs';
+import { parseCereal, updateFrontmatter, cerealMarkdown, inferCategory, inferTags } from './lib/compose-core.mjs';
 
 let failures = 0;
 const ok = (name) => console.log(`  ✓ ${name}`);
@@ -144,7 +144,44 @@ eq('a blank nutrition value stays an explicit null, never removed',
   eq('an unmodelled key survives an edit', lineOf(out, 'purchaseLocation'), 'purchaseLocation: Whole Foods');
 }
 
-// --- 4. parsing ----------------------------------------------------------------
+// --- 4. categories -------------------------------------------------------------
+// A file without `category` is a cereal, so cereal files never carry the line
+// and clearing it means "back to cereal".
+console.log('\ncategories');
+eq('a category is inserted right after the brand',
+  updateFrontmatter(FIXTURE, { top: { category: 'bar' } }).split('\n')[3], 'category: bar');
+
+eq('clearing the category removes its line',
+  lineOf(updateFrontmatter(updateFrontmatter(FIXTURE, { top: { category: 'bar' } }), { top: { category: null } }), 'category'),
+  undefined);
+
+{
+  const picked = { servingSize: 60, barcode: null };
+  const base = { brand: 'Quest', name: 'Cookies & Cream', picked, slug: 'quest-cookies-and-cream' };
+  eq('a new bar file says so', lineOf(cerealMarkdown({ ...base, category: 'bar' }), 'category'), 'category: bar');
+  eq('a new cereal file has no category line', lineOf(cerealMarkdown(base), 'category'), undefined);
+}
+
+const guess = (brand, name, extra = {}) => inferCategory({ categories: [], ...extra }, brand, name);
+eq('"bar" in the name makes a bar', guess('Quest', 'Protein Bar, Cookies & Cream'), 'bar');
+eq('a cereal name stays cereal', guess('Magic Spoon', 'Peanut Butter'), 'cereal');
+eq('chips in the name make a snack', guess('Quest', 'Protein Chips, Nacho Cheese'), 'snack');
+eq('the database shelf can make a bar',
+  guess('Barebells', 'Salty Peanut', { categories: ['en:snacks', 'en:bars', 'en:protein-bars'] }), 'bar');
+eq('puffs on the cereal shelf stay cereal',
+  guess('Seven Sundays', 'PB Puffs', { categories: ['en:breakfast-cereals'] }), 'cereal');
+eq('puffs on the snack shelf are a snack',
+  guess('Wilde', 'Protein Puffs', { categories: ['en:snacks', 'en:salty-snacks'] }), 'snack');
+
+{
+  const bar = { protein: 21, ingredients: 'milk protein isolate, almonds, chocolate chips', labels: [], categories: [] };
+  const tags = inferTags(bar, 'Quest', 'Cookies & Cream Bar');
+  eq('a bar with 10 g of protein or more is a protein bar', JSON.stringify(tags.formFactors), '["protein-bar"]');
+  eq('bar forms ignore the ingredients (chocolate chips are not a nut bar)', tags.formFactors.includes('nut-bar'), false);
+  eq('a chosen category wins over the guess', inferTags(bar, 'Quest', 'Cookies & Cream Bar', { category: 'snack' }).category, 'snack');
+}
+
+// --- 5. parsing ----------------------------------------------------------------
 console.log('\nparsing');
 const parsed = parseCereal(FIXTURE);
 eq('unquotes a double-quoted string', parsed.brand, "Nature's Path");

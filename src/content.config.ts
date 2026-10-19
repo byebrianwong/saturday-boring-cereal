@@ -1,10 +1,28 @@
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
 
-export const FORM_FACTORS = [
+// What kind of product a file is. The site is cereal-first, and every product
+// is ranked only against others in its own category, so a protein bar never
+// takes a cereal's place. A file with no `category` line is a cereal.
+export const CATEGORIES = ['cereal', 'bar', 'snack'] as const;
+
+// Form factors, one list per category. Puffs and crisps appear in both the
+// cereal and the snack lists, so FORM_FACTORS (every allowed value) repeats
+// them. The repeat is harmless: it only feeds validation.
+// The scripts and the Stock Room read these lists out of this file's text, so
+// keep each one a plain list of quoted strings.
+export const CEREAL_FORMS = [
   'flakes', 'clusters', 'granola', 'puffs', 'squares', 'os',
   'shredded', 'biscuits', 'muesli', 'oats', 'crisps',
 ] as const;
+
+export const BAR_FORMS = ['protein-bar', 'granola-bar', 'nut-bar', 'fruit-bar'] as const;
+
+export const SNACK_FORMS = [
+  'chips', 'puffs', 'crisps', 'bites', 'cookies', 'jerky', 'crackers',
+] as const;
+
+export const FORM_FACTORS = [...CEREAL_FORMS, ...BAR_FORMS, ...SNACK_FORMS] as const;
 
 export const PROTEIN_SOURCES = [
   'pea-protein', 'milk-protein', 'whey', 'soy', 'nut-seed', 'grain-only',
@@ -19,9 +37,11 @@ export const ATTRIBUTES = [
 // near-zero sugar by swapping in a sweetener out of the "least sugar" record.
 // Natural ones (allulose, monk fruit, stevia) count too: the record is for
 // boxes that are low in sugar without tasting sweeter than the label says.
+// Maltitol, sorbitol and xylitol are sugar alcohols that protein bars use a lot.
 export const SWEETENERS = [
   'sucralose', 'aspartame', 'acesulfame-k', 'saccharin',
   'allulose', 'monk-fruit', 'stevia', 'erythritol',
+  'maltitol', 'sorbitol', 'xylitol',
 ] as const;
 
 // Per-serving nutrition. Nullable fields mirror what labels actually omit:
@@ -49,6 +69,7 @@ const cereals = defineCollection({
   schema: z.object({
     name: z.string(),
     brand: z.string(),
+    category: z.enum(CATEGORIES).default('cereal'),
     // Nullable: some Notion entries have no Taste score. UI shows "unrated"
     // rather than inventing a number.
     rating: z.number().min(0).max(10).nullable().default(null),

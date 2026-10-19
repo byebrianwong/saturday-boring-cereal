@@ -1,0 +1,88 @@
+---
+import { CATEGORY_INFO, CATEGORY_ORDER, type Category } from '../lib/taxonomy';
+
+// The row above the Aisle's filters that picks cereal, bars, snacks or
+// everything. Each product is ranked only within its own category, so this
+// row decides what the position numbers count. Categories with nothing in
+// stock are left out, and the Aisle shows no row at all while there is only
+// cereal.
+interface Props {
+  /** How many products each category holds. */
+  counts: Record<Category, number>;
+  active?: Category | 'all';
+}
+
+const { counts, active = 'cereal' } = Astro.props;
+const total = CATEGORY_ORDER.reduce((n, c) => n + counts[c], 0);
+const options = [
+  ...CATEGORY_ORDER.filter((c) => counts[c] > 0).map((c) => ({ key: c, label: CATEGORY_INFO[c].label, n: counts[c] })),
+  { key: 'all', label: 'Everything', n: total },
+];
+---
+
+<div class="cats" role="group" aria-label="Category">
+  {
+    options.map((o) => (
+      <button
+        type="button"
+        data-category={o.key}
+        class:list={{ on: o.key === active }}
+        aria-pressed={o.key === active ? 'true' : 'false'}
+      >
+        {o.label}
+        <small>{o.n}</small>
+      </button>
+    ))
+  }
+</div>
+
+<style>
+  /* Tabs, one size up from the aisle buttons below them, so the row reads as
+     the choice the aisles sit under. */
+  .cats {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 30px 0 0;
+  }
+
+  .cats button {
+    font-family: var(--shout);
+    font-size: 20px;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--white);
+    border: 3px solid var(--ink);
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 9px 20px 7px;
+    cursor: pointer;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .cats button + button { border-left: 0; }
+  .cats button:hover { background: #fff1c4; }
+
+  .cats button.on {
+    background: var(--yellow);
+    box-shadow: inset 3px 3px 0 rgba(27, 18, 6, 0.25);
+  }
+
+  /* The count is data, so it stays small and plain. */
+  .cats small {
+    font-family: var(--fine);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+  }
+
+  /* On a phone the row wraps, and a joined tab that starts a new line would
+     have no left border. Separate tabs there instead. */
+  @media (max-width: 520px) {
+    .cats { gap: 8px; }
+    .cats button { font-size: 16px; padding: 8px 12px 6px; }
+    .cats button + button { border-left: 3px solid var(--ink); }
+  }
+</style>

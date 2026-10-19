@@ -1,5 +1,14 @@
 import { config, fields, collection } from '@keystatic/core';
 
+const categoryOptions = [
+  { label: 'Cereal', value: 'cereal' },
+  { label: 'Bar', value: 'bar' },
+  { label: 'Snack', value: 'snack' },
+];
+
+// Every form factor in one list, cereal first. The site only uses the ones
+// that belong to the product's category (see CEREAL_FORMS, BAR_FORMS and
+// SNACK_FORMS in src/content.config.ts).
 const formFactorOptions = [
   { label: 'Flakes', value: 'flakes' },
   { label: 'Clusters', value: 'clusters' },
@@ -12,6 +21,15 @@ const formFactorOptions = [
   { label: 'Muesli', value: 'muesli' },
   { label: 'Oats', value: 'oats' },
   { label: 'Crisps', value: 'crisps' },
+  { label: 'Protein Bar (bars)', value: 'protein-bar' },
+  { label: 'Granola Bar (bars)', value: 'granola-bar' },
+  { label: 'Nut Bar (bars)', value: 'nut-bar' },
+  { label: 'Fruit Bar (bars)', value: 'fruit-bar' },
+  { label: 'Chips (snacks)', value: 'chips' },
+  { label: 'Bites (snacks)', value: 'bites' },
+  { label: 'Cookies (snacks)', value: 'cookies' },
+  { label: 'Jerky (snacks)', value: 'jerky' },
+  { label: 'Crackers (snacks)', value: 'crackers' },
 ];
 
 const proteinSourceOptions = [
@@ -32,6 +50,9 @@ const sweetenerOptions = [
   { label: 'Monk fruit', value: 'monk-fruit' },
   { label: 'Stevia', value: 'stevia' },
   { label: 'Erythritol', value: 'erythritol' },
+  { label: 'Maltitol', value: 'maltitol' },
+  { label: 'Sorbitol', value: 'sorbitol' },
+  { label: 'Xylitol', value: 'xylitol' },
 ];
 
 const attributeOptions = [
@@ -57,11 +78,11 @@ export default config({
   },
   collections: {
     cereals: collection({
-      label: 'Cereals',
+      label: 'Products',
       slugField: 'name',
       path: 'src/content/cereals/*',
       format: { contentField: 'body' },
-      columns: ['brand', 'rating', 'dateReviewed'],
+      columns: ['brand', 'category', 'rating', 'dateReviewed'],
       schema: {
         name: fields.slug({
           name: {
@@ -74,6 +95,12 @@ export default config({
           label: 'Brand',
           description: 'The company on the box, e.g. “Post” or “General Mills”, not the cereal line.',
           validation: { isRequired: true },
+        }),
+        category: fields.select({
+          label: 'Category',
+          description: 'Cereal, bar or snack. Each is ranked only against its own category.',
+          options: categoryOptions,
+          defaultValue: 'cereal',
         }),
         rating: fields.number({
           label: 'Taste rating (0–10)',

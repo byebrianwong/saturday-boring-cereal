@@ -1,6 +1,8 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { u } from '../lib/url';
+import { inWrapper, productPath } from '../lib/taxonomy';
+import WrapperShot from './WrapperShot.astro';
 
 // One card in the home page's "But wait, there's more — and less" row. It
 // either names the record-holding cereal with its box, or (with `stack`)
@@ -23,7 +25,7 @@ interface Props {
 }
 
 const { label, value, note, caveat, cereal, stack, href } = Astro.props;
-const link = href ?? (cereal ? `/cereals/${cereal.id}/` : undefined);
+const link = href ?? (cereal ? productPath(cereal) : undefined);
 const Tag = link ? 'a' : 'div';
 const boxes = stack ? stack.slice(0, 3) : cereal ? [cereal] : [];
 ---
@@ -33,8 +35,16 @@ const boxes = stack ? stack.slice(0, 3) : cereal ? [cereal] : [];
 
   <span class="boxes">
     {boxes.map((c) => (
-      <span class="box">
-        {c.data.boxImage ? (
+      <span class:list={['box', { wide: inWrapper(c) }]}>
+        {inWrapper(c) ? (
+          <WrapperShot
+            image={c.data.boxImage}
+            emoji={c.data.emoji}
+            boxColor={c.data.boxColor}
+            alt={`${c.data.brand} ${c.data.name} wrapper`}
+            size="sm"
+          />
+        ) : c.data.boxImage ? (
           <img src={u(c.data.boxImage)} alt={`${c.data.brand} ${c.data.name} box`} loading="lazy" />
         ) : (
           <span class="fallback" style={`background:${c.data.boxColor}`}>
@@ -114,6 +124,13 @@ const boxes = stack ? stack.slice(0, 3) : cereal ? [cereal] : [];
   }
 
   .box img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  /* A bar: the frame keeps its box shape and the wrapper lies across it. */
+  .box.wide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
   .fallback {
     width: 100%;

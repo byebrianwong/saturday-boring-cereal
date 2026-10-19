@@ -1,28 +1,49 @@
 ---
-import { AISLE_FILTERS } from '../lib/taxonomy';
+import { AISLE_FILTERS, EVERYTHING_FILTERS, label, type Category } from '../lib/taxonomy';
 import { u } from '../lib/url';
 
 interface Props {
   /** 'links' renders anchors to the explorer; 'buttons' renders client-side filter buttons. */
   mode?: 'links' | 'buttons';
   active?: string;
+  /** Whose filters to show. 'all' is the short row used when every category is on the shelf. */
+  category?: Category | 'all';
+  /** Rendered but hidden, for the explorer's other categories. */
+  hidden?: boolean;
+  /** Keep only these filter keys, e.g. the ones some product in stock carries. */
+  only?: string[];
 }
 
-const { mode = 'links', active = 'all' } = Astro.props;
+const { mode = 'links', active = 'all', category = 'cereal', hidden = false, only } = Astro.props;
+const all = category === 'all' ? EVERYTHING_FILTERS : AISLE_FILTERS[category];
+const filters = only ? all.filter((k) => only.includes(k)) : all;
+
+// Explorer links carry the category in the hash next to the filter. Cereal is
+// the explorer's default, so a cereal link leaves it out: /cereals/#f=granola.
+function href(key: string): string {
+  const parts = [];
+  if (category !== 'cereal') parts.push(`c=${category}`);
+  if (key !== 'all') parts.push(`f=${key}`);
+  return u(parts.length ? `/cereals/#${parts.join('&')}` : '/cereals/');
+}
 ---
 
-<div class="aisles" data-filter-bar={mode === 'buttons' ? '' : undefined}>
+<div
+  class="aisles"
+  data-filter-bar={mode === 'buttons' ? category : undefined}
+  hidden={hidden}
+>
   {
-    AISLE_FILTERS.map((f) =>
+    filters.map((key, i) =>
       mode === 'links' ? (
-        <a href={f.key === 'all' ? u('/cereals/') : u(`/cereals/#f=${f.key}`)} class:list={{ on: f.key === active }}>
-          <small>{f.aisle}</small>
-          {f.label}
+        <a href={href(key)} class:list={{ on: key === active }}>
+          <small>AISLE {i + 1}</small>
+          {label(key)}
         </a>
       ) : (
-        <button type="button" data-filter={f.key} class:list={{ on: f.key === active }}>
-          <small>{f.aisle}</small>
-          {f.label}
+        <button type="button" data-filter={key} class:list={{ on: key === active }}>
+          <small>AISLE {i + 1}</small>
+          {label(key)}
         </button>
       )
     )
@@ -32,7 +53,7 @@ const { mode = 'links', active = 'all' } = Astro.props;
 <style>
   /* Was a row of hanging supermarket aisle signs; now a strip of ad buttons.
      Class names and the data-filter hooks are unchanged — the filter script on
-     /cereals/ selects on [data-filter-bar] [data-filter]. */
+     /cereals/ selects on [data-filter-bar="<category>"] [data-filter]. */
   .aisles {
     display: flex;
     gap: 10px;
@@ -40,6 +61,8 @@ const { mode = 'links', active = 'all' } = Astro.props;
     flex-wrap: wrap;
     margin: 34px 0 8px;
   }
+
+  .aisles[hidden] { display: none; }
 
   .aisles a,
   .aisles button {

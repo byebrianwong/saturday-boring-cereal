@@ -1,4 +1,4 @@
-// Set a cereal's box photo from a URL (or a local file) and normalize it for
+// Set a product's box photo from a URL (or a local file) and normalize it for
 // the 3D box.
 //
 //   npm run image natures-path-heritage-flakes https://…/front.png
@@ -22,7 +22,9 @@
 //   --source <manufacturer|other|own_photo|open_food_facts>   default: other
 //   --credit "Image: Nature's Path (naturespath.com)"         default: from the host
 //   --fit <cover|contain>   cover (default) crops to fill the face; contain pads
-//                           onto white so a tall bag keeps its top and bottom
+//                           onto white so a tall bag keeps its top and bottom.
+//                           A bar (`category: bar`) is fitted to a wide 5:2
+//                           wrapper instead of the tall box face.
 //   --no-trim               keep the original margins
 //   --none                  no good front exists: clear boxImage and set
 //                           noAutoImage so enrichment can't add an angled one
@@ -31,7 +33,7 @@
 import { readFileSync, writeFileSync, readdirSync, mkdirSync, unlinkSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { ROOT, CEREALS } from './lib/enrich-core.mjs';
-import { loadImage, normalizeBoxImage, OUT_WIDTH, OUT_HEIGHT } from './lib/image-core.mjs';
+import { loadImage, normalizeBoxImage, shapeFor } from './lib/image-core.mjs';
 
 const IMAGES = join(ROOT, 'public', 'images', 'cereals');
 
@@ -57,7 +59,7 @@ for (let i = 0; i < argv.length; i++) {
 const CLEAR = has('--none');
 const DRY = has('--dry-run');
 const TRIM = !has('--no-trim');
-const FIT = flag('fit') || 'cover';
+const FIT_FLAG = flag('fit');
 const [slugArg, srcArg] = pos;
 
 function fail(msg) {
@@ -68,7 +70,7 @@ function fail(msg) {
 if (!slugArg) {
   fail('usage: npm run image <slug> <image-url|file>   (or: npm run image <slug> --none)');
 }
-if (!['cover', 'contain'].includes(FIT)) fail(`--fit must be cover or contain (got "${FIT}")`);
+if (FIT_FLAG && !['cover', 'contain'].includes(FIT_FLAG)) fail(`--fit must be cover or contain (got "${FIT_FLAG}")`);
 if (!CLEAR && !srcArg) fail('missing the image URL or file path (or pass --none if no good front exists)');
 
 // --- resolve the cereal -------------------------------------------------------
@@ -88,6 +90,8 @@ const slug = resolveSlug(slugArg);
 const file = join(CEREALS, `${slug}.md`);
 const md = readFileSync(file, 'utf8');
 const outFile = join(IMAGES, `${slug}.jpg`);
+const FIT = FIT_FLAG || 'cover';
+const SHAPE = shapeFor((md.match(/^category: (\w+)$/m) || [])[1]);
 
 // --- frontmatter editing ------------------------------------------------------
 // Update the keys that already exist in place, and insert the rest as one block
@@ -126,7 +130,7 @@ if (CLEAR) {
 
 // --- fetch + normalize --------------------------------------------------------
 const input = await loadImage(srcArg).catch((e) => fail(e.message));
-const { out, before, trimmed: t, lost } = await normalizeBoxImage(input, { trim: TRIM, fit: FIT });
+const { out, before, trimmed: t, lost, size } = await normalizeBoxImage(input, { trim: TRIM, fit: FIT, shape: SHAPE });
 
 // --- credit -------------------------------------------------------------------
 const host = /^https?:\/\//.test(srcArg) ? new URL(srcArg).hostname.replace(/^www\./, '') : null;
@@ -140,7 +144,7 @@ if (DRY) {
   console.log(`[dry-run] ${slug}`);
   console.log(`  source     ${before.width}x${before.height} ${before.format}`);
   console.log(`  trimmed    ${t.width}x${t.height}${TRIM ? '' : ' (--no-trim)'}`);
-  console.log(`  output     ${OUT_WIDTH}x${OUT_HEIGHT} jpeg, fit=${FIT}, ${(out.length / 1024).toFixed(0)}KB`);
+  console.log(`  output     ${size.width}x${size.height} jpeg (${SHAPE}), fit=${FIT}, ${(out.length / 1024).toFixed(0)}KB`);
   if (FIT === 'cover' && lost.pct > 0) console.log(`  cover crop discards ~${lost.pct}% off the ${lost.axis}`);
   console.log(`  would write ${outFile.replace(ROOT + '/', '')}`);
   console.log(`  imageSource: ${source}${credit ? `\n  imageCredit: ${credit}` : ''}`);
@@ -162,7 +166,7 @@ next = removeField(next, 'noAutoImage');
 writeFileSync(file, next);
 
 console.log(`✓ ${slug}: ${replaced ? 'replaced' : 'added'} box photo`);
-console.log(`  ${before.width}x${before.height} → trimmed ${t.width}x${t.height} → ${OUT_WIDTH}x${OUT_HEIGHT} (${(out.length / 1024).toFixed(0)}KB, fit=${FIT})`);
+console.log(`  ${before.width}x${before.height} → trimmed ${t.width}x${t.height} → ${size.width}x${size.height} (${(out.length / 1024).toFixed(0)}KB, fit=${FIT})`);
 console.log(`  public/images/cereals/${slug}.jpg · imageSource: ${source}`);
 if (FIT === 'cover' && lost.pct >= 25) {
   console.log(`\n⚠ The cover crop discarded ~${lost.pct}% off the ${lost.axis} — tall bags lose their`);

@@ -1,6 +1,8 @@
 # Saturday Boring Cereal 🥣
 
 My rankings of granolas and healthier cereals, scored on taste and macros combined.
+Protein bars, cereal bars and protein snacks are on the shelf too, each ranked only against
+its own kind (see [Bars and snacks](#bars-and-snacks)).
 Astro static site + Keystatic admin, no database, no server.
 
 **Live:** https://saturday-boring-cereal.vercel.app
@@ -178,13 +180,13 @@ Five ways in, same files:
    ```
 
    Downloads (or reads a local file), trims the margins, flattens onto white, fits
-   it to the 240×320 box-face ratio at 900px, writes
+   it to the 240×320 box-face ratio at 900px (a bar: a 5:2 wrapper at 1000px), writes
    `public/images/cereals/<slug>.jpg`, and sets `boxImage` / `imageSource` /
    `imageCredit`. See [Box images](#box-images) for why the source has to be a flat,
    straight-on front and where to find one.
 
 5. **The Stock Room** — `npm run dev`, then [http://localhost:4321/admin](http://localhost:4321/admin).
-   Two tabs: **Add a cereal** (search, pick the product, pick its box photo, score it) and
+   Two tabs: **Add a product** (search, pick the product, pick its box photo, score it) and
    **Edit one you have** (everything above in one form — score, note, tags, every nutrition
    field, and the photo). See [Web admin](#web-admin-the-stock-room) below — including why
    it's dev-only.
@@ -206,6 +208,62 @@ Rules encoded in the schema:
 - `emoji` + `boxColor` are the placeholder box art, used whenever `boxImage` is unset.
 - `noAutoImage: true` marks a product with no usable flat front anywhere, so enrichment
   can't put an angled one back. `npm run image <slug> --none` sets it.
+- `category` is `bar` or `snack` for those products. A file without it is a cereal, which is
+  why no cereal file carries the line. `formFactors` must come from that category's list
+  (`CEREAL_FORMS`, `BAR_FORMS`, `SNACK_FORMS` in `content.config.ts`).
+
+## Bars and snacks
+
+Every product is a markdown file in `src/content/cereals/`, cereal or not. The `category`
+field says which aisle it belongs to:
+
+| Category | In the file | Its page | Form factors |
+|---|---|---|---|
+| Cereal | no `category` line | `/cereals/<slug>/` | flakes, clusters, granola, puffs, … |
+| Bar | `category: bar` | `/bars/<slug>/` | protein bar, granola bar, nut bar, fruit bar |
+| Snack | `category: snack` | `/snacks/<slug>/` | chips, puffs, crisps, bites, cookies, jerky, crackers |
+
+**Scoring is the same for all three, ranking is not.** A bar gets the same Taste, Health and
+Tier score as a cereal: same formula, same targets per 100 g, same letter cut-offs, so an A
+means the same thing everywhere and the Price Check can put a bar next to a cereal. But
+every ranking counts within one category only. A protein bar packs far more protein and
+fiber per 100 g than a cereal. A typical protein bar label (21 g protein, 1 g sugar, 14 g
+fiber, 3 g saturated fat in a 60 g bar) rated 6 for taste scores 6.4 overall, above the best
+cereal on the site (6.1). On one shared list, bars would take every top spot. So:
+
+- **Home page:** the Tiers, the champion and the shelf records are cereal only. Bars and
+  snacks get their own "other aisles" section, top three each, which appears once one is
+  on file.
+- **The Aisle (`/cereals/`):** opens on cereal. A Cereal / Bars / Snacks / Everything row
+  appears above the filters once anything other than cereal is in stock, and each
+  category has its own filter buttons. Position numbers count within the category, and
+  Everything shows none. Links carry the category: `/cereals/#c=bar&f=protein-bar`.
+  `/bars/` and `/snacks/` redirect there.
+- **Tag pages:** a tag shared across categories (high-protein, puffs) lists each category
+  as its own shelf.
+
+**Adding one** works the same as a cereal, from any of the tools:
+
+- The **Stock Room** guesses the category from the product name and the database's shelf
+  placement (Open Food Facts' `en:protein-bars`, USDA's "Snack, Energy & Granola Bars"),
+  and shows it in a Category picker you can change. The form-factor checkboxes follow the
+  picker.
+- `npm run find "quest cookies and cream bar"` guesses it too and prints the guess; pass
+  `--category bar` to set it.
+- `npm run add -- --category bar --form protein-bar …` for one the databases don't have.
+- **Keystatic** has a Category dropdown.
+
+**Photos of bars** are wrappers, not box fronts. A bar's photo is fitted to 5:2 (saved at
+1000×400) instead of the tall 3:4 box face. That ratio comes from real wrappers: clean Open
+Food Facts fronts of Barebells and KIND bars measured 2.43, 2.50 and 2.72 after trimming.
+The Stock Room, `npm run find` and `npm run image` pick the shape from the category, so
+there's nothing to set. On the site a bar lies flat and slightly tilted in its wrapper
+([WrapperShot](src/components/WrapperShot.astro)) where a cereal stands as a 3D box. On
+cards and tiles the frame keeps the box's size, with the wrapper across it, so rows of bars
+and cereals line up.
+
+**Sugar substitutes** now include maltitol, sorbitol and xylitol, the sugar alcohols bars
+use most. A product with one is still kept out of the "least sugar" record.
 
 ## Updating a cereal you already have
 
@@ -236,9 +294,10 @@ rename one, `git mv` the markdown and the `.jpg` and update `boxImage` by hand.
 ## Web admin (the Stock Room)
 
 `npm run dev` → **[localhost:4321/admin](http://localhost:4321/admin)**, for when you'd
-rather not be in a terminal. Two tabs.
+rather not be in a terminal. Two tabs. Both work for cereal, bars and snacks: each has a
+Category picker, and the form-factor checkboxes show only that category's forms.
 
-### Add a cereal
+### Add a product
 
 `npm run find` with a browser on it:
 
@@ -251,7 +310,8 @@ rather not be in a terminal. Two tabs.
    this is the one step where seeing them side by side actually beats the CLI. Ingredient
    and nutrition panels are filtered out; width variants of the same shot are collapsed.
    Paste your own URL to override, or choose "No photo" to keep the emoji placeholder.
-4. **Score it and write the note.** Tags come pre-checked from the guess; fix what's wrong.
+4. **Score it and write the note.** The category and tags come pre-set from the guess; fix
+   what's wrong.
 5. **Preview file** shows the exact markdown before anything is written. **Add to the
    aisle** writes it.
 
@@ -321,14 +381,15 @@ deploys anywhere (Cloudflare Pages / Netlify / Vercel).
 
 ```
 src/
-  content/cereals/     one .md per cereal (frontmatter + review body)
+  content/cereals/     one .md per product, cereal, bar or snack (frontmatter + review body)
   content.config.ts    content collection schema (Zod) + taxonomy enums
-  components/          MiniBox (3D box), PriceTag, NutritionPanel, AisleFilters
+  components/          MiniBox (3D box), PriceTag, NutritionPanel, AisleFilters, CategorySwitch
   layouts/Layout.astro store sign header + footer
   pages/
     index.astro        landing: 3D hero box, aisle signs, top-shelf ranks
-    cereals/index.astro the explorer (client-side filter + sort, deep-linkable #f=granola)
-    cereals/[slug].astro detail: big box, Nutrition Facts panel, tasting note
+    cereals/index.astro the explorer (client-side filter + sort, deep-linkable #c=bar&f=granola)
+    [aisle]/[slug].astro detail: big box, Nutrition Facts panel, tasting note
+                       (/cereals/<slug>/, /bars/<slug>/ or /snacks/<slug>/)
     about.astro        methodology, written as store policy
   admin/               the Stock Room — dev-only, injected as routes, never built
     index.astro        search → pick product → pick photo → score + note → save
@@ -402,6 +463,8 @@ attributed to the wrong company.
 
 `boxImage` renders as the **front face of a CSS 3D box** that already applies its own
 `rotateY(-20deg)`. So the source must be a flat, straight-on, dead-center package front.
+(A bar's `boxImage` is its wrapper, shown flat; see [Bars and snacks](#bars-and-snacks).
+The same rule holds: a flat, straight-on wrapper, not one held in a hand.)
 A 3/4 "packshot" render reads as a box inside a box; an Open Food Facts user snapshot
 drags in table edges, fingers and tilt.
 

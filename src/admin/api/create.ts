@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { isAuthed, unauthorized } from '../lib/auth';
-import { usdaUpgradeToLabel } from '../../../scripts/lib/enrich-core.mjs';
+import { usdaUpgradeToLabel, readTaxonomy } from '../../../scripts/lib/enrich-core.mjs';
+import { shapeFor } from '../../../scripts/lib/image-core.mjs';
 import {
   slugify, cerealExists, cerealMarkdown, sanitize, prepareImage, writeCereal, nutritionFrom,
 } from '../../../scripts/lib/compose-core.mjs';
@@ -13,7 +14,7 @@ export const POST: APIRoute = async ({ request }) => {
   const body = await request.json().catch(() => ({}));
   const {
     candidate, brand, name, rating, note, imageUrl, imageSource, fit,
-    formFactors = [], proteinSources = [], attributes = [],
+    category = 'cereal', formFactors = [], proteinSources = [], attributes = [],
     emoji, boxColor, dryRun,
   } = body ?? {};
 
@@ -23,6 +24,17 @@ export const POST: APIRoute = async ({ request }) => {
   const score = rating === '' || rating == null ? null : Number(rating);
   if (score != null && (!Number.isFinite(score) || score < 0 || score > 10)) {
     return json({ error: 'Taste score has to be a number from 0 to 10 (or blank).' }, 400);
+  }
+
+  // Form factors belong to a category: a cereal can't be a protein bar.
+  const { CATEGORIES, FORMS_BY_CATEGORY } = readTaxonomy();
+  if (CATEGORIES && !CATEGORIES.includes(category)) {
+    return json({ error: `Category has to be one of ${CATEGORIES.join(', ')}.` }, 400);
+  }
+  const forms: string[] | null | undefined = (FORMS_BY_CATEGORY as Record<string, string[]> | null)?.[category];
+  const wrongForms = forms && Array.isArray(formFactors) ? formFactors.filter((f: string) => !forms.includes(f)) : [];
+  if (wrongForms.length) {
+    return json({ error: `Not a ${category} form factor: ${wrongForms.join(', ')}` }, 400);
   }
 
   const slug = slugify(brand, name);
@@ -58,7 +70,7 @@ export const POST: APIRoute = async ({ request }) => {
   let imageError = null;
   if (imageUrl) {
     try {
-      image = await prepareImage(imageUrl, { fit: fit === 'contain' ? 'contain' : 'cover' });
+      image = await prepareImage(imageUrl, { fit: fit === 'contain' ? 'contain' : 'cover', shape: shapeFor(category) });
     } catch (e: any) {
       imageError = e.message;
     }
@@ -72,6 +84,7 @@ export const POST: APIRoute = async ({ request }) => {
     note: (note ?? '').trim(),
     picked,
     slug,
+    category,
     formFactors, proteinSources, attributes,
     emoji: emoji || '🥣',
     boxColor: boxColor || '#c98d4e',
@@ -88,7 +101,7 @@ export const POST: APIRoute = async ({ request }) => {
   const blank = Object.entries(nutrition).filter(([k, v]) => v == null && k !== 'proteinDV').map(([k]) => k);
 
   if (dryRun) {
-    return json({ ok: true, dryRun: true, slug, markdown, dropped, imageError, blank, image: imageMeta(image) });
+    return json({ ok: true, dryRun: true, slug, category, markdown, dropped, imageError, blank, image: imageMeta(image) });
   }
 
   try {
@@ -100,6 +113,7 @@ export const POST: APIRoute = async ({ request }) => {
   return json({
     ok: true,
     slug,
+    category,
     markdown,
     dropped,
     imageError,
@@ -127,6 +141,9 @@ function imageMeta(image: any) {
     height: image.before.height,
     trimmedWidth: image.trimmed.width,
     trimmedHeight: image.trimmed.height,
+    // What it was fitted to: 900×1200 for a box front, 1000×400 for a bar's wrapper.
+    outWidth: image.size.width,
+    outHeight: image.size.height,
     bytes: image.out.length,
     // How much a cover crop threw away — a tall bag losing its top and bottom
     // should be visible, not silent.

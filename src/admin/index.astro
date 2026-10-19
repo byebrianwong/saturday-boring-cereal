@@ -6,17 +6,24 @@
 // exists in a static build on a static host. It never ships in dist/.
 import Layout from '../layouts/Layout.astro';
 import { readTaxonomy } from '../../scripts/lib/enrich-core.mjs';
+import { CATEGORY_ORDER, label } from '../lib/taxonomy';
 import { isAuthed, usingDefaultPassword } from './lib/auth';
 
 export const prerender = false;
 
 const authed = isAuthed(Astro.request);
 const defaultPassword = usingDefaultPassword();
-const { FORM_FACTORS, PROTEIN_SOURCES, ATTRIBUTES } = readTaxonomy();
+const { FORM_FACTORS, FORMS_BY_CATEGORY, PROTEIN_SOURCES, ATTRIBUTES } = readTaxonomy();
 
-// Mirror Keystatic's labels so the two admin surfaces read the same.
-const label = (v: string) =>
-  v === 'os' ? "O's" : v.split('-').map((w) => w[0].toUpperCase() + w.slice(1)).join(v.includes('-') ? '-' : ' ');
+// Which categories each form factor belongs to, e.g. puffs → "cereal snack".
+// The page script shows only the checkboxes for the chosen category.
+const formCats = (v: string) =>
+  FORMS_BY_CATEGORY
+    ? Object.entries(FORMS_BY_CATEGORY as Record<string, string[]>).filter(([, list]) => list.includes(v)).map(([c]) => c).join(' ')
+    : CATEGORY_ORDER.join(' ');
+// The picker names one product ("Bar"), not an aisle ("Bars").
+const CATEGORY_NAMES: Record<string, string> = { cereal: 'Cereal', bar: 'Bar', snack: 'Snack' };
+const categoryName = (c: string) => CATEGORY_NAMES[c] ?? c;
 ---
 
 <Layout title="Stock Room — Saturday Boring Cereal">
@@ -44,7 +51,7 @@ const label = (v: string) =>
     {authed && (
       <div class="admin" id="admin">
         <div class="tabs" role="tablist">
-          <button type="button" class="tab on" id="tab-add" role="tab">Add a cereal</button>
+          <button type="button" class="tab on" id="tab-add" role="tab">Add a product</button>
           <button type="button" class="tab" id="tab-edit" role="tab">Edit one you have</button>
         </div>
 
@@ -60,6 +67,11 @@ const label = (v: string) =>
             <div class="grid">
               <label>Brand<input type="text" id="e-brand" required /></label>
               <label>Product name<input type="text" id="e-name" required /></label>
+              <label>Category <span class="sub">ranked only against its own</span>
+                <select id="e-category">
+                  {CATEGORY_ORDER.map((c) => <option value={c}>{categoryName(c)}</option>)}
+                </select>
+              </label>
               <label>Taste score <span class="sub">0–10, blank = unrated</span>
                 <input type="number" id="e-rating" min="0" max="10" step="0.1" />
               </label>
@@ -78,7 +90,7 @@ const label = (v: string) =>
               <legend>Tags</legend>
               <div class="tags">
                 <div><h4>Form</h4>{FORM_FACTORS?.map((v: string) => (
-                  <label class="chk"><input type="checkbox" name="e-form" value={v} /> {label(v)}</label>
+                  <label class="chk" data-cats={formCats(v)}><input type="checkbox" name="e-form" value={v} /> {label(v)}</label>
                 ))}</div>
                 <div><h4>Protein</h4>{PROTEIN_SOURCES?.map((v: string) => (
                   <label class="chk"><input type="checkbox" name="e-protein-src" value={v} /> {label(v)}</label>
@@ -139,7 +151,7 @@ const label = (v: string) =>
           <input
             type="search"
             id="q"
-            placeholder="Search a cereal by name — e.g. kodiak cookie butter"
+            placeholder="Search by name — e.g. kodiak cookie butter, or quest protein bar"
             autofocus
           />
           <button type="submit" id="search-btn">Search</button>
@@ -158,6 +170,11 @@ const label = (v: string) =>
           <div class="grid">
             <label>Brand<input type="text" id="brand" required /></label>
             <label>Product name<input type="text" id="name" required /></label>
+            <label>Category <span class="sub">guessed — fix it if it's wrong</span>
+              <select id="category">
+                {CATEGORY_ORDER.map((c) => <option value={c}>{categoryName(c)}</option>)}
+              </select>
+            </label>
             <label>Taste score <span class="sub">0–10, blank = unrated</span>
               <input type="number" id="rating" min="0" max="10" step="0.1" />
             </label>
@@ -173,7 +190,7 @@ const label = (v: string) =>
             <legend>Tags <span class="sub">guessed from the name and ingredients — fix what's wrong</span></legend>
             <div class="tags">
               <div><h4>Form</h4>{FORM_FACTORS?.map((v: string) => (
-                <label class="chk"><input type="checkbox" name="form" value={v} /> {label(v)}</label>
+                <label class="chk" data-cats={formCats(v)}><input type="checkbox" name="form" value={v} /> {label(v)}</label>
               ))}</div>
               <div><h4>Protein</h4>{PROTEIN_SOURCES?.map((v: string) => (
                 <label class="chk"><input type="checkbox" name="protein-src" value={v} /> {label(v)}</label>
@@ -197,7 +214,7 @@ const label = (v: string) =>
               <label class="full">Or paste an image URL
                 <input type="url" id="imgurl" placeholder="https://…/front.png" />
               </label>
-              <label>Fit
+              <label>Fit <span class="sub">a bar is fitted to a wide wrapper</span>
                 <select id="fit">
                   <option value="cover">cover — crop to fill</option>
                   <option value="contain">contain — pad onto white</option>
@@ -222,6 +239,8 @@ const label = (v: string) =>
 </Layout>
 
 <script>
+  import { CATEGORY_INFO } from '../lib/taxonomy';
+
   // --- login ------------------------------------------------------------------
   const gate = document.getElementById('gate') as HTMLFormElement | null;
   gate?.addEventListener('submit', async (e) => {
@@ -257,6 +276,20 @@ const label = (v: string) =>
       String(s ?? '').replace(/[&<>"']/g, (c) =>
         ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
     const g = (v: any, unit = 'g') => (v == null ? '—' : `${v}${unit}`);
+
+    // A product's page: cereals live at /cereals/<slug>/, bars at /bars/<slug>/.
+    const pageHref = (category: string, slug: string) =>
+      `/${CATEGORY_INFO[category as keyof typeof CATEGORY_INFO]?.path ?? 'cereals'}/${slug}/`;
+
+    // Show only the form-factor checkboxes that belong to the chosen category,
+    // and untick the rest so a cereal can't be saved as a protein bar.
+    function showForms(scope: HTMLElement, category: string) {
+      scope.querySelectorAll<HTMLElement>('label.chk[data-cats]').forEach((el) => {
+        const fits = (el.dataset.cats ?? '').split(' ').includes(category);
+        el.hidden = !fits;
+        if (!fits) el.querySelector('input')!.checked = false;
+      });
+    }
 
     // --- 1. search ------------------------------------------------------------
     $('search').addEventListener('submit', async (e) => {
@@ -336,6 +369,7 @@ const label = (v: string) =>
 
       ($('brand') as HTMLInputElement).value = picked.brand;
       ($('name') as HTMLInputElement).value = picked.name;
+      ($('category') as HTMLSelectElement).value = picked.tags?.category ?? 'cereal';
 
       for (const [group, values] of [
         ['form', picked.tags?.formFactors],
@@ -346,6 +380,7 @@ const label = (v: string) =>
           (el as HTMLInputElement).checked = !!values?.includes((el as HTMLInputElement).value);
         });
       }
+      categoryChanged();
 
       $('picked').innerHTML =
         `Filling from <b>${esc(picked.sourceLabel)}</b>: “${esc(picked.matchedName)}” ` +
@@ -363,6 +398,11 @@ const label = (v: string) =>
       doneEl.hidden = true;
       composeEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+
+    function categoryChanged() {
+      showForms(composeEl, ($('category') as HTMLSelectElement).value);
+    }
+    $('category').addEventListener('change', categoryChanged);
 
     // --- 3. image picker ------------------------------------------------------
     function renderGallery() {
@@ -407,6 +447,7 @@ const label = (v: string) =>
         candidate: picked.raw,
         brand: ($('brand') as HTMLInputElement).value,
         name: ($('name') as HTMLInputElement).value,
+        category: ($('category') as HTMLSelectElement).value,
         rating: ($('rating') as HTMLInputElement).value,
         note: ($('note') as HTMLInputElement).value,
         emoji: ($('emoji') as HTMLInputElement).value,
@@ -465,9 +506,9 @@ const label = (v: string) =>
         (data.imageError
           ? `<p class="warn">Photo failed: ${esc(data.imageError)} — the emoji placeholder stays.</p>` : '') +
         (img
-          ? `<p>Photo: ${img.width}×${img.height} → trimmed ${img.trimmedWidth}×${img.trimmedHeight} → 900×1200, ${(img.bytes / 1024).toFixed(0)}KB.` +
+          ? `<p>Photo: ${img.width}×${img.height} → trimmed ${img.trimmedWidth}×${img.trimmedHeight} → ${img.outWidth}×${img.outHeight}, ${(img.bytes / 1024).toFixed(0)}KB.` +
             (img.lostPct >= 25 ? ` <span class="warn">The crop discarded ~${img.lostPct}% off the ${esc(img.lostAxis)} — try “contain” instead.</span>` : '') + `</p>` : '') +
-        `<p><a href="/cereals/${esc(data.slug)}/" target="_blank" rel="noreferrer">Open its page →</a> ` +
+        `<p><a href="${esc(pageHref(data.category, data.slug))}" target="_blank" rel="noreferrer">Open its page →</a> ` +
         `· <a href="/keystatic/collection/cereals/item/${esc(data.slug)}" target="_blank" rel="noreferrer">Edit in Keystatic →</a></p>` +
         `<p class="sub">It's a file on disk now: commit it when you're happy.</p>`;
       doneEl.hidden = false;
@@ -545,12 +586,13 @@ const label = (v: string) =>
         : catalog;
       catalogEl.innerHTML = shown.map((c) => `
         <button type="button" class="row${editing?.slug === c.slug ? ' on' : ''}" data-slug="${esc(c.slug)}">
-          <span class="row-thumb">${c.boxImage
+          <span class="row-thumb${c.category === 'bar' ? ' wide' : ''}">${c.boxImage
             ? `<img src="${esc(c.boxImage)}" alt="" loading="lazy" />`
             : `<span class="row-emoji">${esc(c.emoji)}</span>`}</span>
           <span class="row-text">
             <b>${esc(c.brand)}</b> ${esc(c.name)}
-            <small>${c.rating == null ? 'unrated' : c.rating + '/10'} · ${esc(c.slug)}${
+            <small>${c.category && c.category !== 'cereal' ? `${esc(c.category)} · ` : ''}${
+              c.rating == null ? 'unrated' : c.rating + '/10'} · ${esc(c.slug)}${
               c.dateUpdated ? ` · updated ${esc(c.dateUpdated)}` : ''}</small>
           </span>
         </button>`).join('') || '<p class="none">Nothing matches that filter.</p>';
@@ -590,6 +632,7 @@ const label = (v: string) =>
       const c = data.cereal;
       ($('e-brand') as HTMLInputElement).value = c.brand ?? '';
       ($('e-name') as HTMLInputElement).value = c.name ?? '';
+      ($('e-category') as HTMLSelectElement).value = c.category ?? 'cereal';
       ($('e-rating') as HTMLInputElement).value = c.rating == null ? '' : String(c.rating);
       ($('e-note') as HTMLInputElement).value = c.shortNote ?? '';
       ($('e-emoji') as HTMLInputElement).value = c.emoji ?? '🥣';
@@ -605,6 +648,7 @@ const label = (v: string) =>
           (el as HTMLInputElement).checked = !!values?.includes((el as HTMLInputElement).value);
         });
       }
+      showForms(editorEl, c.category ?? 'cereal');
 
       $('nutgrid').innerHTML = NUTRITION_FIELDS.map(([key, lbl, unit]) => {
         const v = c.nutrition?.[key];
@@ -617,7 +661,7 @@ const label = (v: string) =>
 
       $('editing').innerHTML =
         `Editing <code>${esc(slug)}.md</code>` +
-        ` · <a href="/cereals/${esc(slug)}/" target="_blank" rel="noreferrer">see the page</a>` +
+        ` · <a href="${esc(pageHref(c.category ?? 'cereal', slug))}" target="_blank" rel="noreferrer">see the page</a>` +
         `<br><span class="sub">The filename and URL stay as they are — renaming the brand or ` +
         `product here only changes how it reads on the site.</span>`;
 
@@ -625,6 +669,9 @@ const label = (v: string) =>
       editorEl.hidden = false;
       editorEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
+
+    $('e-category').addEventListener('change', () =>
+      showForms(editorEl, ($('e-category') as HTMLSelectElement).value));
 
     // --- photo ---------------------------------------------------------------
     function renderPhotoNow() {
@@ -635,8 +682,10 @@ const label = (v: string) =>
           `enrichment can't put an angled one back. The ${esc(($('e-emoji') as HTMLInputElement).value)} placeholder takes over.</p>`;
         return;
       }
+      // A bar's photo is a wide wrapper, so it gets a wide preview.
+      const wide = editing?.category === 'bar' ? ' wide' : '';
       $('photo-now').innerHTML = current
-        ? `<img class="now" src="${esc(current)}" alt="" /><span class="sub">Current photo${
+        ? `<img class="now${wide}" src="${esc(current)}" alt="" /><span class="sub">Current photo${
             editing.imageSource ? ` · ${esc(editing.imageSource)}` : ''}</span>`
         : `<p class="none">No photo — showing the ${esc(editing?.emoji ?? '🥣')} placeholder.${
             editing?.noAutoImage ? ' Marked <code>noAutoImage</code>.' : ''}</p>`;
@@ -718,6 +767,7 @@ const label = (v: string) =>
         fields: {
           brand: ($('e-brand') as HTMLInputElement).value,
           name: ($('e-name') as HTMLInputElement).value,
+          category: ($('e-category') as HTMLSelectElement).value,
           rating: ($('e-rating') as HTMLInputElement).value,
           shortNote: ($('e-note') as HTMLInputElement).value,
           emoji: ($('e-emoji') as HTMLInputElement).value,
@@ -779,10 +829,10 @@ const label = (v: string) =>
         `<p>Changed: ${esc((data.changed || []).join(', ')) || 'the photo only'}.</p>` +
         (data.imageError ? `<p class="warn">Photo failed: ${esc(data.imageError)} — the old one stays.</p>` : '') +
         (img
-          ? `<p>New photo: ${img.width}×${img.height} → trimmed ${img.trimmedWidth}×${img.trimmedHeight} → 900×1200, ${(img.bytes / 1024).toFixed(0)}KB.` +
+          ? `<p>New photo: ${img.width}×${img.height} → trimmed ${img.trimmedWidth}×${img.trimmedHeight} → ${img.outWidth}×${img.outHeight}, ${(img.bytes / 1024).toFixed(0)}KB.` +
             (img.lostPct >= 25 ? ` <span class="warn">The crop discarded ~${img.lostPct}% off the ${esc(img.lostAxis)} — try “contain”.</span>` : '') + `</p>`
           : '') +
-        `<p><a href="/cereals/${esc(data.slug)}/" target="_blank" rel="noreferrer">Open its page →</a></p>` +
+        `<p><a href="${esc(pageHref(($('e-category') as HTMLSelectElement).value, data.slug))}" target="_blank" rel="noreferrer">Open its page →</a></p>` +
         `<p class="sub">Written to disk — <code>git diff</code> to see it, then commit.</p>`;
       ($('e-done') as HTMLElement).hidden = false;
       ($('e-preview') as HTMLElement).hidden = true;
@@ -1020,6 +1070,8 @@ const label = (v: string) =>
       width: auto;
       margin-right: 4px;
     }
+    /* Form factors from another category. */
+    .chk[hidden] { display: none; }
 
     .gallery {
       display: grid;
@@ -1191,6 +1243,10 @@ const label = (v: string) =>
       height: 100%;
       object-fit: cover;
     }
+    /* A bar's wrapper is wide: show all of it, small, rather than a crop. */
+    .row-thumb.wide img {
+      object-fit: contain;
+    }
     .row-emoji {
       font-size: 17px;
     }
@@ -1227,6 +1283,10 @@ const label = (v: string) =>
       object-fit: cover;
       border: 2px solid var(--ink);
       background: #fff;
+    }
+    .photo-now .now.wide {
+      width: 200px;
+      height: 80px;
     }
     .actions.left {
       justify-content: flex-start;
