@@ -1,8 +1,10 @@
 ---
 name: Flax Plus, Maple Pecan Crunch
 brand: "Nature's Path"
-rating: 8.5
+rating: 8
+shortNote: Crunchy flakes with nice granola clusters. Medium strength maple pecan flavor.
 dateReviewed: 2026-02-15
+dateUpdated: 2026-10-12
 emoji: '🍁'
 boxColor: "#6fae57"
 boxImage: /images/cereals/natures-path-organic-flax-plus-maple-pecan-crunch.jpg
