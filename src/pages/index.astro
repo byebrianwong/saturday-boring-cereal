@@ -5,21 +5,35 @@ import RankCard from '../components/RankCard.astro';
 import ChampCard from '../components/ChampCard.astro';
 import BreakfastStrip from '../components/BreakfastStrip.astro';
 import { byOverallDesc } from '../lib/score';
-import { label } from '../lib/taxonomy';
+import { CATEGORY_INFO, countOf, inCategory, label } from '../lib/taxonomy';
 import { u } from '../lib/url';
 import RecordCard from '../components/RecordCard.astro';
 import { shelfRecords, type ShelfRecord } from '../lib/records';
 import { gramsShort } from '../lib/format';
 
-const cereals = await getCollection('cereals');
+const everything = await getCollection('cereals');
+// It's a cereal site: the Tiers, the champion and the shelf records are all
+// cereal. Bars and snacks get the same score but are ranked only against each
+// other, in their own section further down.
+const cereals = inCategory(everything, 'cereal');
 // The home page shows the top of the Tier list: taste and health combined.
 const ranked = [...cereals].sort(byOverallDesc);
+
+// The other aisles: the top three of each, numbered within that category.
+const others = (['bar', 'snack'] as const)
+  .map((category) => {
+    const list = inCategory(everything, category);
+    return { category, n: list.length, top: [...list].sort(byOverallDesc).slice(0, 3) };
+  })
+  .filter((o) => o.n > 0);
+const othersNames = others.map((o) => CATEGORY_INFO[o.category].many).join(' and ');
 const champ = ranked[0];
 const runnersUp = ranked.slice(1, 9);
 
-// Tag counts for the "browse the aisles" section (form factors + attributes).
+// Tag counts for the "browse the aisles" section (form factors + attributes),
+// across every category: a tag page splits its list by category itself.
 const tagCounts = new Map<string, number>();
-for (const c of cereals) {
+for (const c of everything) {
   for (const t of [...c.data.formFactors, ...c.data.attributes]) {
     tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
   }
@@ -133,6 +147,38 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
       <a class="btn-ink rank-more" href={u('/cereals/')}>See the full ranking →</a>
     </div>
   </section>
+
+  <!-- ============ THE OTHER AISLES (bars, snacks) ============ -->
+  {
+    others.length > 0 && (
+      <section class="section other-aisles" id="other-aisles">
+        <div class="wrap">
+          <div class="section-kicker">Also in stock</div>
+          <h2 class="section-title">The <em>other</em> aisles</h2>
+          <p class="section-lede">
+            The {othersNames} get the same score as the cereals: same taste curve, same targets per 100
+            grams, same Tier letters. They are ranked only against each other, never against the cereals.
+          </p>
+          {others.map(({ category, n, top }) => (
+            <div class="aisle-block">
+              <h3 class="aisle-head">
+                {CATEGORY_INFO[category].label}
+                <small>{countOf(category, n)} on file</small>
+              </h3>
+              <div class="rank-row">
+                {top.map((c, i) => (
+                  <RankCard cereal={c} rank={i + 1} size="sm" />
+                ))}
+              </div>
+              <a class="btn-ink rank-more" href={u(`/cereals/#c=${category}`)}>
+                See all {countOf(category, n)} →
+              </a>
+            </div>
+          ))}
+        </div>
+      </section>
+    )
+  }
 
   <!-- ============ BUT WAIT, THERE'S MORE — AND LESS ============ -->
   <section class="butwait">
@@ -391,6 +437,31 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
   }
 
   .rank-more { margin-top: 44px; }
+
+  /* ---- the other aisles ---- */
+  .other-aisles { border-top: 6px solid var(--ink); }
+
+  .aisle-block { margin-top: 46px; }
+
+  .aisle-head {
+    font-family: var(--shout);
+    font-size: 30px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 26px;
+  }
+
+  /* The count is data: small and plain. */
+  .aisle-head small {
+    display: block;
+    font-family: var(--fine);
+    font-size: 12px;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .aisle-block .rank-more { margin-top: 30px; }
 
   /* Key for the macro colours on the cards. Plain small print, like the
      numbers it explains. */

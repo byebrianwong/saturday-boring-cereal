@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { isAuthed, unauthorized } from '../lib/auth';
 import { readTaxonomy, NUTRITION_ORDER } from '../../../scripts/lib/enrich-core.mjs';
+import { shapeFor } from '../../../scripts/lib/image-core.mjs';
 import {
   parseCereal, readCerealRaw, writeCerealRaw, updateFrontmatter, cerealExists,
   prepareImage, writeBoxImage, removeBoxImage,
@@ -42,8 +43,13 @@ export const POST: APIRoute = async ({ request }) => {
   }
 
   const taxonomy = readTaxonomy();
+  const category = String(fields.category ?? current.category ?? 'cereal');
+  if (taxonomy.CATEGORIES && !taxonomy.CATEGORIES.includes(category)) {
+    return json({ error: `Category has to be one of ${taxonomy.CATEGORIES.join(', ')}.` }, 400);
+  }
+  // Form factors belong to a category: a cereal can't be a protein bar.
   const allowed: Record<string, string[] | null> = {
-    formFactors: taxonomy.FORM_FACTORS,
+    formFactors: (taxonomy.FORMS_BY_CATEGORY as Record<string, string[]> | null)?.[category] ?? taxonomy.FORM_FACTORS,
     proteinSources: taxonomy.PROTEIN_SOURCES,
     attributes: taxonomy.ATTRIBUTES,
   };
@@ -52,7 +58,10 @@ export const POST: APIRoute = async ({ request }) => {
     if (!Array.isArray(values)) return json({ error: `${key} must be a list.` }, 400);
     const ok = allowed[key];
     const bad = ok ? values.filter((v: string) => !ok.includes(v)) : [];
-    if (bad.length) return json({ error: `Unknown ${key}: ${bad.join(', ')}` }, 400);
+    if (bad.length) {
+      const what = key === 'formFactors' ? `${category} form factor` : key;
+      return json({ error: `Not a ${what}: ${bad.join(', ')}` }, 400);
+    }
   }
 
   // --- work out what actually changed ---------------------------------------
@@ -67,6 +76,8 @@ export const POST: APIRoute = async ({ request }) => {
     if (!same(value, current[key])) top[key] = value;
   }
   if (!same(rating, current.rating ?? null)) top.rating = rating;
+  // A file with no category is a cereal, so switching to cereal removes the line.
+  if (category !== (current.category ?? 'cereal')) top.category = category === 'cereal' ? null : category;
   for (const key of LIST_FIELDS) {
     const next = fields[key] ?? [];
     if (!same(next, current[key] ?? [])) top[key] = next;
@@ -101,7 +112,7 @@ export const POST: APIRoute = async ({ request }) => {
     top.noAutoImage = true;
   } else if (imageUrl) {
     try {
-      image = await prepareImage(imageUrl, { fit: fit === 'contain' ? 'contain' : 'cover' });
+      image = await prepareImage(imageUrl, { fit: fit === 'contain' ? 'contain' : 'cover', shape: shapeFor(category) });
       const host = hostOf(image.url);
       const fromOff = /openfoodfacts/.test(host ?? '');
       top.boxImage = `/images/cereals/${slug}.jpg`;
@@ -160,6 +171,9 @@ function imageMeta(image: any) {
     height: image.before.height,
     trimmedWidth: image.trimmed.width,
     trimmedHeight: image.trimmed.height,
+    // What it was fitted to: 900×1200 for a box front, 1000×400 for a bar's wrapper.
+    outWidth: image.size.width,
+    outHeight: image.size.height,
     bytes: image.out.length,
     lostPct: image.lost.pct,
     lostAxis: image.lost.axis,

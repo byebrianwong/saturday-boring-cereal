@@ -4,7 +4,7 @@ import Layout from '../../layouts/Layout.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import MiniBox from '../../components/MiniBox.astro';
 import PriceTag from '../../components/PriceTag.astro';
-import { label } from '../../lib/taxonomy';
+import { CATEGORY_INFO, CATEGORY_ORDER, inCategory, inWrapper, label, productPath } from '../../lib/taxonomy';
 import { macroLine, byRatingDesc } from '../../lib/macros';
 import { u } from '../../lib/url';
 
@@ -28,6 +28,13 @@ export async function getStaticPaths() {
 
 const { tag, kind, list } = Astro.props;
 const title = label(tag);
+
+// Products are ranked within their own category, so a tag that spans more than
+// one (puffs: cereal and snacks; high-protein: anything) gets one shelf each.
+const shelves = CATEGORY_ORDER.map((category) => ({ category, items: inCategory(list, category) })).filter(
+  (s) => s.items.length > 0
+);
+const mixed = shelves.length > 1;
 ---
 
 <Layout
@@ -44,23 +51,29 @@ const title = label(tag);
 
   <div class="crumb wrap"><a href={u('/cereals/')}>← Back to the full aisle</a></div>
 
-  <div class="aislegrid wrap">
-    {
-      list.map((c) => (
-        <div class="cell">
-          <MiniBox
-            emoji={c.data.emoji}
-            brand={c.data.brand}
-            name={c.data.name}
-            boxColor={c.data.boxColor}
-            boxImage={c.data.boxImage}
-            href={`/cereals/${c.id}/`}
-          />
-          <PriceTag rating={c.data.rating} macros={macroLine(c)} />
+  {
+    shelves.map(({ category, items }) => (
+      <section class="shelf wrap">
+        {mixed && <h2 class="shelf-head">{CATEGORY_INFO[category].label}</h2>}
+        <div class="aislegrid">
+          {items.map((c) => (
+            <div class="cell">
+              <MiniBox
+                emoji={c.data.emoji}
+                brand={c.data.brand}
+                name={c.data.name}
+                boxColor={c.data.boxColor}
+                boxImage={c.data.boxImage}
+                wide={inWrapper(c)}
+                href={productPath(c)}
+              />
+              <PriceTag rating={c.data.rating} macros={macroLine(c)} />
+            </div>
+          ))}
         </div>
-      ))
-    }
-  </div>
+      </section>
+    ))
+  }
 </Layout>
 
 <style>
@@ -79,13 +92,29 @@ const title = label(tag);
     text-decoration: underline;
   }
 
+  .shelf {
+    max-width: 980px;
+    margin: 34px auto 70px;
+  }
+
+  .shelf + .shelf {
+    margin-top: -36px;
+  }
+
+  .shelf-head {
+    font-family: var(--shout);
+    font-size: 22px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-bottom: 3px solid var(--ink);
+    padding-bottom: 6px;
+    margin: 0 0 24px;
+  }
+
   .aislegrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     gap: 34px 18px;
-    max-width: 980px;
-    margin: 34px auto 0;
-      margin-bottom: 70px;
   }
 
   .cell {

@@ -1,4 +1,4 @@
-// Add one cereal and pull its nutrition in the same step.
+// Add one product (cereal, bar or snack) and pull its nutrition in the same step.
 //
 //   npm run add                      # interactive — asks brand, product, score, macros
 //   npm run add -- --brand "Magic Spoon" --name "Peanut Butter" --rating 5 \
@@ -17,6 +17,8 @@
 //
 // Your recorded numbers (protein / sugar / fiber / serving / rating) are never
 // overwritten — only blank fields get filled. Flags:
+//   --category    cereal (the default), bar or snack; --form takes that
+//                 category's form factors (e.g. protein-bar for a bar)
 //   --no-enrich   just scaffold the file, skip the lookup
 //   --review      look up, but never auto-apply — always hold for confirmation
 //   --no-usda     skip USDA (Open Food Facts only)
@@ -28,7 +30,7 @@ import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
 import { CEREALS, DRAFTS, readCereal, readTaxonomy, nameMatch, applyDraft, enrichCereal } from './lib/enrich-core.mjs';
 
-const { FORM_FACTORS, PROTEIN_SOURCES, ATTRIBUTES } = readTaxonomy();
+const { CATEGORIES, FORMS_BY_CATEGORY, PROTEIN_SOURCES, ATTRIBUTES } = readTaxonomy();
 
 // --- args ---------------------------------------------------------------------
 const argv = process.argv.slice(2);
@@ -124,7 +126,9 @@ const note = await ask({ q: 'Short tasting note', flag: 'note' }, { def: flag('n
 const servingDesc = flag('serving-desc');
 const emoji = flag('emoji') || '🥣';
 const boxColor = flag('color') || '#c98d4e';
-const formFactors = pickList(flag('form'), FORM_FACTORS, 'form factor');
+const category = flag('category') || 'cereal';
+if (CATEGORIES && !CATEGORIES.includes(category)) fail(`--category must be one of ${CATEGORIES.join(', ')} (got "${category}")`);
+const formFactors = pickList(flag('form'), FORMS_BY_CATEGORY?.[category] ?? null, `${category} form factor`);
 const proteinSources = pickList(flag('protein-src'), PROTEIN_SOURCES, 'protein source');
 const attributes = pickList(flag('attrs'), ATTRIBUTES, 'attribute');
 rl?.close();
@@ -146,6 +150,8 @@ const today = new Date().toISOString().slice(0, 10);
 const lines = ['---'];
 lines.push(`name: ${q(name)}`);
 lines.push(`brand: ${q(brand)}`);
+// A file without a category is a cereal, so only bars and snacks write one.
+if (category !== 'cereal') lines.push(`category: ${category}`);
 lines.push(`rating: ${rating == null ? 'null' : rating}`);
 if (note) lines.push(`shortNote: ${q(note)}`);
 lines.push(`dateReviewed: ${today}`);
@@ -179,7 +185,7 @@ lines.push('');
 mkdirSync(CEREALS, { recursive: true });
 writeFileSync(join(CEREALS, file), lines.join('\n') + '\n');
 console.log(`\n✓ Created src/content/cereals/${file}`);
-console.log(`  ${brand} ${name} · ${rating == null ? 'unrated' : rating + '/10'} · ${serving}g serving`);
+console.log(`  ${brand} ${name} · ${category} · ${rating == null ? 'unrated' : rating + '/10'} · ${serving}g serving`);
 
 // --- pull nutrition -----------------------------------------------------------
 if (NO_ENRICH) {

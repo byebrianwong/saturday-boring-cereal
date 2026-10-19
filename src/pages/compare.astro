@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Layout from '../layouts/Layout.astro';
 import { scoreCereal, tierColor, overallOutOfTen, proteinDVOf } from '../lib/score';
 import { u } from '../lib/url';
+import { inWrapper, productPath } from '../lib/taxonomy';
 import { per100gOf, percentDV } from '../lib/nutrition';
 
 const cereals = await getCollection('cereals');
@@ -22,8 +23,10 @@ const items = ranked.map((c) => {
   emoji: c.data.emoji,
   boxColor: c.data.boxColor,
   boxImage: c.data.boxImage ? u(c.data.boxImage) : null,
+  // A bar's photo is a wide wrapper, not a box front.
+  wrapped: inWrapper(c),
   rating: c.data.rating,
-  href: u(`/cereals/${c.id}/`),
+  href: u(productPath(c)),
   // Tier, precomputed so the client table can stamp it per column.
   overall: s.overall,
   tier: s.tier,
@@ -112,7 +115,7 @@ const items = ranked.map((c) => {
   <script>
     interface Row {
       id: string; brand: string; name: string; emoji: string;
-      boxColor: string; boxImage: string | null; rating: number | null; href: string;
+      boxColor: string; boxImage: string | null; wrapped: boolean; rating: number | null; href: string;
       overall: number | null; tier: string | null; color: string; out10: string | null;
       n: Record<string, number | null>;
       dv: Record<string, number | null>;
@@ -182,7 +185,7 @@ const items = ranked.map((c) => {
         b.type = 'button';
         b.className = 'chip' + (selected.has(d.id) ? ' on' : '');
         b.disabled = !selected.has(d.id) && selected.size >= MAX;
-        b.innerHTML = `<span class="cb">${d.boxImage ? `<img src="${d.boxImage}" alt="">` : d.emoji}</span>` +
+        b.innerHTML = `<span class="cb${d.wrapped ? ' wide' : ''}">${d.boxImage ? `<img src="${d.boxImage}" alt="">` : d.emoji}</span>` +
           `<span class="ct"><b>${d.name}</b><small>${d.brand}</small></span>`;
         b.addEventListener('click', () => {
           if (selected.has(d.id)) selected.delete(d.id);
@@ -225,7 +228,7 @@ const items = ranked.map((c) => {
         `<div class="rh corner"></div>` +
         chosen.map((c) => `
           <div class="chead">
-            <a class="box" href="${c.href}" style="--bc:${c.boxColor}">
+            <a class="box${c.wrapped ? ' wide' : ''}" href="${c.href}" style="--bc:${c.boxColor}">
               ${c.boxImage ? `<img src="${c.boxImage}" alt="${c.brand} ${c.name}">` : `<span class="e">${c.emoji}</span>`}
             </a>
             <div class="cn"><b>${c.name}</b><small>${c.brand}</small></div>
@@ -395,6 +398,9 @@ const items = ranked.map((c) => {
     object-fit: cover;
   }
 
+  /* A bar's wrapper is wide: show all of it, small, rather than a crop. */
+  .picker :global(.chip .cb.wide img) { object-fit: contain; }
+
   .picker :global(.chip .ct) {
     display: flex;
     flex-direction: column;
@@ -500,6 +506,28 @@ const items = ranked.map((c) => {
   }
 
   .board :global(.box .e) { font-size: 32px; }
+
+  /* A bar: the frame keeps its size so the header row lines up, and the
+     wrapper lies across it, flat and a little tilted, like WrapperShot. */
+  .board :global(.box.wide) { background: var(--cream); }
+
+  .board :global(.box.wide img),
+  .board :global(.box.wide .e) {
+    width: 92%;
+    height: auto;
+    aspect-ratio: 5 / 2;
+    object-fit: cover;
+    border: 2px solid var(--ink);
+    transform: rotate(-4deg);
+  }
+
+  .board :global(.box.wide .e) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    background: var(--bc);
+  }
 
   .board :global(.cn b) {
     display: block;

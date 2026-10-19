@@ -8,18 +8,26 @@ interface Props {
   boxColor: string;
   href?: string;
   boxImage?: string;
+  /** A bar: shown as a wide wrapper lying across the card. */
+  wide?: boolean;
 }
 
 import { u } from '../lib/url';
+import WrapperShot from './WrapperShot.astro';
 
-const { emoji, brand, name, boxColor, href, boxImage } = Astro.props;
+const { emoji, brand, name, boxColor, href, boxImage, wide = false } = Astro.props;
 const Tag = href ? 'a' : 'div';
 ---
 
 <Tag class="mini" href={href ? u(href) : undefined} style={`--bc: ${boxColor}`}>
-  <div class:list={['mf', { hasphoto: boxImage }]}>
+  <div class:list={['mf', { hasphoto: boxImage, wide }]}>
     {
-      boxImage ? (
+      wide ? (
+        <>
+          <WrapperShot image={boxImage} emoji={emoji} boxColor={boxColor} alt={`${brand} ${name}`} size="sm" />
+          {!boxImage && <h5>{name}</h5>}
+        </>
+      ) : boxImage ? (
         <img class="photo" src={u(boxImage)} alt={`${brand} ${name}`} loading="lazy" />
       ) : (
         <>
@@ -64,6 +72,10 @@ const Tag = href ? 'a' : 'div';
   }
 
   .mf.hasphoto { padding: 0; background: var(--white); }
+
+  /* A bar: the card keeps its size and the wrapper lies across it. */
+  .mf.wide { padding: 6px; background: var(--cream); }
+  .mf.wide h5 { color: var(--ink); text-shadow: none; margin-top: 12px; }
 
   .photo { width: 100%; height: 100%; object-fit: cover; }
 

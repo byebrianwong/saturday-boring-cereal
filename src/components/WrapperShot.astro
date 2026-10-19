@@ -1,0 +1,125 @@
+---
+// A bar's wrapper: its photo, or the emoji placeholder, as a flat 5:2 strip.
+//
+// Bars come in wrappers, so their photos are fitted to 5:2 instead of the tall
+// box face (see scripts/lib/image-core.mjs). Put this inside any box-shaped
+// frame: it centres itself in the frame, so a bar's card keeps the same size
+// as the cereal cards beside it and rows still line up.
+import { u } from '../lib/url';
+
+interface Props {
+  /** The product's `boxImage`. Without one, the emoji placeholder shows. */
+  image?: string;
+  emoji: string;
+  boxColor: string;
+  /** Alt text for the photo. Empty when the name is printed right beside it. */
+  alt: string;
+  /**
+   * xs: a table thumbnail. sm: small cards. md: tiles and rank cards.
+   * lg: the product's own page.
+   */
+  size?: 'xs' | 'sm' | 'md' | 'lg';
+  /** Printed next to the emoji when there's no photo, e.g. "No image on file". */
+  note?: string;
+  lazy?: boolean;
+}
+
+const { image, emoji, boxColor, alt, size = 'md', note, lazy = true } = Astro.props;
+---
+
+<span class={`wrapper-shot ${size}`} style={`--bc: ${boxColor}`}>
+  {
+    image ? (
+      <img src={u(image)} alt={alt} loading={lazy ? 'lazy' : undefined} />
+    ) : (
+      <>
+        <span class="em" aria-hidden="true">{emoji}</span>
+        {note && <span class="note">{note}</span>}
+      </>
+    )
+  }
+</span>
+
+<style>
+  /* Chrome, like the 3D box it stands in for: hard border, offset shadow and
+     a slight tilt, as if the bar was dropped on the counter. */
+  .wrapper-shot {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    flex: none;
+    width: 86%;
+    aspect-ratio: 5 / 2;
+    overflow: hidden;
+    padding: 0 6%;
+    background: linear-gradient(145deg, var(--bc), color-mix(in srgb, var(--bc) 72%, #000));
+    border: 3px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    transform: rotate(-4deg);
+    /* The emoji scales with the strip's width. */
+    container-type: inline-size;
+  }
+
+  .wrapper-shot:has(img) { padding: 0; background: var(--white); }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .em {
+    font-size: 22cqw;
+    line-height: 1;
+    filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.3));
+  }
+
+  /* Data, so it stays small and plain. */
+  .note {
+    font-family: var(--fine);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    line-height: 1.3;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .xs {
+    width: 100%;
+    border-width: 1.5px;
+    box-shadow: none;
+    transform: none;
+    padding: 0;
+  }
+
+  .xs .note { display: none; }
+
+  .sm {
+    border-width: 2px;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+
+  .sm .note { display: none; }
+
+  .lg {
+    width: 100%;
+    border-width: 4px;
+    box-shadow: 8px 8px 0 var(--ink);
+    transform: rotate(-3deg);
+  }
+
+  /* On the product's own page the placeholder carries the name, like the
+     printing on a real wrapper. */
+  .lg .em { font-size: 15cqw; }
+
+  .lg .note {
+    font-family: var(--shout);
+    font-size: 22px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--white);
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);
+  }
+</style>

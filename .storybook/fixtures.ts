@@ -31,6 +31,7 @@ function toEntry(path: string, raw: string): Cereal {
     body: body.trim(),
     data: {
       // The schema's defaults, so a fixture looks like what getCollection returns.
+      category: 'cereal',
       rating: null,
       emoji: '🥣',
       boxColor: '#c98d4e',

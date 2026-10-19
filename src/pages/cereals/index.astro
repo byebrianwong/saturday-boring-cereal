@@ -2,29 +2,63 @@
 import { getCollection } from 'astro:content';
 import Layout from '../../layouts/Layout.astro';
 import AisleFilters from '../../components/AisleFilters.astro';
+import CategorySwitch from '../../components/CategorySwitch.astro';
 import PageHeader from '../../components/PageHeader.astro';
+import WrapperShot from '../../components/WrapperShot.astro';
 import { byRatingDesc } from '../../lib/macros';
 import { per100gOf, percentOfDay, type Nutrition } from '../../lib/nutrition';
 import { scoreCereal, scoreTier, tierColor, overallOutOfTen, macroTier, proteinDVOf } from '../../lib/score';
 import type { MacroTintKey } from '../../lib/score';
 import { oneDecimal } from '../../lib/format';
-import { label } from '../../lib/taxonomy';
+import { AISLE_FILTERS, CATEGORY_ORDER, EVERYTHING_FILTERS, inCategory, inWrapper, label, productPath } from '../../lib/taxonomy';
 import { u } from '../../lib/url';
 
 const cereals = await getCollection('cereals');
 const ranked = [...cereals].sort(byRatingDesc);
 
+// Cereal, bars and snacks share this page, but each is ranked only within its
+// own category. The page opens on cereal; the category row appears once
+// anything else is in stock.
+const counts = Object.fromEntries(CATEGORY_ORDER.map((c) => [c, inCategory(cereals, c).length])) as Record<
+  (typeof CATEGORY_ORDER)[number],
+  number
+>;
+const stocked = CATEGORY_ORDER.filter((c) => counts[c] > 0);
+const showSwitch = stocked.length > 1;
+// A bar or snack filter button only shows when something in that category
+// carries the tag, so a short shelf doesn't fill up with buttons that find
+// nothing. The cereal row is the site's original, fixed list and stays whole.
+const tagsIn = (list: typeof cereals) =>
+  new Set<string>(list.flatMap((c) => [...c.data.formFactors, ...c.data.attributes]));
+const filtersFor = (keys: string[], list: typeof cereals) => {
+  const present = tagsIn(list);
+  return keys.filter((k) => k === 'all' || present.has(k));
+};
+const filterRows = [
+  ...stocked.map((c) => ({
+    category: c,
+    keys: c === 'cereal' ? AISLE_FILTERS.cereal : filtersFor(AISLE_FILTERS[c], inCategory(cereals, c)),
+  })),
+  ...(showSwitch ? [{ category: 'all' as const, keys: filtersFor(EVERYTHING_FILTERS, cereals) }] : []),
+];
+
 // One row per box. Nutrition is per 100 g, like everywhere else on the site.
 // A null stays null: the cell prints a dash and sorts to the bottom.
+// `pos` is the first paint's position number, counted within the category.
+const seen = new Map<string, number>();
 const rows = ranked.map((c) => {
   const d = c.data;
   const n = per100gOf(c);
   const s = scoreCereal(c);
   const taste = d.rating == null ? null : d.rating * 10;
+  const pos = seen.get(d.category) ?? 0;
+  seen.set(d.category, pos + 1);
   return {
     id: c.id,
     d,
-    href: u(`/cereals/${c.id}/`),
+    pos,
+    wrapped: inWrapper(c),
+    href: u(productPath(c)),
     taste,
     tasteTier: taste == null ? 'na' : scoreTier(taste),
     // Health is the nutrition share of the Tier score: the weighted mean of
@@ -100,6 +134,7 @@ const sortVal = (v: number | null | undefined) => (v == null ? '' : String(v));
 // box tiles carry the same set, so one sort puts both views in the same order.
 const dataAttrs = (r: (typeof rows)[number]) => ({
   'data-id': r.id,
+  'data-cat': r.d.category,
   'data-tags': r.tags.join(' '),
   'data-search': `${r.d.brand} ${r.d.name} ${r.d.shortNote ?? ''}`.toLowerCase(),
   'data-s-name': `${r.d.brand} ${r.d.name}`.toLowerCase(),
@@ -138,7 +173,12 @@ const MEDALS = ['m1', 'm2', 'm3'];
     lede="Every box on record. Look at them as boxes or read them as a table. Sort, filter by type or search by name. Press + on up to four boxes to send them to the price check."
   />
 
-  <AisleFilters mode="buttons" />
+  {showSwitch && <CategorySwitch counts={counts} />}
+  {
+    filterRows.map((row, i) => (
+      <AisleFilters mode="buttons" category={row.category} only={row.keys} hidden={i > 0} />
+    ))
+  }
 
   <div class="controls wrap">
     <div class="viewer" role="group" aria-label="View">
@@ -167,12 +207,14 @@ const MEDALS = ['m1', 'm2', 'm3'];
 
   <section class="shelf wrap" id="shelf" data-units="pct">
     <ol class="tiles" id="tiles" aria-label="All cereals, as boxes">
-      {rows.map((r, i) => (
-        <li class="tile" {...dataAttrs(r)}>
-          <span class:list={['pos', MEDALS[i]]} hidden={r.taste == null}>{i + 1}</span>
+      {rows.map((r) => (
+        <li class="tile" {...dataAttrs(r)} hidden={r.d.category !== 'cereal'}>
+          <span class:list={['pos', MEDALS[r.pos]]} hidden={r.taste == null}>{r.pos + 1}</span>
           <a class="tile-link" href={r.href}>
-            <span class="tile-img" style={`--bc: ${r.d.boxColor}`}>
-              {r.d.boxImage ? (
+            <span class:list={['tile-img', { wide: r.wrapped }]} style={`--bc: ${r.d.boxColor}`}>
+              {r.wrapped ? (
+                <WrapperShot image={r.d.boxImage} emoji={r.d.emoji} boxColor={r.d.boxColor} alt="" />
+              ) : r.d.boxImage ? (
                 <img src={u(r.d.boxImage)} alt="" loading="lazy" />
               ) : (
                 <span class="e" aria-hidden="true">{r.d.emoji}</span>
@@ -271,7 +313,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
             </tr>
             <tr class="heads">
               <th class="h-name" scope="col" data-sort="name" data-first="asc">
-                <button type="button">Cereal</button>
+                <button type="button" id="name-head">Cereal</button>
               </th>
               <th class="h-big h-taste" scope="col" data-sort="taste" data-first="desc">
                 <button type="button">Taste</button>
@@ -294,11 +336,13 @@ const MEDALS = ['m1', 'm2', 'm3'];
           </thead>
           <tbody id="rows">
             {rows.map((r) => (
-              <tr {...dataAttrs(r)}>
+              <tr {...dataAttrs(r)} hidden={r.d.category !== 'cereal'}>
                 <th class="c-name" scope="row">
                   <a href={r.href}>
-                    <span class="thumb" style={`--bc: ${r.d.boxColor}`}>
-                      {r.d.boxImage ? (
+                    <span class:list={['thumb', { wide: r.wrapped }]} style={`--bc: ${r.d.boxColor}`}>
+                      {r.wrapped ? (
+                        <WrapperShot image={r.d.boxImage} emoji={r.d.emoji} boxColor={r.d.boxColor} alt="" size="xs" />
+                      ) : r.d.boxImage ? (
                         <img src={u(r.d.boxImage)} alt="" loading="lazy" />
                       ) : (
                         <span class="e" aria-hidden="true">{r.d.emoji}</span>
@@ -405,9 +449,9 @@ const MEDALS = ['m1', 'm2', 'm3'];
   const sortDir = document.getElementById('sortdir') as HTMLButtonElement;
   const count = document.getElementById('count')!;
   const q = document.getElementById('q') as HTMLInputElement;
-  const filterBtns = Array.from(
-    document.querySelectorAll<HTMLButtonElement>('[data-filter-bar] [data-filter]')
-  );
+  const filterBars = Array.from(document.querySelectorAll<HTMLElement>('[data-filter-bar]'));
+  const catBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-category]'));
+  const nameHead = document.getElementById('name-head')!;
   const viewBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('[data-view]'));
   const shelf = document.getElementById('shelf')!;
   const unitBtns = Array.from(document.querySelectorAll<HTMLButtonElement>('button[data-units]'));
@@ -434,18 +478,36 @@ const MEDALS = ['m1', 'm2', 'm3'];
   const firstDir = (key: string): Dir => (options.find((o) => o.value === key)?.dataset.first as Dir) ?? 'desc';
 
   // State lives in the URL hash so a view, sort and filter can be linked.
-  // `f` is the aisle filter (the home page's aisle signs already link with it).
+  // `c` is the category: cereal (the default, never written), bar, snack or
+  // all. Each category is ranked on its own, so it decides what the position
+  // numbers count. Without the category row only cereal is valid.
+  // `f` is the aisle filter, one of the buttons in that category's row.
   // `v` is the view; Boxes is the default, so only `v=table` is ever written.
   // `u` is the units; % of a day is the default, so only `u=g` is ever written.
-  const state = { v: 'boxes' as 'boxes' | 'table', u: 'pct' as Units, f: 'all', s: 'taste', d: 'desc' as Dir, q: '' };
+  const state = { v: 'boxes' as 'boxes' | 'table', u: 'pct' as Units, c: 'cereal', f: 'all', s: 'taste', d: 'desc' as Dir, q: '' };
+
+  // The filter buttons of the category on show.
+  const barFor = (c: string) => filterBars.find((b) => b.dataset.filterBar === c);
+  const filterBtnsIn = (c: string) =>
+    Array.from(barFor(c)?.querySelectorAll<HTMLButtonElement>('[data-filter]') ?? []);
+
+  // Nouns for the count line and the table's first heading.
+  const NOUNS: Record<string, [string, string, string]> = {
+    cereal: ['box', 'boxes', 'Cereal'],
+    bar: ['bar', 'bars', 'Bar'],
+    snack: ['snack', 'snacks', 'Snack'],
+    all: ['product', 'products', 'Product'],
+  };
 
   function readHash() {
     const h = new URLSearchParams(location.hash.slice(1));
     state.v = h.get('v') === 'table' ? 'table' : 'boxes';
     const units = h.get('u');
     state.u = units === 'g' || units === 'pct' ? units : storedUnits();
+    const c = h.get('c');
+    state.c = c && catBtns.some((b) => b.dataset.category === c) ? c : 'cereal';
     const f = h.get('f');
-    state.f = f && filterBtns.some((b) => b.dataset.filter === f) ? f : 'all';
+    state.f = f && filterBtnsIn(state.c).some((b) => b.dataset.filter === f) ? f : 'all';
     const s = h.get('s');
     state.s = s && options.some((o) => o.value === s) ? s : 'taste';
     const d = h.get('d');
@@ -458,6 +520,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
     const h = new URLSearchParams();
     if (state.v !== 'boxes') h.set('v', state.v);
     if (state.u !== 'pct') h.set('u', state.u);
+    if (state.c !== 'cereal') h.set('c', state.c);
     if (state.f !== 'all') h.set('f', state.f);
     if (state.s !== 'taste' || state.d !== 'desc') {
       h.set('s', state.s);
@@ -477,6 +540,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
   }
 
   function matches(el: HTMLElement): boolean {
+    if (state.c !== 'all' && el.dataset.cat !== state.c) return false;
     if (state.f !== 'all' && !(el.dataset.tags ?? '').split(' ').includes(state.f)) return false;
     const terms = state.q.toLowerCase().trim().split(/\s+/).filter(Boolean);
     const hay = el.dataset.search ?? '';
@@ -502,10 +566,11 @@ const MEDALS = ['m1', 'm2', 'm3'];
 
   // Number the shown tiles in sort order. A box missing the sorted value gets
   // no number, and neither does any tile when sorting by name. The top three
-  // get medal colours only when the sort runs best-first.
+  // get medal colours only when the sort runs best-first. Products are ranked
+  // only within their own category, so a mixed shelf (Everything) gets none.
   function numberTiles(sorted: HTMLLIElement[]) {
     const key = sortKey();
-    const ranked = state.s !== 'name';
+    const ranked = state.s !== 'name' && state.c !== 'all';
     const bestFirst = state.d === firstDir(state.s);
     let pos = 0;
     for (const tile of sorted) {
@@ -533,7 +598,10 @@ const MEDALS = ['m1', 'm2', 'm3'];
 
     none.hidden = shown > 0;
     tilesNone.hidden = shown > 0;
-    count.textContent = `${shown} of ${rows.length} box${rows.length === 1 ? '' : 'es'} shown`;
+    const inCat = state.c === 'all' ? rows.length : rows.filter((r) => r.dataset.cat === state.c).length;
+    const [one, many, head] = NOUNS[state.c] ?? NOUNS.all;
+    count.textContent = `${shown} of ${inCat} ${inCat === 1 ? one : many} shown`;
+    nameHead.textContent = head;
 
     const boxes = state.v === 'boxes';
     tilesEl.hidden = !boxes;
@@ -562,7 +630,13 @@ const MEDALS = ['m1', 'm2', 'm3'];
       if (on) th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
       else th.removeAttribute('aria-sort');
     }
-    for (const b of filterBtns) b.classList.toggle('on', b.dataset.filter === state.f);
+    for (const bar of filterBars) bar.hidden = bar.dataset.filterBar !== state.c;
+    for (const b of filterBtnsIn(state.c)) b.classList.toggle('on', b.dataset.filter === state.f);
+    for (const b of catBtns) {
+      const on = b.dataset.category === state.c;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
     writeHash();
   }
 
@@ -609,9 +683,20 @@ const MEDALS = ['m1', 'm2', 'm3'];
     });
   }
 
-  for (const b of filterBtns) {
+  for (const bar of filterBars) {
+    for (const b of filterBtnsIn(bar.dataset.filterBar!)) {
+      b.addEventListener('click', () => {
+        state.f = b.dataset.filter!;
+        render();
+      });
+    }
+  }
+
+  // A new category starts unfiltered: each category has its own filters.
+  for (const b of catBtns) {
     b.addEventListener('click', () => {
-      state.f = b.dataset.filter!;
+      state.c = b.dataset.category!;
+      state.f = 'all';
       render();
     });
   }
@@ -820,7 +905,8 @@ const MEDALS = ['m1', 'm2', 'm3'];
   }
 
   .tiles[hidden],
-  .ledger-frame[hidden] { display: none; }
+  .ledger-frame[hidden],
+  .tile[hidden] { display: none; }
 
   .tile {
     position: relative;
@@ -851,6 +937,9 @@ const MEDALS = ['m1', 'm2', 'm3'];
   }
 
   .tile-img img { width: 100%; height: 100%; object-fit: cover; }
+  /* A bar: the frame stays box-shaped so the row lines up, and the wrapper
+     lies across it on a plain ground. */
+  .tile-img.wide { background: var(--cream); }
   .tile-img .e { font-size: 64px; line-height: 1; }
 
   .tile-nm { display: block; padding: 10px 12px 0; }
@@ -1146,6 +1235,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
   }
 
   .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .thumb.wide { background: var(--cream); padding: 0 2px; }
   .thumb .e { font-size: 19px; line-height: 1; }
 
   .nm b {

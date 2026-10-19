@@ -1,5 +1,6 @@
-// Search for a cereal by name, pick it off a list, and get everything filled in
-// — nutrition, box photo, tags — so all you write is the score and the note.
+// Search for a product by name, pick it off a list, and get everything filled in
+// — nutrition, box photo, category, tags — so all you write is the score and
+// the note. Works for cereal, bars and snacks.
 //
 //   npm run find "magic spoon peanut butter"
 //   npm run find                                 # asks for the name
@@ -22,19 +23,22 @@
 //   --brand / --name override the brand/product split taken from the match
 //   --no-image       don't pull the photo, keep the emoji placeholder
 //   --no-usda        Open Food Facts only
+//   --category <c>   cereal, bar or snack; else guessed from the name and the
+//                    database's shelf placement
 //   --no-infer       don't guess formFactors/attributes/proteinSources
-//   --fit contain    pad the photo onto white instead of cropping to fill
+//   --fit contain    pad the photo onto white instead of cropping to fill.
+//                    A bar's photo is fitted to a wide wrapper, not a box front
 //   --dry-run        show what it would write, write nothing
 //   --yes            never prompt (needs --pick; for scripts)
 
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
-import { searchCandidates, usdaUpgradeToLabel } from './lib/enrich-core.mjs';
+import { searchCandidates, usdaUpgradeToLabel, readTaxonomy } from './lib/enrich-core.mjs';
 import {
-  splitBrandName, inferTags, slugify, cerealExists, cerealMarkdown,
+  splitBrandName, inferTags, inferCategory, slugify, cerealExists, cerealMarkdown,
   sanitize, prepareImage, writeCereal, nutritionFrom,
 } from './lib/compose-core.mjs';
-import { OUT_WIDTH, OUT_HEIGHT } from './lib/image-core.mjs';
+import { shapeFor } from './lib/image-core.mjs';
 
 // --- args ---------------------------------------------------------------------
 const argv = process.argv.slice(2);
@@ -43,7 +47,7 @@ const flag = (name) => {
   const i = argv.indexOf(`--${name}`);
   return i >= 0 && i + 1 < argv.length ? argv[i + 1] : undefined;
 };
-const flagsWithValues = new Set(['pick', 'rating', 'note', 'brand', 'name', 'fit', 'emoji', 'color']);
+const flagsWithValues = new Set(['pick', 'rating', 'note', 'brand', 'name', 'fit', 'emoji', 'color', 'category']);
 const pos = [];
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
@@ -58,7 +62,8 @@ const NO_IMAGE = has('--no-image');
 const USE_USDA = !has('--no-usda');
 const INFER = !has('--no-infer');
 const DRY = has('--dry-run');
-const FIT = flag('fit') || 'cover';
+const FIT_FLAG = flag('fit');
+const CATEGORY_FLAG = flag('category');
 const NONINTERACTIVE = has('--yes') || !stdin.isTTY;
 const FDC_KEY = process.env.FDC_API_KEY || 'DEMO_KEY';
 
@@ -66,7 +71,11 @@ function fail(msg) {
   console.error(`\nError: ${msg}`);
   process.exit(1);
 }
-if (!['cover', 'contain'].includes(FIT)) fail(`--fit must be cover or contain (got "${FIT}")`);
+if (FIT_FLAG && !['cover', 'contain'].includes(FIT_FLAG)) fail(`--fit must be cover or contain (got "${FIT_FLAG}")`);
+const CATEGORIES = readTaxonomy().CATEGORIES ?? ['cereal', 'bar', 'snack'];
+if (CATEGORY_FLAG && !CATEGORIES.includes(CATEGORY_FLAG)) {
+  fail(`--category must be one of ${CATEGORIES.join(', ')} (got "${CATEGORY_FLAG}")`);
+}
 
 const rl = NONINTERACTIVE ? null : createInterface({ input: stdin, output: stdout });
 const ask = async (q, def) => {
@@ -193,11 +202,15 @@ if (rating != null && (!Number.isFinite(rating) || rating < 0 || rating > 10)) {
 const note = flag('note') ?? (await ask('Short tasting note'));
 rl?.close();
 
-// --- 7. infer the tags --------------------------------------------------------
+// --- 7. infer the category and tags ------------------------------------------
 // Best-effort only, and printed back so a wrong guess is obvious and editable.
+const category = CATEGORY_FLAG || inferCategory(picked, brand, name);
 const { formFactors, proteinSources, attributes } = INFER
-  ? inferTags(picked, brand, name)
+  ? inferTags(picked, brand, name, { category })
   : { formFactors: [], proteinSources: [], attributes: [] };
+const FIT = FIT_FLAG || 'cover';
+// A bar's photo is fitted to a wide wrapper; everything else to a box front.
+const SHAPE = shapeFor(category);
 
 // --- 8. compose ---------------------------------------------------------------
 const slug = slugify(brand, name);
@@ -217,14 +230,14 @@ const boxColor = flag('color') || '#c98d4e';
 let imageResult = null;
 if (!NO_IMAGE && picked.image) {
   try {
-    imageResult = await prepareImage(picked.image, { fit: FIT });
+    imageResult = await prepareImage(picked.image, { fit: FIT, shape: SHAPE });
   } catch (e) {
     console.log(`\n  (photo download failed: ${e.message} — keeping the ${emoji} placeholder)`);
   }
 }
 
 const md = cerealMarkdown({
-  brand, name, rating, note, picked, slug,
+  brand, name, rating, note, picked, slug, category,
   formFactors, proteinSources, attributes, emoji, boxColor,
   hasImage: !!imageResult,
   imageSource: 'open_food_facts',
@@ -236,9 +249,9 @@ if (DRY) {
   console.log(`\n[dry-run] would write src/content/cereals/${file}\n`);
   console.log(md.replace(/^/gm, '  '));
   if (imageResult) {
-    const { before, trimmed, out } = imageResult;
+    const { before, trimmed, out, size } = imageResult;
     console.log(`  [dry-run] would write public/images/cereals/${slug}.jpg`);
-    console.log(`    ${before.width}x${before.height} → trimmed ${trimmed.width}x${trimmed.height} → ${OUT_WIDTH}x${OUT_HEIGHT} (${(out.length / 1024).toFixed(0)}KB)`);
+    console.log(`    ${before.width}x${before.height} → trimmed ${trimmed.width}x${trimmed.height} → ${size.width}x${size.height} (${(out.length / 1024).toFixed(0)}KB)`);
   }
   process.exit(0);
 }
@@ -250,7 +263,8 @@ const filled = Object.entries(nutRows).filter(([, v]) => v != null).length;
 const blank = Object.entries(nutRows).filter(([k, v]) => v == null && k !== 'proteinDV').map(([k]) => k);
 
 console.log(`\n✓ Created src/content/cereals/${file}`);
-console.log(`  ${brand} ${name} · ${rating == null ? 'unrated' : rating + '/10'} · ${picked.servingSize}g serving`);
+console.log(`  ${brand} ${name} · ${category} · ${rating == null ? 'unrated' : rating + '/10'} · ${picked.servingSize}g serving`);
+if (!CATEGORY_FLAG) console.log(`  category guessed as ${category} — wrong? delete the file and re-run with --category`);
 console.log(`  ${filled} nutrition fields from ${picked.sourceLabel}${picked.basis === 'label' ? ' (printed label)' : ''}: “${picked.matchedName}”`);
 if (blank.length) console.log(`  still blank: ${blank.join(', ')} — renders as “not listed”`);
 
@@ -262,9 +276,9 @@ if (INFER && (formFactors.length || proteinSources.length || attributes.length))
 }
 
 if (imageResult) {
-  const { before, trimmed, out, lost } = imageResult;
+  const { before, trimmed, out, lost, size } = imageResult;
   console.log(`\n  Box photo: public/images/cereals/${slug}.jpg (${(out.length / 1024).toFixed(0)}KB)`);
-  console.log(`    ${before.width}x${before.height} → trimmed ${trimmed.width}x${trimmed.height} → ${OUT_WIDTH}x${OUT_HEIGHT}, fit=${FIT}`);
+  console.log(`    ${before.width}x${before.height} → trimmed ${trimmed.width}x${trimmed.height} → ${size.width}x${size.height}, fit=${FIT}`);
   if (FIT === 'cover' && lost.pct >= 25) {
     console.log(`    ⚠ the crop discarded ~${lost.pct}% off the ${lost.axis} — re-run with --fit contain to pad instead`);
   }

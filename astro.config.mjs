@@ -66,9 +66,13 @@ export default defineConfig({
   // Retired pages send old links to The Aisle instead of a 404. The Rankings
   // page was folded into it (it opens sorted by Taste), and the Receipts page
   // (/reviews/) was removed. A cereal that was listed twice sends its old
-  // page to the entry that was kept. Astro does not add `base` to a
-  // redirect's destination, so it is added here.
+  // page to the entry that was kept. Bars and snacks have their own detail
+  // pages (/bars/<slug>/) but share the Aisle, so their bare paths open it on
+  // that category. Astro does not add `base` to a redirect's destination, so
+  // it is added here.
   redirects: {
+    '/bars': `${base ?? ''}/cereals/#c=bar`,
+    '/snacks': `${base ?? ''}/cereals/#c=snack`,
     '/top': `${base ?? ''}/cereals/`,
     '/reviews': `${base ?? ''}/cereals/`,
     '/cereals/manitoba-harvest-hemp-foods-superseed-granola': `${base ?? ''}/cereals/manitoba-harvest-organic-superseed-granola-blueberry/`,

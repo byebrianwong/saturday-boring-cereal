@@ -1,6 +1,7 @@
 import type { APIContext } from 'astro';
 import { getCollection } from 'astro:content';
 import { u } from '../lib/url';
+import { productPath } from '../lib/taxonomy';
 
 // Hand-rolled RSS (no dependency). Reviews, newest first.
 function esc(s: string): string {
@@ -17,7 +18,7 @@ export async function GET(context: APIContext) {
   const items = [...cereals]
     .sort((a, b) => b.data.dateReviewed.getTime() - a.data.dateReviewed.getTime())
     .map((c) => {
-      const link = new URL(u(`/cereals/${c.id}/`), site).href;
+      const link = new URL(u(productPath(c)), site).href;
       const score = c.data.rating == null ? 'unrated' : `${c.data.rating.toFixed(1)}/10`;
       const title = `${c.data.brand} ${c.data.name} — ${score}`;
       const desc = c.data.shortNote ?? 'Ranked and measured. No long-form note on file.';

@@ -37,6 +37,9 @@ export const round = (v, step) => (v == null || Number.isNaN(v) ? null : Math.ro
 // TypeScript file that imports the virtual `astro:content` module, so we can't
 // `import` it from plain Node — read the enum arrays out of its text instead.
 // If that ever fails to parse, callers skip validation rather than block a add.
+//
+// Form factors are listed per category (CEREAL_FORMS, BAR_FORMS, SNACK_FORMS).
+// FORMS_BY_CATEGORY keeps them apart; FORM_FACTORS is every one of them, once.
 export function readTaxonomy() {
   const grab = (src, constName) => {
     const m = src.match(new RegExp(`export const ${constName} = \\[([\\s\\S]*?)\\]`));
@@ -44,13 +47,24 @@ export function readTaxonomy() {
   };
   try {
     const src = readFileSync(join(ROOT, 'src', 'content.config.ts'), 'utf8');
+    const byCategory = {
+      cereal: grab(src, 'CEREAL_FORMS'),
+      bar: grab(src, 'BAR_FORMS'),
+      snack: grab(src, 'SNACK_FORMS'),
+    };
+    const complete = Object.values(byCategory).every(Boolean);
     return {
-      FORM_FACTORS: grab(src, 'FORM_FACTORS'),
+      CATEGORIES: grab(src, 'CATEGORIES'),
+      FORMS_BY_CATEGORY: complete ? byCategory : null,
+      FORM_FACTORS: complete ? [...new Set(Object.values(byCategory).flat())] : null,
       PROTEIN_SOURCES: grab(src, 'PROTEIN_SOURCES'),
       ATTRIBUTES: grab(src, 'ATTRIBUTES'),
     };
   } catch {
-    return { FORM_FACTORS: null, PROTEIN_SOURCES: null, ATTRIBUTES: null };
+    return {
+      CATEGORIES: null, FORMS_BY_CATEGORY: null, FORM_FACTORS: null,
+      PROTEIN_SOURCES: null, ATTRIBUTES: null,
+    };
   }
 }
 
@@ -460,6 +474,9 @@ async function offSearchByName(query, limit) {
   const fields = [
     'product_name', 'brands', 'code', 'nutriments', 'image_front_url',
     'serving_size', 'serving_quantity', 'ingredients_text', 'labels_tags', 'quantity',
+    // Open Food Facts' own shelf placement (en:breakfast-cereals,
+    // en:protein-bars, en:snacks…), used to guess cereal, bar or snack.
+    'categories_tags',
     // Per-language front shots. One product often carries several, and the
     // admin's image picker wants every one of them to choose between.
     'selected_images',
@@ -523,6 +540,7 @@ function offProducts(products) {
         sodium: sodium == null ? null : Math.round(sodium),
         ingredients: p.ingredients_text || null,
         labels: p.labels_tags || [],
+        categories: p.categories_tags || [],
       };
     });
 }
@@ -567,6 +585,9 @@ export async function usdaCandidates(query, { fdcKey = 'DEMO_KEY', limit = 8 } =
       sodium: per(per100.sodium) == null ? null : Math.round(per(per100.sodium)),
       ingredients: f.ingredients || null,
       labels: [],
+      // USDA's shelf placement, e.g. "Snack, Energy & Granola Bars". The search
+      // endpoint calls it foodCategory; the detail record, brandedFoodCategory.
+      categories: [f.foodCategory || f.brandedFoodCategory].filter(Boolean),
     };
   });
 }
