@@ -9,7 +9,7 @@
 
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { ROOT, CEREALS, readTaxonomy, guard, NUTRITION_ORDER } from './enrich-core.mjs';
+import { ROOT, CEREALS, readTaxonomy, guard, NUTRITION_ORDER, localDate } from './enrich-core.mjs';
 import { loadImage, normalizeBoxImage } from './image-core.mjs';
 
 export const IMAGES = join(ROOT, 'public', 'images', 'cereals');
@@ -219,7 +219,7 @@ export function cerealMarkdown({
   brand, name, rating = null, note = '', picked, slug, category = 'cereal',
   formFactors = [], proteinSources = [], attributes = [],
   emoji = '🥣', boxColor = '#c98d4e', hasImage = false, imageSource, imageCredit,
-  date = new Date().toISOString().slice(0, 10),
+  date = localDate(),
 }) {
   const lines = ['---'];
   lines.push(`name: ${yamlQuote(name)}`);

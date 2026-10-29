@@ -28,7 +28,7 @@ import { writeFileSync, existsSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';
-import { CEREALS, DRAFTS, readCereal, readTaxonomy, nameMatch, applyDraft, enrichCereal } from './lib/enrich-core.mjs';
+import { CEREALS, DRAFTS, readCereal, readTaxonomy, nameMatch, applyDraft, enrichCereal, localDate } from './lib/enrich-core.mjs';
 
 const { CATEGORIES, FORMS_BY_CATEGORY, PROTEIN_SOURCES, ATTRIBUTES } = readTaxonomy();
 
@@ -146,7 +146,7 @@ if (existsSync(join(CEREALS, file))) fail(`${file} already exists — edit it in
 
 // --- write the markdown -------------------------------------------------------
 // Full nutrition field set (nulls where unknown) so enrichment can fill each blank.
-const today = new Date().toISOString().slice(0, 10);
+const today = localDate();
 const lines = ['---'];
 lines.push(`name: ${q(name)}`);
 lines.push(`brand: ${q(brand)}`);

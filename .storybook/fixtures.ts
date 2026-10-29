@@ -89,4 +89,6 @@ export const examples = {
   lowScore: cereal('special-k-zero-cinnamon'),
   /** Calories and other label fields missing. Must read "not listed". */
   missingFields: cereal('trader-joes-homestyle-cherry-pistachio-pecan-granola'),
+  /** The serving description already gives the grams ("0.5 cup (40 g)"). */
+  gramsInServing: cereal('seven-sundays-good-day-granola-peanut-butter-chocolate-banana'),
 };

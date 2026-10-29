@@ -17,7 +17,7 @@
 
 import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { CEREALS } from './lib/enrich-core.mjs';
+import { CEREALS, localDate } from './lib/enrich-core.mjs';
 
 const argv = process.argv.slice(2);
 const has = (f) => argv.includes(f);
@@ -74,7 +74,7 @@ if (!UNRATED) {
   rating = String(n);
 }
 
-const date = flag('date') || new Date().toISOString().slice(0, 10);
+const date = flag('date') || localDate();
 if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) fail(`--date must be YYYY-MM-DD (got "${date}")`);
 
 // --- edit ---------------------------------------------------------------------
