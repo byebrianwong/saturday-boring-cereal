@@ -1,6 +1,6 @@
 import type { APIRoute } from 'astro';
 import { isAuthed, unauthorized } from '../lib/auth';
-import { readTaxonomy, NUTRITION_ORDER } from '../../../scripts/lib/enrich-core.mjs';
+import { readTaxonomy, NUTRITION_ORDER, localDate } from '../../../scripts/lib/enrich-core.mjs';
 import { shapeFor } from '../../../scripts/lib/image-core.mjs';
 import {
   parseCereal, readCerealRaw, writeCerealRaw, updateFrontmatter, cerealExists,
@@ -131,7 +131,7 @@ export const POST: APIRoute = async ({ request }) => {
   // Matches rate.mjs: a re-rate or a rewritten note is an update; dateReviewed
   // stays the original review date. Fixing a nutrition typo isn't a re-review.
   const reviewChanged = 'rating' in top || 'shortNote' in top;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDate();
   if (reviewChanged && current.dateUpdated !== today) top.dateUpdated = today;
 
   const changed = [...Object.keys(top), ...Object.keys(nut).map((k) => `nutrition.${k}`)];

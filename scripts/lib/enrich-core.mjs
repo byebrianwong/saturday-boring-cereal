@@ -31,6 +31,14 @@ export const UA = 'SaturdayBoringCereal/0.1 (beamer408@gmail.com)';
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const round = (v, step) => (v == null || Number.isNaN(v) ? null : Math.round(v / step) * step);
 
+// Today's date as YYYY-MM-DD, by this computer's clock and time zone. Don't use
+// toISOString() for this: it gives the UTC date, which is already tomorrow on a
+// Pacific-time evening.
+export function localDate(d = new Date()) {
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 // --- taxonomy -----------------------------------------------------------------
 // The allowed form factors / protein sources / attributes live in
 // src/content.config.ts (the Zod schema, single source of truth). It's a

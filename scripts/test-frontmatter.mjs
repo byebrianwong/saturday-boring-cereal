@@ -14,7 +14,7 @@
 
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CEREALS } from './lib/enrich-core.mjs';
+import { CEREALS, localDate } from './lib/enrich-core.mjs';
 import { parseCereal, updateFrontmatter, cerealMarkdown, inferCategory, inferTags } from './lib/compose-core.mjs';
 
 let failures = 0;
@@ -192,6 +192,17 @@ eq('reads null as null', parsed.nutrition.totalFat, null);
 eq('keeps a quoted barcode a string', parsed.barcode, '0058449770206');
 eq('separates the nutrition block', parsed.nutrition.servingSize, 40);
 eq('captures the body', parsed.body.includes('A review body.'), true);
+
+// --- 6. dates -------------------------------------------------------------------
+// New files and re-rates are stamped with the local date. The UTC date is a day
+// ahead on a Pacific-time evening.
+console.log('\ndates');
+eq('a late-evening date stays on the same day', localDate(new Date(2026, 9, 28, 23, 40)), '2026-10-28');
+eq('single-digit months and days are padded', localDate(new Date(2026, 0, 5, 9, 0)), '2026-01-05');
+{
+  const base = { brand: 'Quest', name: 'Cookies & Cream', picked: { servingSize: 60 }, slug: 'quest-cookies-and-cream' };
+  eq('a new file is stamped with the local date', lineOf(cerealMarkdown(base), 'dateReviewed'), `dateReviewed: ${localDate()}`);
+}
 
 console.log(failures ? `\n${failures} failed\n` : '\nall passed\n');
 process.exit(failures ? 1 : 0);

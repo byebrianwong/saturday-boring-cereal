@@ -42,3 +42,15 @@ export const MissingValues = {
     },
   },
 };
+
+export const GramsInServingDescription = {
+  args: { nutrition: examples.gramsInServing.data.nutrition, basis: 'serving' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'This box\'s serving description already gives the grams ("0.5 cup (40 g)"), so the panel shows it as stored and does not add the grams a second time.',
+      },
+    },
+  },
+};

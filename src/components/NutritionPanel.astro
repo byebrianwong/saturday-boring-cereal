@@ -16,9 +16,14 @@ interface Props {
 const { nutrition: label, basis = '100g' } = Astro.props;
 const perServing = basis === 'serving';
 const n = perServing ? label : per100g(label);
-const servingText = label.servingDescription
-  ? `${label.servingDescription} (${label.servingSize} g)`
-  : `${label.servingSize} g`;
+// Many labels already give the grams in the description ("0.5 cup (40 g)", "37g").
+// Add them only when the description has none, so they never print twice.
+const descriptionHasGrams = /\d\s*(g|grams?)\b/i.test(label.servingDescription ?? '');
+const servingText = !label.servingDescription
+  ? `${label.servingSize} g`
+  : descriptionHasGrams
+    ? label.servingDescription
+    : `${label.servingDescription} (${label.servingSize} g)`;
 
 // %DV column, laid out like a US label: blank for nutrients with no Daily Value.
 const dv = (v: number | null) => (v == null ? '' : percent(v));
