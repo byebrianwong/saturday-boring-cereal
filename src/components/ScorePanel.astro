@@ -1,6 +1,6 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { scoreCereal, scoreTier, TASTE_WEIGHT, type Subscore } from '../lib/score';
+import { scoreCereal, TASTE_WEIGHT, type Subscore } from '../lib/score';
 import TierStamp from './TierStamp.astro';
 import { u } from '../lib/url';
 
@@ -16,7 +16,8 @@ const score = scoreCereal(cereal);
 const taste = score.subscores.find((s) => s.key === 'taste')!;
 const nutrition = score.subscores.filter((s) => s.key !== 'taste');
 const tastePct = Math.round(TASTE_WEIGHT * 100);
-const tierOf = (s: Subscore) => (s.score == null ? 'na' : scoreTier(s.score));
+// Each bar takes its nutrient's tint, so it matches the cards and the table.
+const tierOf = (s: Subscore) => s.tier ?? 'na';
 ---
 
 <section class="verdict">
@@ -120,10 +121,13 @@ const tierOf = (s: Subscore) => (s.score == null ? 'na' : scoreTier(s.score));
     color: var(--muted);
   }
 
+  /* A long detail ("32.4g · 65% of a day · 62% over the limit") wraps under
+     itself, right-aligned, and never runs into the name. */
   .lab {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    gap: 12px;
     margin-bottom: 4px;
   }
 
@@ -133,6 +137,7 @@ const tierOf = (s: Subscore) => (s.score == null ? 'na' : scoreTier(s.score));
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--muted);
+    white-space: nowrap;
   }
 
   .det {
@@ -141,6 +146,7 @@ const tierOf = (s: Subscore) => (s.score == null ? 'na' : scoreTier(s.score));
     font-weight: 700;
     color: var(--ink);
     font-variant-numeric: tabular-nums;
+    text-align: right;
   }
 
   .det.missing {
@@ -196,6 +202,9 @@ const tierOf = (s: Subscore) => (s.score == null ? 'na' : scoreTier(s.score));
   }
   .sub.bad .fill {
     background: linear-gradient(90deg, color-mix(in srgb, var(--score-bad) 82%, #fff), var(--score-bad));
+  }
+  .sub.worst .fill {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--score-worst) 82%, #fff), var(--score-worst));
   }
 
   .fine {

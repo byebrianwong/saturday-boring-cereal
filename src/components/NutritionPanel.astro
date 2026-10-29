@@ -1,6 +1,6 @@
 ---
 import { grams, milligrams, percent, plain } from '../lib/format';
-import { per100g, percentDV, type Nutrition } from '../lib/nutrition';
+import { per100g, percentDV, percentOfDay, type Nutrition } from '../lib/nutrition';
 import { proteinDVOf } from '../lib/score';
 
 interface Props {
@@ -26,6 +26,8 @@ const servingText = !label.servingDescription
     : `${label.servingDescription} (${label.servingSize} g)`;
 
 // %DV column, laid out like a US label: blank for nutrients with no Daily Value.
+// One exception: the sugar percent is total sugars against 50 g (the added-sugar
+// Daily Value), so Total Sugars gets it and Added Sugars is left blank.
 const dv = (v: number | null) => (v == null ? '' : percent(v));
 const protein = proteinDVOf(n);
 const proteinDVText =
@@ -50,8 +52,8 @@ const allRows: Array<{
   { label: 'Monounsaturated Fat', value: grams(n.monounsaturatedFat), dv: '', level: 1 },
   { label: 'Total Carbohydrate', value: grams(n.totalCarbs), dv: dv(percentDV('totalCarbs', n.totalCarbs)), bold: true },
   { label: 'Dietary Fiber', value: grams(n.dietaryFiber), dv: dv(percentDV('dietaryFiber', n.dietaryFiber)), level: 1 },
-  { label: 'Total Sugars', value: grams(n.totalSugars), dv: '', level: 1 },
-  { label: 'Added Sugars', value: grams(n.addedSugars), dv: dv(percentDV('addedSugars', n.addedSugars)), level: 2 },
+  { label: 'Total Sugars', value: grams(n.totalSugars), dv: dv(percentOfDay('totalSugars', n.totalSugars)), level: 1 },
+  { label: 'Added Sugars', value: grams(n.addedSugars), dv: '', level: 2 },
   { label: 'Protein', value: grams(n.protein), dv: proteinDVText, bold: true },
   { label: 'Sodium', value: milligrams(n.sodium), dv: dv(percentDV('sodium', n.sodium)), bold: true },
 ];
@@ -94,7 +96,8 @@ const rows = allRows.filter((r) => !(r.level && r.value === 'not listed'));
   }
   <p class="foot">
     * % Daily Value: how much of the FDA's daily amount, on a 2,000-calorie diet, is in
-    {perServing ? 'one serving' : '100 g'}. No % means the nutrient has no Daily Value. ~ means
+    {perServing ? 'one serving' : '100 g'}. No % means the nutrient has no Daily Value. Total
+    sugars have none, so they are counted against 50 g, the added-sugar Daily Value. ~ means
     estimated from grams.
   </p>
   {perServing ? (

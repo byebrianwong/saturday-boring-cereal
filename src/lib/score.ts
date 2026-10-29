@@ -1,11 +1,17 @@
 import type { CollectionEntry } from 'astro:content';
-import { per100gOf, percentDV, type DVKey, type Nutrition } from './nutrition';
+import { per100gOf, percentDV, percentOfDay, type DVKey, type Nutrition } from './nutrition';
 import { grams } from './format';
 
 /** "5.4g · 19% DV", or plain grams when the label omits the value. */
 function gramsWithDV(key: DVKey, value: number | null | undefined): string {
   const dv = percentDV(key, value);
   return dv == null ? grams(value) : `${grams(value)} · ${Math.round(dv)}% DV`;
+}
+
+/** Total sugars as "15g · 30% of a day" (against 50 g; see DAY_REFERENCES). */
+function sugarWithDay(value: number | null | undefined): string {
+  const pct = percentOfDay('totalSugars', value);
+  return pct == null ? grams(value) : `${grams(value)} · ${Math.round(pct)}% of a day`;
 }
 
 // The Tier: one composite number so a box can be read at a glance,
@@ -52,11 +58,19 @@ const NUTRITION_WEIGHTS = { protein: 0.4, sugar: 0.3, fiber: 0.2, satFat: 0.1 };
 
 export type SubKey = 'taste' | 'protein' | 'sugar' | 'fiber' | 'satFat';
 
+/**
+ * Colour for a score or a nutrient. `worst` is only for sugar and saturated
+ * fat at half a day's worth or more per 100 g (see WATCH_OUT_PCT).
+ */
+export type Tint = 'good' | 'mid' | 'bad' | 'worst';
+
 export interface Subscore {
   key: SubKey;
   label: string;
   /** 0–100 "goodness"; null when the label doesn't list the input. */
   score: number | null;
+  /** Bar colour: the same tint the nutrient gets everywhere else. */
+  tier: Tint | null;
   /** Raw value shown beside the bar, e.g. "14g" (per 100 g) or "8.5/10". */
   detail: string;
 }
@@ -143,12 +157,14 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
       key: 'taste',
       label: 'Taste',
       score: taste,
+      tier: taste == null ? null : scoreTier(taste),
       detail: rating == null ? 'unrated' : `${rating.toFixed(1)}/10`,
     },
     {
       key: 'protein',
       label: 'Protein',
       score: protein,
+      tier: macroTier('protein', proteinDV),
       detail:
         proteinDV == null
           ? 'not listed'
@@ -160,18 +176,21 @@ export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
       key: 'fiber',
       label: 'Fiber',
       score: fiber,
+      tier: macroTier('dietaryFiber', n.dietaryFiber),
       detail: gramsWithDV('dietaryFiber', n.dietaryFiber),
     },
     {
       key: 'sugar',
       label: 'Sugar',
       score: sugar,
-      detail: grams(n.totalSugars) + overNote(sugarExcess),
+      tier: macroTier('totalSugars', n.totalSugars),
+      detail: sugarWithDay(n.totalSugars) + overNote(sugarExcess),
     },
     {
       key: 'satFat',
       label: 'Sat. fat',
       score: satFat,
+      tier: macroTier('saturatedFat', n.saturatedFat),
       detail: gramsWithDV('saturatedFat', n.saturatedFat) + overNote(satFatExcess),
     },
   ];
@@ -239,25 +258,48 @@ export function scoreTier(score: number): 'good' | 'mid' | 'bad' {
 
 export type MacroTintKey = 'protein' | 'dietaryFiber' | 'totalSugars' | 'saturatedFat';
 
+// Sugar's colour bands, as a share of a day per 100 g (total sugars against
+// 50 g): green up to 15% (7.5 g), orange up to 25% (12.5 g). They are wider
+// than the sugar subscore's own good/mid cut-offs (5 g and 9 g), so a box with
+// a little sugar reads green instead of orange. Only the colour uses these; the
+// Tier score still runs off SUGAR_CEILING.
+const SUGAR_TINT_GOOD_PCT = 15;
+const SUGAR_TINT_MID_PCT = 25;
+
+// Sugar or saturated fat at this share of a day or more per 100 g gets the dark
+// red `worst` tint, a warning on top of plain red. Sugar counts against 50 g and
+// saturated fat against its 20 g Daily Value, so that's 25 g and 10 g.
+const WATCH_OUT_PCT = 50;
+
+// The percent cut-offs above are checked against the whole percent the site
+// prints, so two boxes that both read "25%" never get different colours.
+const shownPct = (key: 'totalSugars' | 'saturatedFat', value: number) =>
+  Math.round(percentOfDay(key, value)!);
+
 /**
- * Good / mid / bad tier for one graded nutrient, per 100 g. Uses the same
- * targets as the Tier score, so a cell's tint agrees with the Health score; for
- * protein, pass the %DV from `proteinDVOf`, not grams. Returns null when the
- * label omits the value.
+ * Good / mid / bad tier for one graded nutrient, per 100 g, plus `worst` for
+ * sugar and saturated fat at half a day or more. Protein, fiber and saturated
+ * fat use the Tier score's own targets, so their tint agrees with the Health
+ * score; sugar has its own wider bands (SUGAR_TINT_GOOD_PCT, SUGAR_TINT_MID_PCT).
+ * For protein, pass the %DV from `proteinDVOf`, not grams. Returns null when
+ * the label omits the value.
  */
-export function macroTier(
-  key: MacroTintKey,
-  value: number | null | undefined,
-): 'good' | 'mid' | 'bad' | null {
+export function macroTier(key: MacroTintKey, value: number | null | undefined): Tint | null {
   if (value == null) return null;
   switch (key) {
     case 'protein':
       return scoreTier(up(value, PROTEIN_DV_TARGET)!);
     case 'dietaryFiber':
       return scoreTier(up(value, FIBER_TARGET)!);
-    case 'totalSugars':
-      return scoreTier(down(value, SUGAR_CEILING)!);
+    case 'totalSugars': {
+      const pct = shownPct('totalSugars', value);
+      if (pct >= WATCH_OUT_PCT) return 'worst';
+      if (pct <= SUGAR_TINT_GOOD_PCT) return 'good';
+      if (pct <= SUGAR_TINT_MID_PCT) return 'mid';
+      return 'bad';
+    }
     case 'saturatedFat':
+      if (shownPct('saturatedFat', value) >= WATCH_OUT_PCT) return 'worst';
       return scoreTier(down(value, SAT_FAT_CEILING)!);
   }
 }

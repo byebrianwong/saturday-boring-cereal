@@ -48,7 +48,8 @@ export function per100gOf(c: CollectionEntry<'cereals'>): Nutrition {
 // (21 CFR 101.9(c), the values on every US label since the 2016 update):
 // https://www.fda.gov/food/nutrition-facts-label/daily-value-nutrition-and-supplement-facts-labels
 // Calories, trans fat, total sugars and the poly/mono fats have no Daily
-// Value, so a real label leaves their %DV blank and so does this site.
+// Value, so a real label leaves their %DV blank. The site gives total sugars a
+// percent anyway, from DAY_REFERENCES below.
 // Protein's %DV comes from `proteinDVOf` in score.ts, because a label's
 // protein %DV is adjusted for protein quality and can't be derived from grams.
 export const DAILY_VALUES = {
@@ -67,14 +68,14 @@ export function percentDV(key: DVKey, value: number | null | undefined): number 
   return value == null ? null : (value / DAILY_VALUES[key]) * 100;
 }
 
-// "% of a day" for the Aisle's percent view. It uses the FDA Daily Values plus
-// two references the FDA doesn't set:
+// "% of a day" for every percent the site shows. It uses the FDA Daily Values
+// plus two references the FDA doesn't set:
 // - Total sugars use 50 g, the added-sugar Daily Value. Sugar counts the same
 //   whether it was added or came from fruit, so the site always grades total
-//   sugars and gives them a percent too.
-// - Calories use 2,000 kcal, the day every %DV on a label is based on.
-// The replica Nutrition Facts panel doesn't use these, because a real label
-// leaves both blank.
+//   sugars, and every sugar percent on the site is total sugars against 50 g.
+//   Added sugars get no percent.
+// - Calories use 2,000 kcal, the day every %DV on a label is based on. The
+//   replica Nutrition Facts panel leaves calories without one, like a real label.
 // Protein is not here: use `proteinDVOf` in score.ts.
 export const DAY_REFERENCES = { ...DAILY_VALUES, totalSugars: 50, calories: 2000 } as const;
 

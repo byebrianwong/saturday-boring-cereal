@@ -4,7 +4,7 @@ import Layout from '../layouts/Layout.astro';
 import { scoreCereal, tierColor, overallOutOfTen, proteinDVOf } from '../lib/score';
 import { u } from '../lib/url';
 import { inWrapper, productPath } from '../lib/taxonomy';
-import { per100gOf, percentDV } from '../lib/nutrition';
+import { per100gOf, percentDV, percentOfDay } from '../lib/nutrition';
 
 const cereals = await getCollection('cereals');
 const round1 = (v: number | null | undefined) => (v == null ? null : Math.round(v * 10) / 10);
@@ -47,13 +47,14 @@ const items = ranked.map((c) => {
     totalFat: round1(n.totalFat),
     sodium: round0(n.sodium),
   },
-  // % Daily Value per 100 g, shown under the amount. Rows without an FDA Daily
-  // Value (calories, total sugars) have no entry. Protein marked estimated when
-  // the label doesn't print its own %DV.
+  // % Daily Value per 100 g, shown under the amount. Total sugars have no FDA
+  // Daily Value, so they count against 50 g, the added-sugar one; added sugars
+  // and calories get no percent. Protein marked estimated when the label
+  // doesn't print its own %DV.
   dv: {
     protein: round0(protein.dv),
     dietaryFiber: round0(percentDV('dietaryFiber', n.dietaryFiber)),
-    addedSugars: round0(percentDV('addedSugars', n.addedSugars)),
+    totalSugars: round0(percentOfDay('totalSugars', n.totalSugars)),
     saturatedFat: round0(percentDV('saturatedFat', n.saturatedFat)),
     totalCarbs: round0(percentDV('totalCarbs', n.totalCarbs)),
     totalFat: round0(percentDV('totalFat', n.totalFat)),
@@ -102,8 +103,9 @@ const items = ranked.map((c) => {
         </div>
 
         <p class="board-foot">
-          Figures per 100 g. % DV uses the FDA's Daily Values (2,000 calories); ~ means estimated.
-          A star marks the best in a row.
+          Figures per 100 g. % DV uses the FDA's Daily Values (2,000 calories). Total sugars have no
+          Daily Value, so their % of a day is against 50 g. ~ means estimated. A star marks the best
+          in a row.
           <a href={u('/about/#overall')}>How scoring works</a>
         </p>
       </div>
@@ -145,9 +147,10 @@ const items = ranked.map((c) => {
     const plain = (v: number | null) => (v == null ? nil : String(v));
 
     // Rows in display order: the nutrients the Tier scores come first, good
-    // ones (protein, fiber) then bad ones (sugars, saturated fat). The `minor`
-    // rows follow, smaller and greyer, because the Tier ignores them. `best`
-    // is which direction is "better" for the best-in-row star.
+    // ones (protein, fiber) then bad ones (total sugars, saturated fat). The
+    // `minor` rows follow, smaller and greyer, because the Tier ignores them;
+    // added sugars are one of those. `best` is which direction is "better" for
+    // the best-in-row star.
     const METRICS: Array<{
       key: string;
       label: string;
@@ -158,8 +161,8 @@ const items = ranked.map((c) => {
       { key: 'protein', label: 'Protein', fmt: g, best: 'max' },
       { key: 'dietaryFiber', label: 'Fiber', fmt: g, best: 'max' },
       { key: 'totalSugars', label: 'Total sugars', fmt: g, best: 'min' },
-      { key: 'addedSugars', label: 'Added sugars', fmt: g, best: 'min' },
       { key: 'saturatedFat', label: 'Saturated fat', fmt: g, best: 'min' },
+      { key: 'addedSugars', label: 'Added sugars', fmt: g, best: 'min', minor: true },
       { key: 'calories', label: 'Calories', fmt: plain, best: 'min', minor: true },
       { key: 'totalCarbs', label: 'Carbs', fmt: g, minor: true },
       { key: 'totalFat', label: 'Total fat', fmt: g, minor: true },
@@ -255,9 +258,11 @@ const items = ranked.map((c) => {
             const win = m.best && winners[m.key] === c.id;
             const v = c.n[m.key];
             const p = c.dv[m.key];
+            // Total sugars have no Daily Value; their percent is against 50 g.
+            const unit = m.key === 'totalSugars' ? '% of a day' : '% DV';
             const pdv = v == null || p == null
               ? ''
-              : `<span class="pdv">${m.key === 'protein' && c.proteinDVEstimated ? '~' : ''}${p}% DV</span>`;
+              : `<span class="pdv">${m.key === 'protein' && c.proteinDVEstimated ? '~' : ''}${p}${unit}</span>`;
             const amt = pdv ? `<span class="amt">${m.fmt(v)}${pdv}</span>` : m.fmt(v);
             return `<div class="cell${minor}${win ? ' win' : ''}">${amt}${win ? '<span class="star">★</span>' : ''}</div>`;
           }).join('');
