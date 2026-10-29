@@ -9,7 +9,8 @@ import { CATEGORY_INFO, countOf, inCategory, label } from '../lib/taxonomy';
 import { u } from '../lib/url';
 import RecordCard from '../components/RecordCard.astro';
 import { shelfRecords, type ShelfRecord } from '../lib/records';
-import { gramsShort } from '../lib/format';
+import { dayShare, type ShareKey } from '../lib/macros';
+import { per100gOf } from '../lib/nutrition';
 
 const everything = await getCollection('cereals');
 // It's a cereal site: the Tiers, the champion and the shelf records are all
@@ -44,11 +45,13 @@ const browseTags = [...tagCounts.entries()].sort((a, b) => b[1] - a[1]);
 // box, picked from the real numbers per 100 g.
 const records = shelfRecords(cereals);
 const newest = [...cereals].sort((a, b) => b.data.dateReviewed.getTime() - a.data.dateReviewed.getTime());
-const recordCards: { label: string; caveat?: string; rec: ShelfRecord | null }[] = [
-  { label: 'Most protein', rec: records.mostProtein },
-  { label: 'Least sugar', caveat: 'No sugar substitutes', rec: records.leastSugar },
-  { label: 'Most fiber', rec: records.mostFiber },
-].filter((r) => r.rec != null);
+// Each record prints as a share of a day, like the cards above it.
+const recordRows: { label: string; caveat?: string; key: ShareKey; rec: ShelfRecord | null }[] = [
+  { label: 'Most protein', key: 'protein', rec: records.mostProtein },
+  { label: 'Least sugar', caveat: 'No sugar substitutes', key: 'totalSugars', rec: records.leastSugar },
+  { label: 'Most fiber', key: 'dietaryFiber', rec: records.mostFiber },
+];
+const recordCards = recordRows.filter((r) => r.rec != null);
 
 // Tag chips cycle through the ad palette rather than encoding meaning.
 const tagColour = ['y', 'o', 't', 'r', 'w'];
@@ -121,11 +124,13 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
         The top {runnersUp.length + 1} out of {cereals.length}, by Tier: taste and health combined. Go
         by the letter. Any box in Tier A is a good pick; the small score out of ten only sets the
         order inside a Tier. Protein, fiber and sugar taken off the actual side panel — not off the
-        front — and shown per 100 grams.
+        front — and shown as a share of a day’s worth in 100 grams.
       </p>
       <p class="macro-key">
         <span class="k-good">Green</span> is good for a cereal, <span class="k-mid">orange</span> is
-        middling, <span class="k-bad">red</span> is poor. Same cut-offs as the Tier score.
+        middling, <span class="k-bad">red</span> is poor, and <span class="k-worst">dark red</span>
+        means half a day’s sugar or more. Sugar is total sugar, counted against 50 grams. ~ means the
+        label prints no protein %DV, so it is estimated from grams.
       </p>
 
       <div class="ranks">
@@ -200,8 +205,8 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
         {recordCards.map((r) => (
           <RecordCard
             label={r.label}
-            value={gramsShort(r.rec!.value)!}
-            note="per 100g"
+            value={dayShare(per100gOf(r.rec!.cereal), r.key)!}
+            note="of a day, per 100g"
             caveat={r.caveat}
             cereal={r.rec!.cereal}
           />
@@ -233,12 +238,7 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
   <section class="signoff">
     <div class="rays"></div>
     <div class="wrap signoff-in">
-      <h2>New box every Saturday</h2>
-      <p class="sub">
-        No sponsors, no samples, no mascots. Just me, a spoon, and a kitchen scale that has never
-        once been asked to lie.
-      </p>
-      <a class="cta signoff-cta" href={u('/cereals/')}>
+      <a class="cta" href={u('/cereals/')}>
         Walk the aisle
         <small>Open 24/7 · Aisle 4 only</small>
       </a>
@@ -483,6 +483,7 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
   .macro-key .k-good { --k: var(--score-good); }
   .macro-key .k-mid { --k: var(--score-mid); }
   .macro-key .k-bad { --k: var(--score-bad); }
+  .macro-key .k-worst { --k: var(--score-worst); }
 
   /* ---- signoff ---- */
   .signoff {
@@ -496,30 +497,6 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
 
   .signoff .rays { top: 50%; }
   .signoff-in { position: relative; z-index: 3; }
-
-  .signoff h2 {
-    margin: 0;
-    font-family: var(--shout);
-    font-size: clamp(36px, 5.5vw, 70px);
-    line-height: 0.85;
-    text-transform: uppercase;
-    color: var(--white);
-    text-shadow: 5px 5px 0 var(--ink);
-  }
-
-  .signoff .sub {
-    margin: 14px auto 0;
-    max-width: 620px;
-    font-family: var(--fine);
-    font-size: 16px;
-    line-height: 1.5;
-    background: rgba(255, 248, 234, 0.94);
-    border: 3px solid var(--ink);
-    padding: 11px 18px;
-    color: var(--ink);
-  }
-
-  .signoff-cta { margin-top: 28px; }
 
   @media (max-width: 860px) {
     .hero { padding: 40px 0 0; }

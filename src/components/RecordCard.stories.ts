@@ -11,7 +11,7 @@ export default {
     docs: {
       description: {
         component:
-          'One card in the home page\'s "But wait, there\'s more — and less" row. It names the cereal that holds a shelf record (most protein, least sugar, most fiber) and shows its box, with the amount per 100 g. With `stack` it fans out three boxes behind a count instead, for "Boxes on the record". The winners are picked by `shelfRecords()` in src/lib/records.ts.',
+          'One card in the home page\'s "But wait, there\'s more — and less" row. It names the cereal that holds a shelf record (most protein, least sugar, most fiber) and shows its box, with the amount in 100 g as a share of a day (the same percent as the cards above it). With `stack` it fans out three boxes behind a count instead, for "Boxes on the record". The winners are picked by `shelfRecords()` in src/lib/records.ts.',
       },
     },
   },
@@ -20,8 +20,8 @@ export default {
 export const Record = {
   args: {
     label: 'Most protein',
-    value: '51.3g',
-    note: 'per 100g',
+    value: '82%',
+    note: 'of a day, per 100g',
     cereal: cereal('special-k-zero-cinnamon'),
   },
 };
@@ -29,8 +29,8 @@ export const Record = {
 export const WithCaveat = {
   args: {
     label: 'Least sugar',
-    value: '4.1g',
-    note: 'per 100g',
+    value: '8%',
+    note: 'of a day, per 100g',
     caveat: 'No sugar substitutes',
     cereal: cereal('ikea-hjalteroll-muesli-cocoa-berries'),
   },
@@ -55,7 +55,7 @@ export const BoxCount = {
 };
 
 export const NoPhoto = {
-  args: { label: 'Most protein', value: '38.9g', note: 'per 100g', cereal: examples.noPhoto },
+  args: { label: 'Most protein', value: '72%', note: 'of a day, per 100g', cereal: examples.noPhoto },
   parameters: {
     docs: {
       description: { story: 'Without a box photo the card shows the emoji on the box colour.' },

@@ -11,7 +11,7 @@ export default {
     docs: {
       description: {
         component:
-          'The "grand prize" card for the number one cereal on the home page. The card is loud; the tasting note and the macros inside it stay small and plain. Macros are per 100 g, and a macro the label does not list is left out rather than shown as zero.',
+          'The "grand prize" card for the number one cereal on the home page. The card is loud; the tasting note and the macros inside it stay small and plain. Macros are a share of a day in 100 g, and a macro the label does not list is left out rather than shown as zero.',
       },
     },
   },

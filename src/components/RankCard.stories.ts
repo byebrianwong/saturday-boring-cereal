@@ -11,7 +11,7 @@ export default {
     docs: {
       description: {
         component:
-          'One cereal in the home page rankings, below the ChampCard. Ranks 2 and 3 use `big`; the rows after use `sm`. Most of the card\'s look (`.cd`, `.box`, `.macros`, `.score`) is in src/styles/global.css because ChampCard shares it. Each macro cell is tinted green, orange or red with `cardMacros()` in src/lib/macros.ts, using the same cut-offs as the Tier score.',
+          'One cereal in the home page rankings, below the ChampCard. Ranks 2 and 3 use `big`; the rows after use `sm`. Most of the card\'s look (`.cd`, `.box`, `.macros`, `.score`) is in src/styles/global.css because ChampCard shares it. Each macro cell shows its share of a day in 100 g and is tinted green, orange, red or dark red with `cardMacros()` in src/lib/macros.ts, using the tints from `macroTier()` in src/lib/score.ts.',
       },
     },
   },

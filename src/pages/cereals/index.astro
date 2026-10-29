@@ -425,7 +425,8 @@ const MEDALS = ['m1', 'm2', 'm3'];
       Taste is my score out of ten. Nutrition columns are per 100 g; a dash means the
       label doesn’t list it. % of a day uses the FDA’s Daily Values for a 2,000-calorie diet. Total
       sugar has no Daily Value, so it is counted against 50 g, and calories against 2,000. ~ means
-      the label prints no protein %DV, so it is estimated from grams.
+      the label prints no protein %DV, so it is estimated from grams. Dark red marks sugar or
+      saturated fat at half a day or more.
       <a href={u('/about/#overall')}>How scoring works</a>
     </p>
   </section>
@@ -1319,6 +1320,10 @@ const MEDALS = ['m1', 'm2', 'm3'];
   .tm.t-mid { background: color-mix(in srgb, var(--score-mid) 16%, var(--white)); }
   .c-num.t-bad,
   .tm.t-bad { background: color-mix(in srgb, var(--score-bad) 11%, var(--white)); }
+  /* Sugar or saturated fat at half a day or more: darker, so it stands out
+     from plain red. */
+  .c-num.t-worst,
+  .tm.t-worst { background: color-mix(in srgb, var(--score-worst) 32%, var(--white)); }
 
   /* Columns the Tier ignores: smaller and greyer, behind a heavier rule. */
   .c-num.minor { font-size: 12px; color: var(--muted); }

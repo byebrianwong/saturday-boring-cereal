@@ -59,7 +59,7 @@ const { overall, tier } = scoreCereal(cereal);
 
   <span class="macros">
     {macros.map((m) => (
-      <span class={`t-${m.tier}`} title={`${m.verdict}, by the Tier score's cut-offs`}>
+      <span class={`t-${m.tier}`} title={m.verdict}>
         <span class="mv">{m.value}</span>
         <span class="mk">{m.label}</span>
         <span class="sr-only">({m.verdict})</span>

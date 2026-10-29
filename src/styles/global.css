@@ -35,6 +35,8 @@
   --score-mid-dark: #d17600;
   --score-bad: var(--cherry);
   --score-bad-dark: var(--cherry-deep);
+  /* Darker than bad: sugar or saturated fat at half a day or more per 100 g. */
+  --score-worst: #7d0a0a;
 
 }
 
@@ -463,13 +465,15 @@ img {
   margin-top: 3px;
 }
 
-/* Good / middling / poor on the card macros, using the same cut-offs as the
-   Tier score. Each cell gets the pale tint the /cereals/ table uses, plus a
-   solid bar along its bottom edge, because a tint alone is too faint to read
-   at card size. The number itself keeps its plain ink, so it doesn't shout. */
+/* Good / middling / poor / watch out on the card macros, the same tints as
+   the /cereals/ table (see `macroTier` in src/lib/score.ts). Each cell gets the
+   pale tint the table uses, plus a solid bar along its bottom edge, because a
+   tint alone is too faint to read at card size. The number itself keeps its
+   plain ink, so it doesn't shout. */
 .macros .t-good,
 .macros .t-mid,
-.macros .t-bad { padding-bottom: 11px; }
+.macros .t-bad,
+.macros .t-worst { padding-bottom: 11px; }
 .macros .t-good {
   background: color-mix(in srgb, var(--score-good) 13%, var(--white));
   box-shadow: inset 0 -5px 0 var(--score-good);
@@ -481,6 +485,10 @@ img {
 .macros .t-bad {
   background: color-mix(in srgb, var(--score-bad) 11%, var(--white));
   box-shadow: inset 0 -5px 0 var(--score-bad);
+}
+.macros .t-worst {
+  background: color-mix(in srgb, var(--score-worst) 32%, var(--white));
+  box-shadow: inset 0 -5px 0 var(--score-worst);
 }
 
 /* Text for screen readers only. */
