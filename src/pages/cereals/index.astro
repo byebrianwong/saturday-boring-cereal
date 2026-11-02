@@ -10,14 +10,14 @@ import { per100gOf, percentOfDay, type Nutrition } from '../../lib/nutrition';
 import { scoreCereal, scoreTier, tierColor, overallOutOfTen, macroTier, proteinDVOf } from '../../lib/score';
 import type { MacroTintKey } from '../../lib/score';
 import { oneDecimal } from '../../lib/format';
-import { AISLE_FILTERS, CATEGORY_ORDER, EVERYTHING_FILTERS, inCategory, inWrapper, label, productPath } from '../../lib/taxonomy';
+import { AISLE_FILTERS, aisleNote, CATEGORY_ORDER, EVERYTHING_FILTERS, healthOnly, inCategory, inWrapper, label, productPath } from '../../lib/taxonomy';
 import { u } from '../../lib/url';
 
 const cereals = await getCollection('cereals');
 const ranked = [...cereals].sort(byRatingDesc);
 
-// Cereal, bars and snacks share this page, but each is ranked only within its
-// own category. The page opens on cereal; the category row appears once
+// Cereal, bars, milk and snacks share this page, but each is ranked only within
+// its own category. The page opens on cereal; the category row appears once
 // anything else is in stock.
 const counts = Object.fromEntries(CATEGORY_ORDER.map((c) => [c, inCategory(cereals, c).length])) as Record<
   (typeof CATEGORY_ORDER)[number],
@@ -25,7 +25,7 @@ const counts = Object.fromEntries(CATEGORY_ORDER.map((c) => [c, inCategory(cerea
 >;
 const stocked = CATEGORY_ORDER.filter((c) => counts[c] > 0);
 const showSwitch = stocked.length > 1;
-// A bar or snack filter button only shows when something in that category
+// A filter button outside cereal only shows when something in that category
 // carries the tag, so a short shelf doesn't fill up with buttons that find
 // nothing. The cereal row is the site's original, fixed list and stays whole.
 const tagsIn = (list: typeof cereals) =>
@@ -41,6 +41,18 @@ const filterRows = [
   })),
   ...(showSwitch ? [{ category: 'all' as const, keys: filtersFor(EVERYTHING_FILTERS, cereals) }] : []),
 ];
+
+// What each shelf sorts by until someone picks a sort: Taste, or Health when
+// nothing on the shelf has a Taste score yet.
+const defaultSorts = Object.fromEntries(
+  stocked.map((c) => [c, inCategory(cereals, c).some((x) => x.data.rating != null) ? 'taste' : 'health']),
+);
+
+// Small print for the shelves that need it. The script shows the one on show.
+const shelfNotes = stocked.flatMap((c) => {
+  const text = aisleNote(c, inCategory(cereals, c));
+  return text ? [{ category: c, text }] : [];
+});
 
 // One row per box. Nutrition is per 100 g, like everywhere else on the site.
 // A null stays null: the cell prints a dash and sorts to the bottom.
@@ -58,6 +70,7 @@ const rows = ranked.map((c) => {
     d,
     pos,
     wrapped: inWrapper(c),
+    healthOnly: healthOnly(c),
     href: u(productPath(c)),
     taste,
     tasteTier: taste == null ? 'na' : scoreTier(taste),
@@ -179,6 +192,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
       <AisleFilters mode="buttons" category={row.category} only={row.keys} hidden={i > 0} />
     ))
   }
+  {shelfNotes.map((n) => <p class="shelf-note wrap" data-shelf-note={n.category} hidden>{n.text}</p>)}
 
   <div class="controls wrap">
     <div class="viewer" role="group" aria-label="View">
@@ -205,7 +219,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
     <div class="count" id="count" aria-live="polite"></div>
   </div>
 
-  <section class="shelf wrap" id="shelf" data-units="pct">
+  <section class="shelf wrap" id="shelf" data-units="pct" data-default-sorts={JSON.stringify(defaultSorts)}>
     <ol class="tiles" id="tiles" aria-label="All cereals, as boxes">
       {rows.map((r) => (
         <li class="tile" {...dataAttrs(r)} hidden={r.d.category !== 'cereal'}>
@@ -226,14 +240,16 @@ const MEDALS = ['m1', 'm2', 'm3'];
             </span>
           </a>
           <div class="tile-scores">
-            <span class="tsc">
-              {r.taste == null ? (
-                <span class="big na" title="No Taste score on file">—</span>
-              ) : (
-                <span class={`big ${r.tasteTier}`}>{(r.taste / 10).toFixed(1)}</span>
-              )}
-              <small>Taste</small>
-            </span>
+            {!r.healthOnly && (
+              <span class="tsc">
+                {r.taste == null ? (
+                  <span class="big na" title="No Taste score on file">—</span>
+                ) : (
+                  <span class={`big ${r.tasteTier}`}>{(r.taste / 10).toFixed(1)}</span>
+                )}
+                <small>Taste</small>
+              </span>
+            )}
             <span class="tsc">
               {r.health == null ? (
                 <span class="big na" title="The label lists no protein, sugar, fiber or saturated fat">—</span>
@@ -242,16 +258,18 @@ const MEDALS = ['m1', 'm2', 'm3'];
               )}
               <small>Health</small>
             </span>
-            <span class="tsc">
-              {r.tier == null ? (
-                <span class="seal na" title="Unrated boxes get no tier">—</span>
-              ) : (
-                <span class={`seal ${r.tierColor}`} title={`Overall ${overallOutOfTen(r.overall!)} / 10`}>
-                  {r.tier}
-                </span>
-              )}
-              <small>Tier</small>
-            </span>
+            {!r.healthOnly && (
+              <span class="tsc">
+                {r.tier == null ? (
+                  <span class="seal na" title="Unrated boxes get no tier">—</span>
+                ) : (
+                  <span class={`seal ${r.tierColor}`} title={`Overall ${overallOutOfTen(r.overall!)} / 10`}>
+                    {r.tier}
+                  </span>
+                )}
+                <small>Tier</small>
+              </span>
+            )}
           </div>
           <dl class="tile-macros">
             {TILE_METRICS.map((m) => {
@@ -479,13 +497,18 @@ const MEDALS = ['m1', 'm2', 'm3'];
   const firstDir = (key: string): Dir => (options.find((o) => o.value === key)?.dataset.first as Dir) ?? 'desc';
 
   // State lives in the URL hash so a view, sort and filter can be linked.
-  // `c` is the category: cereal (the default, never written), bar, snack or
-  // all. Each category is ranked on its own, so it decides what the position
+  // `c` is the category: cereal (the default, never written), bar, milk, snack
+  // or all. Each category is ranked on its own, so it decides what the position
   // numbers count. Without the category row only cereal is valid.
   // `f` is the aisle filter, one of the buttons in that category's row.
   // `v` is the view; Boxes is the default, so only `v=table` is ever written.
   // `u` is the units; % of a day is the default, so only `u=g` is ever written.
   const state = { v: 'boxes' as 'boxes' | 'table', u: 'pct' as Units, c: 'cereal', f: 'all', s: 'taste', d: 'desc' as Dir, q: '' };
+
+  // What the shelf on show sorts by until someone picks a sort.
+  const defaultSorts: Record<string, string> = JSON.parse(shelf.dataset.defaultSorts ?? '{}');
+  const defaultSort = () => defaultSorts[state.c] ?? 'taste';
+  const shelfNotes = Array.from(document.querySelectorAll<HTMLElement>('[data-shelf-note]'));
 
   // The filter buttons of the category on show.
   const barFor = (c: string) => filterBars.find((b) => b.dataset.filterBar === c);
@@ -496,6 +519,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
   const NOUNS: Record<string, [string, string, string]> = {
     cereal: ['box', 'boxes', 'Cereal'],
     bar: ['bar', 'bars', 'Bar'],
+    milk: ['milk', 'milks', 'Milk'],
     snack: ['snack', 'snacks', 'Snack'],
     all: ['product', 'products', 'Product'],
   };
@@ -510,7 +534,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
     const f = h.get('f');
     state.f = f && filterBtnsIn(state.c).some((b) => b.dataset.filter === f) ? f : 'all';
     const s = h.get('s');
-    state.s = s && options.some((o) => o.value === s) ? s : 'taste';
+    state.s = s && options.some((o) => o.value === s) ? s : defaultSort();
     const d = h.get('d');
     state.d = d === 'asc' || d === 'desc' ? d : firstDir(state.s);
     state.q = h.get('q') ?? '';
@@ -523,7 +547,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
     if (state.u !== 'pct') h.set('u', state.u);
     if (state.c !== 'cereal') h.set('c', state.c);
     if (state.f !== 'all') h.set('f', state.f);
-    if (state.s !== 'taste' || state.d !== 'desc') {
+    if (state.s !== defaultSort() || state.d !== 'desc') {
       h.set('s', state.s);
       h.set('d', state.d);
     }
@@ -632,6 +656,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
       else th.removeAttribute('aria-sort');
     }
     for (const bar of filterBars) bar.hidden = bar.dataset.filterBar !== state.c;
+    for (const note of shelfNotes) note.hidden = note.dataset.shelfNote !== state.c;
     for (const b of filterBtnsIn(state.c)) b.classList.toggle('on', b.dataset.filter === state.f);
     for (const b of catBtns) {
       const on = b.dataset.category === state.c;
@@ -693,11 +718,14 @@ const MEDALS = ['m1', 'm2', 'm3'];
     }
   }
 
-  // A new category starts unfiltered: each category has its own filters.
+  // A new category starts unfiltered: each category has its own filters. A sort
+  // someone picked carries over; otherwise the new shelf takes its own default.
   for (const b of catBtns) {
     b.addEventListener('click', () => {
+      const picked = state.s !== defaultSort() || state.d !== 'desc';
       state.c = b.dataset.category!;
       state.f = 'all';
+      if (!picked) state.s = defaultSort();
       render();
     });
   }
@@ -765,6 +793,19 @@ const MEDALS = ['m1', 'm2', 'm3'];
     margin-top: 18px;
     flex-wrap: wrap;
   }
+
+  /* Small print, so it stays plain. */
+  .shelf-note {
+    font-family: var(--fine);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+    text-align: center;
+    max-width: 680px;
+    margin-top: 16px;
+  }
+
+  .shelf-note[hidden] { display: none; }
 
   /* The search box is furniture, so it gets the hard border and shadow. */
   .finder {

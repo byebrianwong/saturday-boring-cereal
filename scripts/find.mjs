@@ -23,7 +23,7 @@
 //   --brand / --name override the brand/product split taken from the match
 //   --no-image       don't pull the photo, keep the emoji placeholder
 //   --no-usda        Open Food Facts only
-//   --category <c>   cereal, bar or snack; else guessed from the name and the
+//   --category <c>   cereal, bar, milk or snack; else guessed from the name and the
 //                    database's shelf placement
 //   --no-infer       don't guess formFactors/attributes/proteinSources
 //   --fit contain    pad the photo onto white instead of cropping to fill.
@@ -72,7 +72,7 @@ function fail(msg) {
   process.exit(1);
 }
 if (FIT_FLAG && !['cover', 'contain'].includes(FIT_FLAG)) fail(`--fit must be cover or contain (got "${FIT_FLAG}")`);
-const CATEGORIES = readTaxonomy().CATEGORIES ?? ['cereal', 'bar', 'snack'];
+const CATEGORIES = readTaxonomy().CATEGORIES ?? ['cereal', 'bar', 'milk', 'snack'];
 if (CATEGORY_FLAG && !CATEGORIES.includes(CATEGORY_FLAG)) {
   fail(`--category must be one of ${CATEGORIES.join(', ')} (got "${CATEGORY_FLAG}")`);
 }

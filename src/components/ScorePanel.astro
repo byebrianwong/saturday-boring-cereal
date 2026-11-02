@@ -1,6 +1,7 @@
 ---
 import type { CollectionEntry } from 'astro:content';
-import { scoreCereal, TASTE_WEIGHT, type Subscore } from '../lib/score';
+import { scoreCereal, healthOutOfTen, TASTE_WEIGHT, type Subscore } from '../lib/score';
+import { healthOnly } from '../lib/taxonomy';
 import TierStamp from './TierStamp.astro';
 import { u } from '../lib/url';
 
@@ -16,6 +17,10 @@ const score = scoreCereal(cereal);
 const taste = score.subscores.find((s) => s.key === 'taste')!;
 const nutrition = score.subscores.filter((s) => s.key !== 'taste');
 const tastePct = Math.round(TASTE_WEIGHT * 100);
+// Milk has no Taste score to wait for, so its panel leaves that row out. With no
+// Tier the seal already shows Health, so only a product with a Tier repeats it
+// as a figure beside the nutrition bars.
+const nutritionOnly = healthOnly(cereal);
 // Each bar takes its nutrient's tint, so it matches the cards and the table.
 const tierOf = (s: Subscore) => s.tier ?? 'na';
 ---
@@ -27,22 +32,30 @@ const tierOf = (s: Subscore) => s.tier ?? 'na';
 
   <div class="grid">
     <div class="stamp-cell">
-      <TierStamp tier={score.tier} overall={score.overall} />
+      <TierStamp tier={score.tier} overall={score.overall} health={score.nutrition} />
     </div>
 
     <div class="bars">
-      <div class:list={['sub', 'taste', tierOf(taste)]}>
-        <div class="lab">
-          <span class="name">{taste.label} <span class="share">{tastePct}% of the score</span></span>
-          <span class:list={['det', { missing: taste.score == null }]}>{taste.detail}</span>
+      {!nutritionOnly && (
+        <div class:list={['sub', 'taste', tierOf(taste)]}>
+          <div class="lab">
+            <span class="name">{taste.label} <span class="share">{tastePct}% of the score</span></span>
+            <span class:list={['det', { missing: taste.score == null }]}>{taste.detail}</span>
+          </div>
+          <div class="track">
+            {taste.score != null && <div class="fill" style={`width: ${Math.max(taste.score, 3)}%`} />}
+          </div>
         </div>
-        <div class="track">
-          {taste.score != null && <div class="fill" style={`width: ${Math.max(taste.score, 3)}%`} />}
-        </div>
-      </div>
+      )}
 
-      <div class="group">
-        <div class="grouphead">Nutrition <span class="share">{100 - tastePct}% of the score</span></div>
+      <div class:list={['group', { alone: nutritionOnly }]}>
+        <div class="grouphead">
+          <span>
+            Nutrition
+            {nutritionOnly ? <span class="share">the whole score</span> : <span class="share">{100 - tastePct}% of the score</span>}
+          </span>
+          {score.tier != null && score.nutrition != null && <span class="healthnum">{healthOutOfTen(score.nutrition)}/10</span>}
+        </div>
         {
           nutrition.map((s) => (
             <div class:list={['sub', tierOf(s)]}>
@@ -104,7 +117,16 @@ const tierOf = (s: Subscore) => s.tier ?? 'na';
     border-top: 1px dashed #d8cba8;
   }
 
+  .group.alone {
+    padding-top: 0;
+    border-top: 0;
+  }
+
   .grouphead {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
     font-family: var(--fine);
     font-size: 11px;
     font-weight: 700;
@@ -119,6 +141,14 @@ const tierOf = (s: Subscore) => s.tier ?? 'na';
     letter-spacing: 0.04em;
     text-transform: none;
     color: var(--muted);
+  }
+
+  /* Health out of ten: the same plain type as the figures under it. */
+  .healthnum {
+    font-size: 12px;
+    letter-spacing: 0;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
   }
 
   /* A long detail ("32.4g · 65% of a day · 62% over the limit") wraps under

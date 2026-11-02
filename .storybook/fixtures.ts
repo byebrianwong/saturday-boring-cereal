@@ -91,4 +91,8 @@ export const examples = {
   missingFields: cereal('trader-joes-homestyle-cherry-pistachio-pecan-granola'),
   /** The serving description already gives the grams ("0.5 cup (40 g)"). */
   gramsInServing: cereal('seven-sundays-good-day-granola-peanut-butter-chocolate-banana'),
+  /** A bar with a wrapper photo and no taste score yet. */
+  bar: cereal('quest-cookies-and-cream-protein-bar'),
+  /** A milk: a Health score, no Taste score, no Tier and no photo. */
+  milk: cereal('typical-fat-free-milk'),
 };

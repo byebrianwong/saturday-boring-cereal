@@ -26,7 +26,18 @@ export const Unrated = {
   parameters: {
     docs: {
       description: {
-        story: 'No taste score: the Taste bar is empty, reads "unrated", and there is no Tier. The nutrition bars still show.',
+        story: 'No taste score: the Taste bar is empty, reads "unrated", and the seal shows Health instead of a Tier. The nutrition bars still show.',
+      },
+    },
+  },
+};
+
+export const Milk = {
+  args: { cereal: examples.milk },
+  parameters: {
+    docs: {
+      description: {
+        story: 'Milk is scored on nutrition alone, so the panel leaves out the Taste row and the seal shows Health.',
       },
     },
   },

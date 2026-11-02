@@ -172,6 +172,11 @@ eq('puffs on the cereal shelf stay cereal',
   guess('Seven Sundays', 'PB Puffs', { categories: ['en:breakfast-cereals'] }), 'cereal');
 eq('puffs on the snack shelf are a snack',
   guess('Wilde', 'Protein Puffs', { categories: ['en:snacks', 'en:salty-snacks'] }), 'snack');
+eq('"milk" in the name makes a milk', guess('Horizon', '2% Reduced Fat Milk'), 'milk');
+eq('the database shelf can make a milk', guess('Fairlife', 'Fat Free', { categories: ['en:dairies', 'en:milks'] }), 'milk');
+eq('a milk chocolate bar stays a bar', guess('Hershey', 'Milk Chocolate Bar'), 'bar');
+eq('milk protein in the name is not a milk', guess('Magic Spoon', 'Milk Protein Crunch'), 'cereal');
+eq('the milk chocolate shelf is not milk', guess('Lindt', 'Truffles', { categories: ['en:milk-chocolates'] }), 'cereal');
 
 {
   const bar = { protein: 21, ingredients: 'milk protein isolate, almonds, chocolate chips', labels: [], categories: [] };
@@ -179,6 +184,13 @@ eq('puffs on the snack shelf are a snack',
   eq('a bar with 10 g of protein or more is a protein bar', JSON.stringify(tags.formFactors), '["protein-bar"]');
   eq('bar forms ignore the ingredients (chocolate chips are not a nut bar)', tags.formFactors.includes('nut-bar'), false);
   eq('a chosen category wins over the guess', inferTags(bar, 'Quest', 'Cookies & Cream Bar', { category: 'snack' }).category, 'snack');
+}
+
+{
+  const milk = (name) => inferTags({ ingredients: '', labels: [], categories: [] }, 'Typical', name);
+  eq('skim is fat-free', JSON.stringify(milk('Skim Milk').formFactors), '["fat-free"]');
+  eq('1% is low-fat', JSON.stringify(milk('1% Lowfat Milk').formFactors), '["low-fat"]');
+  eq('2% is reduced-fat', JSON.stringify(milk('2% Reduced-Fat Milk').formFactors), '["reduced-fat"]');
 }
 
 // --- 5. parsing ----------------------------------------------------------------

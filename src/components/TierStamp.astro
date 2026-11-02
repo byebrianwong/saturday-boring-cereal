@@ -1,21 +1,32 @@
 ---
-import { tierColor, overallOutOfTen } from '../lib/score';
+import { tierColor, overallOutOfTen, healthOutOfTen } from '../lib/score';
 
 interface Props {
   tier: string | null;
   overall: number | null;
+  /** The 0–100 Health score. With no Tier to show, the seal shows this instead. */
+  health?: number | null;
 }
 
-const { tier, overall } = Astro.props;
+const { tier, overall, health } = Astro.props;
 const color = tier == null ? 'na' : tierColor(tier);
 const out10 = overall == null ? null : overallOutOfTen(overall);
+const healthOnly = tier == null && health != null ? healthOutOfTen(health) : null;
 ---
 
-<div class:list={['stamp', color]} title={overall == null ? 'Unrated overall' : `Overall ${out10} / 10`}>
-  <span class="cap">Tier</span>
-  <span class="letter">{tier ?? '—'}</span>
-  <span class="num">{out10 ? `${out10} / 10` : 'unrated'}</span>
-</div>
+{healthOnly ? (
+  <div class:list={['stamp', color]} title="Health score out of 10. No Taste score, so no Tier.">
+    <span class="cap">Health</span>
+    <span class="letter">{healthOnly}</span>
+    <span class="num">out of 10</span>
+  </div>
+) : (
+  <div class:list={['stamp', color]} title={overall == null ? 'Unrated overall' : `Overall ${out10} / 10`}>
+    <span class="cap">Tier</span>
+    <span class="letter">{tier ?? '—'}</span>
+    <span class="num">{out10 ? `${out10} / 10` : 'unrated'}</span>
+  </div>
+)}
 
 <style>
   .stamp {

@@ -3,12 +3,13 @@ import { config, fields, collection } from '@keystatic/core';
 const categoryOptions = [
   { label: 'Cereal', value: 'cereal' },
   { label: 'Bar', value: 'bar' },
+  { label: 'Milk', value: 'milk' },
   { label: 'Snack', value: 'snack' },
 ];
 
 // Every form factor in one list, cereal first. The site only uses the ones
-// that belong to the product's category (see CEREAL_FORMS, BAR_FORMS and
-// SNACK_FORMS in src/content.config.ts).
+// that belong to the product's category (see CEREAL_FORMS, BAR_FORMS,
+// SNACK_FORMS and MILK_FORMS in src/content.config.ts).
 const formFactorOptions = [
   { label: 'Flakes', value: 'flakes' },
   { label: 'Clusters', value: 'clusters' },
@@ -30,6 +31,10 @@ const formFactorOptions = [
   { label: 'Cookies (snacks)', value: 'cookies' },
   { label: 'Jerky (snacks)', value: 'jerky' },
   { label: 'Crackers (snacks)', value: 'crackers' },
+  { label: 'Fat-Free (milk)', value: 'fat-free' },
+  { label: '1% Low-Fat (milk)', value: 'low-fat' },
+  { label: '2% Reduced-Fat (milk)', value: 'reduced-fat' },
+  { label: 'Whole (milk)', value: 'whole' },
 ];
 
 const proteinSourceOptions = [
@@ -98,7 +103,7 @@ export default config({
         }),
         category: fields.select({
           label: 'Category',
-          description: 'Cereal, bar or snack. Each is ranked only against its own category.',
+          description: 'Cereal, bar, milk or snack. Each is ranked only against its own category.',
           options: categoryOptions,
           defaultValue: 'cereal',
         }),

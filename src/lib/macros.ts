@@ -1,7 +1,7 @@
 import type { CollectionEntry } from 'astro:content';
 import { gramsShort } from './format';
 import { per100gOf, percentOfDay, type Nutrition } from './nutrition';
-import { macroTier, proteinDVOf, type Tint } from './score';
+import { macroTier, proteinDVOf, scoreCereal, type Tint } from './score';
 
 export interface CardMacro {
   /** Share of a day per 100 g, e.g. "24%", or "~24%" for estimated protein. */
@@ -62,6 +62,9 @@ export function macroLine(c: CollectionEntry<'cereals'>): string {
   return parts.length ? `${parts.join(' · ')} /100g` : '';
 }
 
+/** Best taste first. Unrated products go last, in Health order. */
 export function byRatingDesc(a: CollectionEntry<'cereals'>, b: CollectionEntry<'cereals'>): number {
-  return (b.data.rating ?? -1) - (a.data.rating ?? -1);
+  const taste = (b.data.rating ?? -1) - (a.data.rating ?? -1);
+  if (taste || a.data.rating != null) return taste;
+  return (scoreCereal(b).nutrition ?? -1) - (scoreCereal(a).nutrition ?? -1);
 }

@@ -44,12 +44,15 @@ export const WithCaveat = {
   },
 };
 
+// The home page counts cereal only, so this story does too.
+const boxes = catalog.filter((c) => c.data.category === 'cereal');
+
 export const BoxCount = {
   args: {
     label: 'Boxes on the record',
-    value: String(catalog.length),
+    value: String(boxes.length),
     note: 'tasted and weighed',
-    stack: catalog.slice(0, 3),
+    stack: boxes.slice(0, 3),
     href: '/cereals/',
   },
 };

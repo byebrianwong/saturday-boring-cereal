@@ -4,7 +4,8 @@ import Layout from '../../layouts/Layout.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import MiniBox from '../../components/MiniBox.astro';
 import PriceTag from '../../components/PriceTag.astro';
-import { CATEGORY_INFO, CATEGORY_ORDER, inCategory, inWrapper, label, productPath } from '../../lib/taxonomy';
+import { CATEGORY_INFO, CATEGORY_ORDER, countOf, inCategory, inWrapper, label, productPath } from '../../lib/taxonomy';
+import { scoreCereal } from '../../lib/score';
 import { macroLine, byRatingDesc } from '../../lib/macros';
 import { u } from '../../lib/url';
 
@@ -35,6 +36,9 @@ const shelves = CATEGORY_ORDER.map((category) => ({ category, items: inCategory(
   (s) => s.items.length > 0
 );
 const mixed = shelves.length > 1;
+// "Box" only fits cereal, so the other shelves count in their own nouns.
+const onlyCereal = !mixed && shelves[0].category === 'cereal';
+const counted = mixed ? `${list.length} products` : countOf(shelves[0].category, list.length);
 ---
 
 <Layout
@@ -43,10 +47,10 @@ const mixed = shelves.length > 1;
 >
 
   <PageHeader
-    kicker={`${kind} · ${list.length} box${list.length === 1 ? '' : 'es'} on file`}
+    kicker={`${kind} · ${counted} on file`}
     title=""
     accent={title}
-    lede={`Every ${title.toLowerCase()} box on record, ranked best first. Same figures as everywhere else on the site, taken off the side panel.`}
+    lede={`${onlyCereal ? `Every ${title.toLowerCase()} box on record` : `Everything filed under ${title.toLowerCase()}`}, ranked best first. Same figures as everywhere else on the site, taken off the side panel.`}
   />
 
   <div class="crumb wrap"><a href={u('/cereals/')}>← Back to the full aisle</a></div>
@@ -67,7 +71,7 @@ const mixed = shelves.length > 1;
                 wide={inWrapper(c)}
                 href={productPath(c)}
               />
-              <PriceTag rating={c.data.rating} macros={macroLine(c)} />
+              <PriceTag rating={c.data.rating} macros={macroLine(c)} health={scoreCereal(c).nutrition} />
             </div>
           ))}
         </div>

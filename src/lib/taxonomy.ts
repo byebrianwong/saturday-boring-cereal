@@ -23,6 +23,11 @@ export const FORM_FACTOR_LABELS: Record<string, string> = {
   cookies: 'Cookies',
   jerky: 'Jerky',
   crackers: 'Crackers',
+  // Milk, named the way a carton names it.
+  'fat-free': 'Fat-Free',
+  'low-fat': '1% Low-Fat',
+  'reduced-fat': '2% Reduced-Fat',
+  whole: 'Whole',
 };
 
 export const ATTRIBUTE_LABELS: Record<string, string> = {
@@ -57,11 +62,12 @@ export type Category = CollectionEntry<'cereals'>['data']['category'];
 export const CATEGORY_INFO: Record<Category, { label: string; one: string; many: string; path: string }> = {
   cereal: { label: 'Cereal', one: 'box', many: 'boxes', path: 'cereals' },
   bar: { label: 'Bars', one: 'bar', many: 'bars', path: 'bars' },
+  milk: { label: 'Milk', one: 'milk', many: 'milks', path: 'milk' },
   snack: { label: 'Snacks', one: 'snack', many: 'snacks', path: 'snacks' },
 };
 
 /** Categories in display order. Cereal first: the site is a cereal site. */
-export const CATEGORY_ORDER: Category[] = ['cereal', 'bar', 'snack'];
+export const CATEGORY_ORDER: Category[] = ['cereal', 'bar', 'milk', 'snack'];
 
 /** "3 bars", "1 box". */
 export function countOf(category: Category, n: number): string {
@@ -82,6 +88,30 @@ export function inWrapper(c: CollectionEntry<'cereals'>): boolean {
   return c.data.category === 'bar';
 }
 
+/**
+ * True for a product scored on nutrition alone: any milk nobody has given a
+ * taste rating. It has a Health score, but no Taste score and no Tier, so its
+ * pages lead with Health rather than showing blanks where the others would be.
+ */
+export function healthOnly(c: CollectionEntry<'cereals'>): boolean {
+  return c.data.category === 'milk' && c.data.rating == null;
+}
+
+/**
+ * Small print for a category's shelf, or null when it needs none. Milk never
+ * gets a Taste score, and a shelf where nothing has been tasted yet is ordered
+ * by Health until something has.
+ */
+export function aisleNote(category: Category, list: CollectionEntry<'cereals'>[]): string | null {
+  if (category === 'milk') {
+    return 'Milk gets a Health score only: the nutrition half of the Tier score, with no Taste score and no Tier letter. It is graded per 100 grams like everything else. Milk is about 90% water, so compare it with other milks, not with a dry cereal.';
+  }
+  if (list.length > 0 && list.every((c) => c.data.rating == null)) {
+    return 'Not tasted yet, so there is no Taste score and no Tier. These are ordered by Health, the nutrition half of the score, until they are.';
+  }
+  return null;
+}
+
 /** The products in one category, in the order given. */
 export function inCategory<T extends CollectionEntry<'cereals'>>(list: T[], category: Category): T[] {
   return list.filter((c) => c.data.category === category);
@@ -93,6 +123,7 @@ export function inCategory<T extends CollectionEntry<'cereals'>>(list: T[], cate
 export const AISLE_FILTERS: Record<Category, string[]> = {
   cereal: ['all', 'flakes', 'clusters', 'granola', 'puffs', 'high-protein', 'low-sugar'],
   bar: ['all', 'protein-bar', 'granola-bar', 'nut-bar', 'fruit-bar', 'high-protein', 'low-sugar'],
+  milk: ['all', 'fat-free', 'low-fat', 'reduced-fat', 'whole', 'high-protein', 'low-sugar'],
   snack: ['all', 'chips', 'puffs', 'crisps', 'bites', 'cookies', 'jerky', 'crackers', 'high-protein', 'low-sugar'],
 };
 

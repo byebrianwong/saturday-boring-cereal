@@ -1,5 +1,6 @@
 import PriceTag from './PriceTag.astro';
 import { examples } from '../../.storybook/fixtures';
+import { scoreCereal } from '../lib/score';
 import { frame } from '../../.storybook/helpers';
 import { macroLine } from '../lib/macros';
 
@@ -24,6 +25,13 @@ export const Rated = {
 
 export const Unrated = {
   args: { rating: examples.unrated.data.rating, macros: macroLine(examples.unrated) },
+};
+
+export const HealthInstead = {
+  args: { rating: null, macros: macroLine(examples.milk), health: scoreCereal(examples.milk).nutrition },
+  parameters: {
+    docs: { description: { story: 'With no taste score, the tag shows the Health score when it is given one. Used on the tag pages.' } },
+  },
 };
 
 export const NoMacros = {

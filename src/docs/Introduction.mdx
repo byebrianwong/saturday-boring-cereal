@@ -41,12 +41,13 @@ macros inside it are small grey text.
    come from `src/lib/score.ts`. Nothing about scoring is stored in the cereal
    files, so changing a target there re-grades the whole catalog.
 
-Bars and snacks live in the same folder, marked `category: bar` or
-`category: snack` (a file without the line is a cereal). They get the same
-score, but every ranking — the Tiers, the shelf records, the position numbers
-on The Aisle — counts only within one category. A bar's photo is a wide 5:2
-wrapper, drawn by [WrapperShot](?path=/docs/cards-wrappershot--docs) inside
-the same frames the cereal boxes use.
+Bars, milk and snacks live in the same folder, marked `category: bar`,
+`category: milk` or `category: snack` (a file without the line is a cereal).
+They get the same score, but every ranking — the Tiers, the shelf records, the
+position numbers on The Aisle — counts only within one category. A bar's photo
+is a wide 5:2 wrapper, drawn by [WrapperShot](?path=/docs/cards-wrappershot--docs)
+inside the same frames the cereal boxes use. Milk has no Taste score and no
+Tier, so its cards and panels show the Health score instead.
 
 ## Where each component appears
 
@@ -54,8 +55,8 @@ the same frames the cereal boxes use.
 | --- | --- | --- |
 | Every page | (`src/layouts/Layout.astro`) | SiteHeader, SiteFooter |
 | Home, `/` | `index.astro` | ChampCard, RankCard, BreakfastStrip |
-| The Aisle, `/cereals/` | `cereals/index.astro` | PageHeader, CategorySwitch (once bars or snacks are in stock), AisleFilters |
-| One product, `/cereals/<slug>/`, `/bars/<slug>/` or `/snacks/<slug>/` | `[aisle]/[slug].astro` | ScorePanel (which contains TierStamp), NutritionPanel |
+| The Aisle, `/cereals/` | `cereals/index.astro` | PageHeader, CategorySwitch (once anything but cereal is in stock), AisleFilters |
+| One product, `/cereals/<slug>/`, `/bars/<slug>/`, `/milk/<slug>/` or `/snacks/<slug>/` | `[aisle]/[slug].astro` | ScorePanel (which contains TierStamp), NutritionPanel |
 | Price Check, `/compare/` | `compare.astro` | none |
 | Store Policy, `/about/` | `about.astro` | PageHeader |
 | One tag, `/tags/<tag>/` | `tags/[tag].astro` | PageHeader, MiniBox, PriceTag |

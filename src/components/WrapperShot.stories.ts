@@ -1,9 +1,9 @@
 import WrapperShot from './WrapperShot.astro';
+import { examples } from '../../.storybook/fixtures';
 import { frame } from '../../.storybook/helpers';
 
-// The catalog has no bars yet, so there is no real wrapper photo to show and
-// these stories use the emoji placeholder. The emoji and colour are example
-// values. Once a bar with a photo is on file, add a story that uses it.
+// Most of these stories show the emoji placeholder, with an example emoji and
+// colour. WithPhoto shows a real bar from the catalog.
 const example = { emoji: '🌾', boxColor: '#e07a2e', alt: '' };
 
 // The frames each size sits in on the site, so the strip has the room it has there.
@@ -18,9 +18,17 @@ export default {
     docs: {
       description: {
         component:
-          "A bar's photo, or its emoji placeholder, as a flat 5:2 wrapper. Bars come in wrappers, so their photos are fitted to 5:2 (1000×400) instead of the tall box front. It sits inside the same box-shaped frames the cereals use (Aisle tiles, rank cards, tag-page boxes), so a bar's card is the same size as the cereal cards beside it. The catalog has no bars yet, so these stories show the placeholder with example values.",
+          "A bar's photo, or its emoji placeholder, as a flat 5:2 wrapper. Bars come in wrappers, so their photos are fitted to 5:2 (1000×400) instead of the tall box front. It sits inside the same box-shaped frames the cereals use (Aisle tiles, rank cards, tag-page boxes), so a bar's card is the same size as the cereal cards beside it.",
       },
     },
+  },
+};
+
+export const WithPhoto = {
+  args: { image: examples.bar.data.boxImage, emoji: examples.bar.data.emoji, boxColor: examples.bar.data.boxColor, alt: '' },
+  decorators: [tileFrame],
+  parameters: {
+    docs: { description: { story: 'A real wrapper photo, as on an Aisle tile or a rank card.' } },
   },
 };
 
