@@ -1,5 +1,5 @@
 import RecordCard from './RecordCard.astro';
-import { catalog, cereal, examples } from '../../.storybook/fixtures';
+import { cereal, examples } from '../../.storybook/fixtures';
 import { frame, phone } from '../../.storybook/helpers';
 
 export default {
@@ -44,15 +44,16 @@ export const WithCaveat = {
   },
 };
 
-// The home page counts cereal only, so this story does too.
-const boxes = catalog.filter((c) => c.data.category === 'cereal');
-
 export const BoxCount = {
   args: {
     label: 'Boxes on the record',
-    value: String(boxes.length),
+    value: '33',
     note: 'tasted and weighed',
-    stack: boxes.slice(0, 3),
+    stack: [
+      cereal('backflip-fruit-galaxy'),
+      cereal('calbee-frugra-reduced-sugar-fruit-and-granola'),
+      cereal('cascadian-farm-blueberry-almond-crunch'),
+    ],
     href: '/cereals/',
   },
 };

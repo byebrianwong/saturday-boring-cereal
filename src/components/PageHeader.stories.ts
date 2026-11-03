@@ -1,8 +1,5 @@
 import PageHeader from './PageHeader.astro';
-import { catalog } from '../../.storybook/fixtures';
 import { phone } from '../../.storybook/helpers';
-
-const granolaCount = catalog.filter((c) => c.data.formFactors.includes('granola')).length;
 
 export default {
   title: 'Site chrome/PageHeader',
@@ -50,7 +47,7 @@ export const Turquoise = {
 // Built the way src/pages/tags/[tag].astro builds it.
 export const TagPage = {
   args: {
-    kicker: `Form factor · ${granolaCount} boxes on file`,
+    kicker: 'Form factor · 14 boxes on file',
     title: '',
     accent: 'Granola',
     lede: 'Every granola box on record, ranked best first. Same figures as everywhere else on the site, taken off the side panel.',

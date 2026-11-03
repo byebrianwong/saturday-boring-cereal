@@ -16,8 +16,12 @@ const config: StorybookConfig = {
       sanitization: { sanitizeHtml: { allowedAttributes: { div: ['style'] } } },
     },
   },
-  // Box photos and label photos live in public/, same as the site.
-  staticDirs: ['../public'],
+  // Frozen copies of the fixtures' box and label photos, at the same paths the
+  // site uses. Not ../public, so replacing a product's photo changes no story.
+  staticDirs: ['./fixture-data/public'],
+  // Vite copies public/ into the build by default, which would mix the real
+  // photos in with the frozen ones at the same paths.
+  viteFinal: (config) => ({ ...config, publicDir: false }),
 };
 
 export default config;

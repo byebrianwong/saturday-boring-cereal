@@ -1,0 +1,37 @@
+---
+name: Good Day Granola, Peanut Butter Chocolate Banana
+brand: Seven Sundays
+rating: 8.5
+shortNote: Good granola with a medium banana flavor
+dateReviewed: 2026-09-20
+emoji: '🥣'
+boxColor: "#c98d4e"
+barcode: '0850053830181'
+labelImage: /images/labels/seven-sundays-good-day-granola-peanut-butter-chocolate-banana.jpg
+labelCredit: "Label photo: Seven Sundays (sevensundays.com)"
+boxImage: /images/cereals/seven-sundays-good-day-granola-peanut-butter-chocolate-banana.jpg
+imageSource: manufacturer
+imageCredit: "Image: sevensundays.com"
+formFactors: [granola]
+proteinSources: [nut-seed]
+attributes: []
+ingredients: "gluten free oats, upcycled oat protein, dates, maple syrup, peanut butter, sorghum flakes, sunflower seeds, almonds, pecans, pumpkin seeds, coconut oil, dark chocolate (coconut sugar, chocolate liquor, cocoa butter), bananas, chia seeds, flax seeds, sea salt, vanilla extract. Contains: Peanuts, Tree nuts (almonds, pecans)."
+ingredientsSource: "sevensundays.com — https://sevensundays.com/products/gluten-free-granola-good-day"
+nutrition:
+  servingSize: 40
+  servingDescription: 0.5 cup (40 g)
+  calories: 190
+  totalFat: 11
+  saturatedFat: 2.5
+  transFat: 0
+  polyunsaturatedFat: null
+  monounsaturatedFat: null
+  totalCarbs: 18
+  dietaryFiber: 4
+  totalSugars: 6
+  addedSugars: 3
+  protein: 6
+  proteinDV: 5
+  sodium: 100
+---
+
