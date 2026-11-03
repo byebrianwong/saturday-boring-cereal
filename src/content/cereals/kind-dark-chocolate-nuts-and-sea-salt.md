@@ -2,8 +2,9 @@
 name: "Dark Chocolate Nuts & Sea Salt"
 brand: KIND
 category: bar
-rating: null
+rating: 7.5
 dateReviewed: 2026-11-02
+dateUpdated: 2026-11-02
 emoji: '🌰'
 boxColor: "#1aa3ad"
 labelImage: /images/labels/kind-dark-chocolate-nuts-and-sea-salt.jpg
