@@ -2,8 +2,9 @@
 name: Chocolate Chip
 brand: Clif Bar
 category: bar
-rating: null
+rating: 7
 dateReviewed: 2026-11-02
+dateUpdated: 2026-11-02
 emoji: '🧗'
 boxColor: "#1f5fbf"
 boxImage: /images/cereals/clif-bar-chocolate-chip.jpg
