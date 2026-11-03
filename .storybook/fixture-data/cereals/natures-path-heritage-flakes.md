@@ -1,0 +1,33 @@
+---
+name: Heritage Flakes
+brand: "Nature's Path"
+rating: 7
+dateReviewed: 2026-01-06
+emoji: '🌾'
+boxColor: "#6fae57"
+barcode: '0058449770206'
+labelImage: /images/labels/natures-path-heritage-flakes.jpg
+labelCredit: "Label photo: Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0058449770206"
+boxImage: /images/cereals/natures-path-heritage-flakes.jpg
+imageSource: manufacturer
+imageCredit: "Image: Nature's Path (naturespath.com)"
+formFactors: [flakes]
+proteinSources: []
+attributes: [organic, low-sugar]
+ingredients: "Kamut khorasan wheat flour*, wheat bran*, whole wheat meal*, cane sugar*, whole oat flour*, spelt flour*, barley flour*, whole millet*, barley malt extract*, quinoa*, sea salt, honey*."
+ingredientsSource: "Open Food Facts contributors, CC-BY-SA — https://world.openfoodfacts.org/product/0058449770206"
+nutrition:
+  servingSize: 40
+  calories: 160
+  totalFat: 1.5
+  saturatedFat: 0
+  transFat: 0
+  totalCarbs: 31
+  totalSugars: 5
+  addedSugars: 5
+  dietaryFiber: 7
+  protein: 5
+  proteinDV: null
+  sodium: 170
+---
+

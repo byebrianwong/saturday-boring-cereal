@@ -21,8 +21,8 @@ npm run storybook  # component catalog at http://localhost:6006
 
 ## Storybook and Chromatic
 
-Storybook shows every component in `src/components/`, rendered with real cereals
-from `src/content/cereals/`. If you are new to the code, open it first: its
+Storybook shows every component in `src/components/`, rendered with frozen copies of
+real cereals. If you are new to the code, open it first: its
 "Start here" page explains the design rule, the data rules, and which component
 appears on which page.
 
@@ -31,7 +31,9 @@ appears on which page.
   to HTML at build time. Under `npm run storybook` the controls re-render the story;
   in the built Storybook they do nothing.
 - Story data comes from [.storybook/fixtures.ts](.storybook/fixtures.ts), which reads
-  the real markdown files. `getCollection()` does not run in Storybook.
+  frozen copies of 14 products and their photos in `.storybook/fixture-data/`.
+  `getCollection()` does not run in Storybook. Stories never read `src/content/` or
+  `public/`, so adding or editing a product changes no snapshot.
 - [Chromatic](https://www.chromatic.com/builds?appId=6acabd406e418aa473a862f5)
   snapshots every story on every push
   ([.github/workflows/chromatic.yml](.github/workflows/chromatic.yml)) and shows a

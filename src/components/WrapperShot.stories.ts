@@ -3,7 +3,7 @@ import { examples } from '../../.storybook/fixtures';
 import { frame } from '../../.storybook/helpers';
 
 // Most of these stories show the emoji placeholder, with an example emoji and
-// colour. WithPhoto shows a real bar from the catalog.
+// colour. WithPhoto shows a real bar from the fixtures.
 const example = { emoji: '🌾', boxColor: '#e07a2e', alt: '' };
 
 // The frames each size sits in on the site, so the strip has the room it has there.
