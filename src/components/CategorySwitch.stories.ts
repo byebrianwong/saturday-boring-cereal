@@ -1,10 +1,7 @@
 import CategorySwitch from './CategorySwitch.astro';
-import { catalog } from '../../.storybook/fixtures';
 
-// The real counts. The catalog has no snacks yet, so that count is an example
-// number, not products on file.
-const count = (category: string) => catalog.filter((c) => c.data.category === category).length;
-const [cereal, bar, milk] = [count('cereal'), count('bar'), count('milk')];
+// Example counts, written out so that adding a product changes no snapshot.
+const counts = { cereal: 33, bar: 7, milk: 3 };
 
 export default {
   title: 'Site chrome/CategorySwitch',
@@ -20,14 +17,14 @@ export default {
 };
 
 export const AllStocked = {
-  args: { counts: { cereal, bar, milk, snack: 4 }, active: 'cereal' },
+  args: { counts: { ...counts, snack: 4 }, active: 'cereal' },
   parameters: {
-    docs: { description: { story: 'Every category stocked, cereal picked. The snack count is an example.' } },
+    docs: { description: { story: 'Every category stocked, cereal picked.' } },
   },
 };
 
 export const BarsPicked = {
-  args: { counts: { cereal, bar, milk, snack: 0 }, active: 'bar' },
+  args: { counts: { ...counts, snack: 0 }, active: 'bar' },
   parameters: {
     docs: { description: { story: 'No snacks in stock, so there is no Snacks tab. Bars picked.' } },
   },

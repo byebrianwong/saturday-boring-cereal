@@ -8,8 +8,8 @@ Rankings of granolas and healthier cereals, scored on taste and macros combined.
 [Astro](https://astro.build) site. Each cereal is one markdown file in
 `src/content/cereals/`. There is no database and no server.
 
-This Storybook shows every component in `src/components/`, rendered with real
-cereals from the catalog. Read this page first, then
+This Storybook shows every component in `src/components/`, rendered with frozen
+copies of real cereals. Read this page first, then
 [Foundations](?path=/docs/foundations--docs) for colours and type, then browse
 the components in the sidebar.
 
@@ -74,12 +74,16 @@ Tier, so its cards and panels show the Health score instead.
 
 ## Where the story data comes from
 
-`.storybook/fixtures.ts` reads the real markdown files in
-`src/content/cereals/` and builds the same objects Astro's `getCollection()`
+`.storybook/fixtures.ts` reads frozen copies of 14 catalog entries from
+`.storybook/fixture-data/` and builds the same objects Astro's `getCollection()`
 returns. It also names a handful of examples, each picked because it shows a
 case a component must handle: the top-rated box, a box with no photo, an
-unrated box, a label with missing values. When a cereal file changes, its
-stories change with it.
+unrated box, a label with missing values.
+
+Stories never read `src/content/` or `public/`. Adding, editing or rating a real
+product changes no story, so a change in Chromatic always means the UI changed.
+The copies are not kept in step with the catalog. Update them by hand when the
+schema changes or when a story needs a new case.
 
 ## Running it
 

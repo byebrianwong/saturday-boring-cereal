@@ -1,9 +1,13 @@
-// Story data comes from the real catalog, not hand-written mocks.
+// Story data is a frozen copy of 14 catalog entries, so a Chromatic snapshot
+// changes only when the UI changes. Adding, editing or rating a real product
+// must never change a story, so stories do not read src/content or public/.
 //
 // Components take a `CollectionEntry<'cereals'>`, which Astro normally builds
 // with `getCollection()`. That function does not run inside Storybook, so this
-// file reads the same markdown files and builds the same shape. When a cereal
-// file changes, its stories change with it.
+// file reads the markdown files in fixture-data/cereals and builds the same
+// shape. Those files, and the images in fixture-data/public, were copied from
+// the catalog on 2026-11-02 and are not kept in step with it. Change them only
+// to test a new case or to follow a change to the schema.
 //
 // Two things differ from Astro's real loader:
 // - The frontmatter is not validated against the Zod schema in
@@ -14,7 +18,7 @@ import type { CollectionEntry } from 'astro:content';
 
 type Cereal = CollectionEntry<'cereals'>;
 
-const files = import.meta.glob('../src/content/cereals/*.md', {
+const files = import.meta.glob('./fixture-data/cereals/*.md', {
   query: '?raw',
   import: 'default',
   eager: true,
@@ -46,25 +50,20 @@ function toEntry(path: string, raw: string): Cereal {
   } as Cereal;
 }
 
-/** Every cereal in src/content/cereals, sorted by file name. */
-export const catalog: Cereal[] = Object.entries(files)
-  .map(([path, raw]) => toEntry(path, raw))
-  .sort((a, b) => a.id.localeCompare(b.id));
+const fixtures: Cereal[] = Object.entries(files).map(([path, raw]) => toEntry(path, raw));
 
-/** One cereal by its file name (slug). Throws if the file was renamed or removed. */
+/** One cereal by its file name (slug). Throws if the fixture file is missing. */
 export function cereal(slug: string): Cereal {
-  const found = catalog.find((c) => c.id === slug);
+  const found = fixtures.find((c) => c.id === slug);
   if (!found) {
-    throw new Error(
-      `No cereal "${slug}" in src/content/cereals. A story fixture points at a file that was renamed or removed.`,
-    );
+    throw new Error(`No cereal "${slug}" in .storybook/fixture-data/cereals. Copy the file there to use it in a story.`);
   }
   return found;
 }
 
 /**
- * A copy of a cereal with its box photo removed. Every cereal in the catalog
- * has a photo now, so the placeholder examples are made by taking one away.
+ * A copy of a cereal with its box photo removed. Every fixture has a photo, so
+ * the placeholder examples are made by taking one away.
  */
 function withoutPhoto(c: Cereal): Cereal {
   const { boxImage, imageSource, imageCredit, ...data } = c.data;
@@ -72,10 +71,9 @@ function withoutPhoto(c: Cereal): Cereal {
 }
 
 // Named examples. Each one is picked because it shows a case a component has
-// to handle. If the catalog changes so one no longer shows that case, pick a
-// different slug here.
+// to handle.
 export const examples = {
-  /** Highest taste score on the shelf (9), photo, tasting note, full label. */
+  /** Highest taste score among the fixtures (9), photo, tasting note, full label. */
   topRated: cereal('grandy-organics-peanut-butter-dark-chocolate-granola'),
   /** A typical entry: photo, full label, no tasting note. */
   typical: cereal('natures-path-heritage-flakes'),
