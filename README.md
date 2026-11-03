@@ -1,8 +1,8 @@
 # Saturday Boring Cereal 🥣
 
 My rankings of granolas and healthier cereals, scored on taste and macros combined.
-Protein bars, cereal bars and protein snacks are on the shelf too, each ranked only against
-its own kind (see [Bars and snacks](#bars-and-snacks)).
+Protein bars, cereal bars, protein snacks and milk are on the shelf too, each ranked only
+against its own kind (see [Bars, milk and snacks](#bars-milk-and-snacks)).
 Astro static site + Keystatic admin, no database, no server.
 
 **Live:** https://saturday-boring-cereal.vercel.app
@@ -212,7 +212,7 @@ Rules encoded in the schema:
   why no cereal file carries the line. `formFactors` must come from that category's list
   (`CEREAL_FORMS`, `BAR_FORMS`, `SNACK_FORMS` in `content.config.ts`).
 
-## Bars and snacks
+## Bars, milk and snacks
 
 Every product is a markdown file in `src/content/cereals/`, cereal or not. The `category`
 field says which aisle it belongs to:
@@ -221,6 +221,7 @@ field says which aisle it belongs to:
 |---|---|---|---|
 | Cereal | no `category` line | `/cereals/<slug>/` | flakes, clusters, granola, puffs, … |
 | Bar | `category: bar` | `/bars/<slug>/` | protein bar, granola bar, nut bar, fruit bar |
+| Milk | `category: milk` | `/milk/<slug>/` | fat-free, 1% low-fat, 2% reduced-fat, whole |
 | Snack | `category: snack` | `/snacks/<slug>/` | chips, puffs, crisps, bites, cookies, jerky, crackers |
 
 **Scoring is the same for all three, ranking is not.** A bar gets the same Taste, Health and
@@ -231,14 +232,15 @@ fiber per 100 g than a cereal. A typical protein bar label (21 g protein, 1 g su
 fiber, 3 g saturated fat in a 60 g bar) rated 6 for taste scores 6.4 overall, above the best
 cereal on the site (6.1). On one shared list, bars would take every top spot. So:
 
-- **Home page:** the Tiers, the champion and the shelf records are cereal only. Bars and
-  snacks get their own "other aisles" section, top three each, which appears once one is
-  on file.
-- **The Aisle (`/cereals/`):** opens on cereal. A Cereal / Bars / Snacks / Everything row
-  appears above the filters once anything other than cereal is in stock, and each
+- **Home page:** the Tiers, the champion and the shelf records are cereal only. The other
+  categories get their own "other aisles" section, top three each, which appears once one
+  is on file.
+- **The Aisle (`/cereals/`):** opens on cereal. A Cereal / Bars / Milk / Snacks / Everything
+  row appears above the filters once anything other than cereal is in stock, and each
   category has its own filter buttons. Position numbers count within the category, and
-  Everything shows none. Links carry the category: `/cereals/#c=bar&f=protein-bar`.
-  `/bars/` and `/snacks/` redirect there.
+  Everything shows none. A shelf sorts by Taste, or by Health while nothing on it has a
+  Taste score. Links carry the category: `/cereals/#c=bar&f=protein-bar`. `/bars/`,
+  `/milk/` and `/snacks/` redirect there.
 - **Tag pages:** a tag shared across categories (high-protein, puffs) lists each category
   as its own shelf.
 
@@ -264,6 +266,21 @@ and cereals line up.
 
 **Sugar substitutes** now include maltitol, sorbitol and xylitol, the sugar alcohols bars
 use most. A product with one is still kept out of the "least sugar" record.
+
+**Unrated products show Health.** A bar nobody has tasted yet has no Taste score and no
+Tier, so its card and page show the Health score (the nutrition half of the Tier score, out
+of 10), and its shelf sorts by Health. Give it a rating with `npm run rate` and it gets a
+Tier like anything else.
+
+**Milk is scored on Health alone.** It has no Taste score and no Tier, by design, so it shows
+Health wherever a Tier would go. The three files named `typical-*-milk.md` are not one brand.
+Each holds the median of about 190 plain milk labels of that kind from USDA's Branded Foods
+database, with the cup weight from USDA (245 g fat-free, 244 g for 1% and 2%).
+
+It uses the same formula per 100 g as everything else, and that has two effects worth
+knowing. Milk is about 90% water and has no fiber, so all three land near 4 out of 10
+(fat-free 4.0, 1% 3.9, 2% 3.9). And the three barely differ, because saturated fat is the
+only number that changes between them and it counts for 10% of the score.
 
 ## Updating a cereal you already have
 

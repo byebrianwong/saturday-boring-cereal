@@ -29,7 +29,25 @@ export const Unrated = {
   args: { cereal: examples.unrated, rank: 9, size: 'sm' },
   parameters: {
     docs: {
-      description: { story: 'No taste score: the sticker turns grey and reads "Unrated". No number is made up.' },
+      description: { story: 'No taste score: the sticker turns grey and shows the Health score instead of a Tier letter. No taste number is made up.' },
+    },
+  },
+};
+
+export const Bar = {
+  args: { cereal: examples.bar, rank: 1, size: 'sm' },
+  parameters: {
+    docs: {
+      description: { story: 'A bar that has not been tasted yet: its wrapper, with the Health sticker until it gets a rating.' },
+    },
+  },
+};
+
+export const Milk = {
+  args: { cereal: examples.milk, rank: 1, size: 'sm' },
+  parameters: {
+    docs: {
+      description: { story: 'Milk is scored on Health alone, so it gets the same grey Health sticker. There is no photo, because the entry is a typical label rather than one brand.' },
     },
   },
 };

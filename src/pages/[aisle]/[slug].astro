@@ -5,12 +5,13 @@ import NutritionPanel from '../../components/NutritionPanel.astro';
 import IngredientsPanel from '../../components/IngredientsPanel.astro';
 import ScorePanel from '../../components/ScorePanel.astro';
 import WrapperShot from '../../components/WrapperShot.astro';
-import { CATEGORY_INFO, inWrapper, label } from '../../lib/taxonomy';
+import { CATEGORY_INFO, healthOnly, inWrapper, label } from '../../lib/taxonomy';
+import { healthOutOfTen, scoreCereal } from '../../lib/score';
 import { rating as fmtRating, shortDate } from '../../lib/format';
 import { u } from '../../lib/url';
 
 // One page per product, under its category's path: /cereals/<slug>/,
-// /bars/<slug>/ or /snacks/<slug>/.
+// /bars/<slug>/, /milk/<slug>/ or /snacks/<slug>/.
 export async function getStaticPaths() {
   const cereals = await getCollection('cereals');
   return cereals.map((c) => ({
@@ -26,6 +27,10 @@ const { Content } = await render(cereal);
 const tags = [...data.formFactors, ...data.attributes];
 const proteinTags = data.proteinSources;
 const hasBody = (cereal.body ?? '').trim().length > 0;
+// A milk's note says where its numbers came from. It isn't a tasting note, so
+// it doesn't carry the tasting note's heading or a signature.
+const nutritionOnly = healthOnly(cereal);
+const health = scoreCereal(cereal).nutrition;
 ---
 
 <Layout
@@ -79,13 +84,21 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
       )}
       <div class="bigtag ptag">
         {
-          data.rating == null ? (
+          nutritionOnly && health != null ? (
+            <div class="p">{healthOutOfTen(health)}<small>/10</small></div>
+          ) : data.rating == null ? (
             <div class="p unrated">—<small>unrated</small></div>
           ) : (
             <div class="p">{fmtRating(data.rating)}<small>/10</small></div>
           )
         }
-        <div class="stampline">TASTE · RANKED {shortDate(data.dateReviewed).toUpperCase()}</div>
+        <div class="stampline">
+          {nutritionOnly
+            ? 'HEALTH · NO TASTE SCORE'
+            : data.rating == null
+              ? 'TASTE · NO SCORE ON FILE'
+              : `TASTE · RANKED ${shortDate(data.dateReviewed).toUpperCase()}`}
+        </div>
       </div>
 
       <div class="taglist">
@@ -133,7 +146,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
 
   <article class="note wrap">
     <div class="notehead">
-      <span class="sticker">MANAGER'S TASTING NOTE</span>
+      <span class="sticker">{nutritionOnly ? 'WHERE THESE NUMBERS COME FROM' : "MANAGER'S TASTING NOTE"}</span>
     </div>
     {data.shortNote && <p class="short">“{data.shortNote}”</p>}
     {hasBody ? (
@@ -143,7 +156,7 @@ const hasBody = (cereal.body ?? '').trim().length > 0;
         <p class="empty">No note on file for this one — just the rating and the numbers, which is the whole point.</p>
       )
     )}
-    {(hasBody || data.shortNote) && (
+    {(hasBody || data.shortNote) && !nutritionOnly && (
       <p class="signoff">
         —<a href="https://byebrianwong.com/about" rel="author">Brian Wong</a>
       </p>

@@ -22,7 +22,7 @@ const formCats = (v: string) =>
     ? Object.entries(FORMS_BY_CATEGORY as Record<string, string[]>).filter(([, list]) => list.includes(v)).map(([c]) => c).join(' ')
     : CATEGORY_ORDER.join(' ');
 // The picker names one product ("Bar"), not an aisle ("Bars").
-const CATEGORY_NAMES: Record<string, string> = { cereal: 'Cereal', bar: 'Bar', snack: 'Snack' };
+const CATEGORY_NAMES: Record<string, string> = { cereal: 'Cereal', bar: 'Bar', milk: 'Milk', snack: 'Snack' };
 const categoryName = (c: string) => CATEGORY_NAMES[c] ?? c;
 ---
 

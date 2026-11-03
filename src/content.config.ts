@@ -4,7 +4,7 @@ import { glob } from 'astro/loaders';
 // What kind of product a file is. The site is cereal-first, and every product
 // is ranked only against others in its own category, so a protein bar never
 // takes a cereal's place. A file with no `category` line is a cereal.
-export const CATEGORIES = ['cereal', 'bar', 'snack'] as const;
+export const CATEGORIES = ['cereal', 'bar', 'milk', 'snack'] as const;
 
 // Form factors, one list per category. Puffs and crisps appear in both the
 // cereal and the snack lists, so FORM_FACTORS (every allowed value) repeats
@@ -22,7 +22,11 @@ export const SNACK_FORMS = [
   'chips', 'puffs', 'crisps', 'bites', 'cookies', 'jerky', 'crackers',
 ] as const;
 
-export const FORM_FACTORS = [...CEREAL_FORMS, ...BAR_FORMS, ...SNACK_FORMS] as const;
+// Milk's forms are the names US cartons use: fat-free (skim), low-fat (1%),
+// reduced-fat (2%) and whole.
+export const MILK_FORMS = ['fat-free', 'low-fat', 'reduced-fat', 'whole'] as const;
+
+export const FORM_FACTORS = [...CEREAL_FORMS, ...BAR_FORMS, ...SNACK_FORMS, ...MILK_FORMS] as const;
 
 export const PROTEIN_SOURCES = [
   'pea-protein', 'milk-protein', 'whey', 'soy', 'nut-seed', 'grain-only',

@@ -1,9 +1,9 @@
 ---
 import type { CollectionEntry } from 'astro:content';
 import { u } from '../lib/url';
-import { inWrapper, productPath } from '../lib/taxonomy';
+import { healthOnly, inWrapper, productPath } from '../lib/taxonomy';
 import WrapperShot from './WrapperShot.astro';
-import { scoreCereal, overallOutOfTen, tierColor } from '../lib/score';
+import { scoreCereal, overallOutOfTen, healthOutOfTen, tierColor } from '../lib/score';
 import { cardMacros } from '../lib/macros';
 
 interface Props {
@@ -23,16 +23,18 @@ const macros = cardMacros(cereal);
 // The sticker leads with the Tier letter, not the score. A 5.9 and a 5.8 are
 // the same for anyone choosing a box; the letter says which group it is in.
 // The score (taste and health combined) stays on as small print.
-const { overall, tier } = scoreCereal(cereal);
+// With no Tier to show, the sticker shows Health, which even an untasted product has.
+const { overall, tier, nutrition } = scoreCereal(cereal);
+const health = tier == null && nutrition != null ? healthOutOfTen(nutrition) : null;
 ---
 
 <a class={`cd ${size}`} href={u(productPath(cereal))}>
   <span class="rank-chip">{rank}</span>
 
   <span class:list={['score starburst', tier == null ? 'unrated' : `tier-${tierColor(tier)}`]}>
-    <span class="sc">Tier</span>
-    <span class="sv">{tier ?? '—'}</span>
-    <span class="so">{overall == null ? 'Unrated' : `${overallOutOfTen(overall)} / 10`}</span>
+    <span class="sc">{health ? 'Health' : 'Tier'}</span>
+    <span class:list={['sv', { num: health }]}>{tier ?? health ?? '—'}</span>
+    <span class="so">{overall != null ? `${overallOutOfTen(overall)} / 10` : health ? 'Out of 10' : 'Unrated'}</span>
   </span>
 
   <span class="box">
@@ -49,7 +51,7 @@ const { overall, tier } = scoreCereal(cereal);
     ) : (
       <span class="fallback" style={`background:${d.boxColor}`}>
         <span class="em">{d.emoji}</span>
-        <span class="lb">No image on file</span>
+        <span class="lb">{healthOnly(cereal) ? 'Any carton' : 'No image on file'}</span>
       </span>
     )}
   </span>
@@ -101,6 +103,7 @@ const { overall, tier } = scoreCereal(cereal);
   .cd.big .score { width: 118px; height: 118px; right: -26px; top: -26px; }
   .cd.big .score .sc { font-size: 9px; }
   .cd.big .score .sv { font-size: 54px; }
+  .cd.big .score .sv.num { font-size: 40px; }
   .cd.big .score .so { font-size: 9px; margin-top: 2px; }
 
   /* ---- tier 3 ---- */
@@ -110,6 +113,7 @@ const { overall, tier } = scoreCereal(cereal);
   .cd.sm .score { width: 96px; height: 96px; right: -20px; top: -20px; }
   .cd.sm .score .sc { font-size: 8px; }
   .cd.sm .score .sv { font-size: 44px; }
+  .cd.sm .score .sv.num { font-size: 32px; }
   .cd.sm .score .so { font-size: 8px; margin-top: 1px; }
   .cd.sm .rank-chip { width: 46px; height: 46px; font-size: 23px; top: -16px; left: -16px; }
   .cd.sm .macros .mv { font-size: 20px; }

@@ -1,17 +1,26 @@
 ---
 import { rating as fmtRating } from '../lib/format';
+import { healthOutOfTen } from '../lib/score';
 
 interface Props {
   rating: number | null;
   macros: string;
+  /** The 0–100 Health score. With no Taste score to show, the tag shows this instead. */
+  health?: number | null;
 }
 
-const { rating, macros } = Astro.props;
+const { rating, macros, health } = Astro.props;
 ---
 
 <div class="ptag">
   <div class:list={['p', { unrated: rating == null }]}>
-    {rating == null ? <>—<small>unrated</small></> : <>{fmtRating(rating)}<small>/10</small></>}
+    {rating != null ? (
+      <>{fmtRating(rating)}<small>/10</small></>
+    ) : health != null ? (
+      <>{healthOutOfTen(health)}<small>/10 health</small></>
+    ) : (
+      <>—<small>unrated</small></>
+    )}
   </div>
   <!-- Macros stay deliberately plain: the one thing on the card that never
        exaggerates. Named .mline, not .macros — the latter is the global card

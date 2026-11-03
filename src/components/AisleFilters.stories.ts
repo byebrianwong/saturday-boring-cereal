@@ -44,6 +44,18 @@ export const Bars = {
   },
 };
 
+export const Milk = {
+  args: { mode: 'buttons', category: 'milk' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'The milk row. Like the bars row, /cereals/ shows a button only when some milk in stock carries that tag.',
+      },
+    },
+  },
+};
+
 export const Everything = {
   args: { mode: 'buttons', category: 'all' },
   parameters: {

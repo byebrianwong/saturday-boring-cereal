@@ -60,7 +60,7 @@ export function splitBrandName(picked) {
 // --- tag inference ------------------------------------------------------------
 // Best-effort only. Callers surface the result so a wrong guess is visible and
 // editable rather than silently baked into the file.
-// Cereal, bar or snack. The product's own name decides first, because "bar"
+// Cereal, bar, milk or snack. The product's own name decides first, because "bar"
 // in a name is never wrong. Then the database's shelf placement (Open Food
 // Facts tags like en:protein-bars, or USDA's "Snack, Energy & Granola Bars").
 // Puffs and crisps are cereal forms too, so they only mark a snack when the
@@ -71,16 +71,19 @@ export function inferCategory(picked, brand, name) {
   if (/\bbars?\b/.test(title)) return 'bar';
   if (/\bcereal/.test(title)) return 'cereal';
   if (/\b(chips?|bites|cookies?|jerky|crackers?|meat sticks?|pretzels?|popcorn)\b/.test(title)) return 'snack';
+  // Milk chocolate and milk protein are ingredients, not milk.
+  if (/\bmilk\b(?! chocolate| protein)/.test(title)) return 'milk';
   if (/\bbars?\b/.test(shelf)) return 'bar';
   if (/cereal|muesli|granola/.test(shelf)) return 'cereal';
   if (/snack|chips|crisps|cookie|biscuit|cracker|jerky|meat/.test(shelf)) return 'snack';
+  if (/\bmilks?\b(?!-)/.test(shelf)) return 'milk';
   return 'cereal';
 }
 
 // Form-factor guesses per category. Cereal forms look at the ingredients too
-// (an "oat" cereal says so there); bar and snack forms read the name only,
-// because their ingredient lists name chocolate chips, nuts and fruit that
-// don't make the product a chip, nut bar or fruit bar.
+// (an "oat" cereal says so there); the other forms read the name only, because
+// a bar's ingredient list names chocolate chips, nuts and fruit that don't make
+// it a chip, nut bar or fruit bar.
 const FORM_GUESSES = {
   cereal: {
     granola: /granola/, flakes: /flake/, clusters: /cluster/, puffs: /puff/,
@@ -94,6 +97,10 @@ const FORM_GUESSES = {
   snack: {
     chips: /\bchips?\b/, puffs: /puff/, crisps: /crisp/, bites: /\bbites?\b/,
     cookies: /cookie/, jerky: /jerky|meat stick/, crackers: /cracker/,
+  },
+  milk: {
+    'fat-free': /fat[- ]free|\bskim\b|nonfat/, 'low-fat': /\b1\s?%|low[- ]?fat/,
+    'reduced-fat': /\b2\s?%|reduced[- ]fat/, whole: /\bwhole\b/,
   },
 };
 

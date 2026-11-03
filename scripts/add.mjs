@@ -17,7 +17,7 @@
 //
 // Your recorded numbers (protein / sugar / fiber / serving / rating) are never
 // overwritten — only blank fields get filled. Flags:
-//   --category    cereal (the default), bar or snack; --form takes that
+//   --category    cereal (the default), bar, milk or snack; --form takes that
 //                 category's form factors (e.g. protein-bar for a bar)
 //   --no-enrich   just scaffold the file, skip the lookup
 //   --review      look up, but never auto-apply — always hold for confirmation
@@ -150,7 +150,7 @@ const today = localDate();
 const lines = ['---'];
 lines.push(`name: ${q(name)}`);
 lines.push(`brand: ${q(brand)}`);
-// A file without a category is a cereal, so only bars and snacks write one.
+// A file without a category is a cereal, so everything else writes one.
 if (category !== 'cereal') lines.push(`category: ${category}`);
 lines.push(`rating: ${rating == null ? 'null' : rating}`);
 if (note) lines.push(`shortNote: ${q(note)}`);

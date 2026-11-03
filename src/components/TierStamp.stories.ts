@@ -37,3 +37,10 @@ export const Unrated = {
     docs: { description: { story: 'A cereal with no taste score has no Tier.' } },
   },
 };
+
+export const HealthInstead = {
+  args: { tier: null, overall: null, health: scoreCereal(examples.milk).nutrition },
+  parameters: {
+    docs: { description: { story: 'With no Tier to show, the seal shows the Health score when it is given one. Used by ScorePanel.' } },
+  },
+};

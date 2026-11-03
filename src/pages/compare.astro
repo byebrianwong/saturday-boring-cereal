@@ -36,6 +36,8 @@ const items = ranked.map((c) => {
   // best-in-row star compares the same numbers people see). Serving size is the
   // label's own figure.
   n: {
+    // Health out of ten, the one score every product has, milk included.
+    health: s.nutrition == null ? null : round1(s.nutrition / 10),
     servingSize: n.servingSize,
     protein: round1(n.protein),
     dietaryFiber: round1(n.dietaryFiber),
@@ -158,6 +160,7 @@ const items = ranked.map((c) => {
       best?: 'max' | 'min';
       minor?: boolean;
     }> = [
+      { key: 'health', label: 'Health', fmt: (v) => (v == null ? nil : `${v.toFixed(1)} / 10`), best: 'max' },
       { key: 'protein', label: 'Protein', fmt: g, best: 'max' },
       { key: 'dietaryFiber', label: 'Fiber', fmt: g, best: 'max' },
       { key: 'totalSugars', label: 'Total sugars', fmt: g, best: 'min' },

@@ -46,7 +46,7 @@ export function localDate(d = new Date()) {
 // `import` it from plain Node — read the enum arrays out of its text instead.
 // If that ever fails to parse, callers skip validation rather than block a add.
 //
-// Form factors are listed per category (CEREAL_FORMS, BAR_FORMS, SNACK_FORMS).
+// Form factors are listed per category (CEREAL_FORMS, BAR_FORMS, SNACK_FORMS, MILK_FORMS).
 // FORMS_BY_CATEGORY keeps them apart; FORM_FACTORS is every one of them, once.
 export function readTaxonomy() {
   const grab = (src, constName) => {
@@ -58,6 +58,7 @@ export function readTaxonomy() {
     const byCategory = {
       cereal: grab(src, 'CEREAL_FORMS'),
       bar: grab(src, 'BAR_FORMS'),
+      milk: grab(src, 'MILK_FORMS'),
       snack: grab(src, 'SNACK_FORMS'),
     };
     const complete = Object.values(byCategory).every(Boolean);

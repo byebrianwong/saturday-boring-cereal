@@ -5,7 +5,7 @@ import RankCard from '../components/RankCard.astro';
 import ChampCard from '../components/ChampCard.astro';
 import BreakfastStrip from '../components/BreakfastStrip.astro';
 import { byOverallDesc } from '../lib/score';
-import { CATEGORY_INFO, countOf, inCategory, label } from '../lib/taxonomy';
+import { aisleNote, CATEGORY_INFO, CATEGORY_ORDER, countOf, inCategory, label } from '../lib/taxonomy';
 import { u } from '../lib/url';
 import RecordCard from '../components/RecordCard.astro';
 import { shelfRecords, type ShelfRecord } from '../lib/records';
@@ -14,20 +14,19 @@ import { per100gOf } from '../lib/nutrition';
 
 const everything = await getCollection('cereals');
 // It's a cereal site: the Tiers, the champion and the shelf records are all
-// cereal. Bars and snacks get the same score but are ranked only against each
-// other, in their own section further down.
+// cereal. Every other category is ranked only against itself, in its own
+// section further down.
 const cereals = inCategory(everything, 'cereal');
 // The home page shows the top of the Tier list: taste and health combined.
 const ranked = [...cereals].sort(byOverallDesc);
 
 // The other aisles: the top three of each, numbered within that category.
-const others = (['bar', 'snack'] as const)
+const others = CATEGORY_ORDER.filter((c) => c !== 'cereal')
   .map((category) => {
     const list = inCategory(everything, category);
-    return { category, n: list.length, top: [...list].sort(byOverallDesc).slice(0, 3) };
+    return { category, n: list.length, top: [...list].sort(byOverallDesc).slice(0, 3), note: aisleNote(category, list) };
   })
   .filter((o) => o.n > 0);
-const othersNames = others.map((o) => CATEGORY_INFO[o.category].many).join(' and ');
 const champ = ranked[0];
 const runnersUp = ranked.slice(1, 9);
 
@@ -153,7 +152,7 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
     </div>
   </section>
 
-  <!-- ============ THE OTHER AISLES (bars, snacks) ============ -->
+  <!-- ============ THE OTHER AISLES (bars, milk, snacks) ============ -->
   {
     others.length > 0 && (
       <section class="section other-aisles" id="other-aisles">
@@ -161,15 +160,16 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
           <div class="section-kicker">Also in stock</div>
           <h2 class="section-title">The <em>other</em> aisles</h2>
           <p class="section-lede">
-            The {othersNames} get the same score as the cereals: same taste curve, same targets per 100
-            grams, same Tier letters. They are ranked only against each other, never against the cereals.
+            The same nutrition targets per 100 grams as the cereals, so a number means the same thing
+            in every aisle. Each aisle is ranked only against itself, never against the cereals.
           </p>
-          {others.map(({ category, n, top }) => (
+          {others.map(({ category, n, top, note }) => (
             <div class="aisle-block">
               <h3 class="aisle-head">
                 {CATEGORY_INFO[category].label}
                 <small>{countOf(category, n)} on file</small>
               </h3>
+              {note && <p class="aisle-note">{note}</p>}
               <div class="rank-row">
                 {top.map((c, i) => (
                   <RankCard cereal={c} rank={i + 1} size="sm" />
@@ -459,6 +459,15 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
     letter-spacing: 0.2em;
     color: var(--muted);
     margin-top: 4px;
+  }
+
+  .aisle-note {
+    font-family: var(--fine);
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--muted);
+    max-width: 640px;
+    margin: -14px auto 26px;
   }
 
   .aisle-block .rank-more { margin-top: 30px; }
