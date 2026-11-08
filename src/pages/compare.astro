@@ -4,7 +4,7 @@ import Layout from '../layouts/Layout.astro';
 import { scoreCereal, tierColor, overallOutOfTen, proteinDVOf } from '../lib/score';
 import { u } from '../lib/url';
 import { inWrapper, productPath } from '../lib/taxonomy';
-import { per100gOf, percentDV, percentOfDay } from '../lib/nutrition';
+import { basisFor, nutritionOf, percentDV, percentOfDay } from '../lib/nutrition';
 
 const cereals = await getCollection('cereals');
 const round1 = (v: number | null | undefined) => (v == null ? null : Math.round(v * 10) / 10);
@@ -14,7 +14,7 @@ const ranked = [...cereals].sort((a, b) => (b.data.rating ?? -1) - (a.data.ratin
 // Compact payload for the client picker + table.
 const items = ranked.map((c) => {
   const s = scoreCereal(c);
-  const n = per100gOf(c);
+  const n = nutritionOf(c);
   const protein = proteinDVOf(n);
   return {
   id: c.id,
@@ -32,7 +32,9 @@ const items = ranked.map((c) => {
   tier: s.tier,
   color: s.tier == null ? 'na' : tierColor(s.tier),
   out10: s.overall == null ? null : overallOutOfTen(s.overall),
-  // Per 100 g, rounded the way the rest of the site displays it (so the
+  // What the column's figures are per: "100 g", or "250 mL" for a milk.
+  basis: basisFor(c.data.category).label,
+  // Per 100 g (250 mL for milk), rounded the way the rest of the site displays it (so the
   // best-in-row star compares the same numbers people see). Serving size is the
   // label's own figure.
   n: {
@@ -49,7 +51,7 @@ const items = ranked.map((c) => {
     totalFat: round1(n.totalFat),
     sodium: round0(n.sodium),
   },
-  // % Daily Value per 100 g, shown under the amount. Total sugars have no FDA
+  // % Daily Value on the same basis, shown under the amount. Total sugars have no FDA
   // Daily Value, so they count against 50 g, the added-sugar one; added sugars
   // and calories get no percent. Protein marked estimated when the label
   // doesn't print its own %DV.
@@ -105,9 +107,9 @@ const items = ranked.map((c) => {
         </div>
 
         <p class="board-foot">
-          Figures per 100 g. % DV uses the FDA's Daily Values (2,000 calories). Total sugars have no
-          Daily Value, so their % of a day is against 50 g. ~ means estimated. A star marks the best
-          in a row.
+          Figures per 100 g, except milk, which is per 250 mL and says so under its name. % DV uses
+          the FDA's Daily Values (2,000 calories). Total sugars have no Daily Value, so their % of a
+          day is against 50 g. ~ means estimated. A star marks the best in a row.
           <a href={u('/about/#overall')}>How scoring works</a>
         </p>
       </div>
@@ -121,6 +123,7 @@ const items = ranked.map((c) => {
       id: string; brand: string; name: string; emoji: string;
       boxColor: string; boxImage: string | null; wrapped: boolean; rating: number | null; href: string;
       overall: number | null; tier: string | null; color: string; out10: string | null;
+      basis: string;
       n: Record<string, number | null>;
       dv: Record<string, number | null>;
       proteinDVEstimated: boolean;
@@ -237,7 +240,7 @@ const items = ranked.map((c) => {
             <a class="box${c.wrapped ? ' wide' : ''}" href="${c.href}" style="--bc:${c.boxColor}">
               ${c.boxImage ? `<img src="${c.boxImage}" alt="${c.brand} ${c.name}">` : `<span class="e">${c.emoji}</span>`}
             </a>
-            <div class="cn"><b>${c.name}</b><small>${c.brand}</small></div>
+            <div class="cn"><b>${c.name}</b><small>${c.brand}</small>${c.basis === '100 g' ? '' : `<small class="per">Per ${c.basis}</small>`}</div>
             <div class="crate">${
               c.rating == null ? nil : `${c.rating.toFixed(1)}<small>/10</small>`
             }</div>
@@ -554,6 +557,12 @@ const items = ranked.map((c) => {
     text-transform: uppercase;
     letter-spacing: 0.14em;
     margin-top: 3px;
+  }
+
+  /* A milk column is per 250 mL, not 100 g. Not uppercased, so "mL" stays mL. */
+  .board :global(.cn small.per) {
+    text-transform: none;
+    letter-spacing: 0.04em;
   }
 
   /* The taste score is a number, so it behaves like one. */

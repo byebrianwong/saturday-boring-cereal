@@ -33,7 +33,8 @@ macros inside it are small grey text.
 1. **Stored per serving, shown per 100 g.** A cereal file records nutrition
    exactly as the box prints it, per serving. The site scales it to 100 g
    (`src/lib/nutrition.ts`) so boxes with different serving sizes compare
-   fairly.
+   fairly. Milk is the exception: it is scaled to 250 mL, about what goes on
+   a bowl.
 2. **Missing means missing.** If a label does not list a value, the site says
    "not listed". If there is no taste score, it says "unrated". Nothing is ever
    estimated to fill a gap. Several stories exist only to show this.

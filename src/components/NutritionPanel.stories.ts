@@ -10,7 +10,7 @@ export default {
     docs: {
       description: {
         component:
-          'A US-style Nutrition Facts label. Cereal files store nutrition per serving, exactly as the box prints it. This panel scales it to 100 g by default, so boxes with different serving sizes can be compared. A main nutrient the label does not list shows as "not listed", never as a guess. An indented one the label leaves out, such as trans fat, is left off the panel. Sodium sits last so the macros read as one block.',
+          'A US-style Nutrition Facts label. Cereal files store nutrition per serving, exactly as the box prints it. This panel scales it to 100 g by default, so boxes with different serving sizes can be compared. Milk is scaled to 250 mL instead. A main nutrient the label does not list shows as "not listed", never as a guess. An indented one the label leaves out, such as trans fat, is left off the panel. Sodium sits last so the macros read as one block.',
       },
     },
   },
@@ -18,6 +18,18 @@ export default {
 
 export const Per100g = {
   args: { nutrition: examples.typical.data.nutrition },
+};
+
+export const Per250ml = {
+  args: { nutrition: examples.milk.data.nutrition, basis: '250ml' },
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'How a milk page shows its numbers: per 250 mL, about what goes on a bowl of cereal, scaled from the carton\'s 1 cup (240 mL) serving. 100 g of milk is less than half a glass.',
+      },
+    },
+  },
 };
 
 export const PerServing = {

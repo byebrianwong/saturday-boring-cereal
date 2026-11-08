@@ -6,7 +6,7 @@ import CategorySwitch from '../../components/CategorySwitch.astro';
 import PageHeader from '../../components/PageHeader.astro';
 import WrapperShot from '../../components/WrapperShot.astro';
 import { byRatingDesc } from '../../lib/macros';
-import { per100gOf, percentOfDay, type Nutrition } from '../../lib/nutrition';
+import { basisFor, nutritionOf, percentOfDay, type Nutrition } from '../../lib/nutrition';
 import { scoreCereal, scoreTier, tierColor, overallOutOfTen, macroTier, proteinDVOf } from '../../lib/score';
 import type { MacroTintKey } from '../../lib/score';
 import { oneDecimal } from '../../lib/format';
@@ -54,13 +54,22 @@ const shelfNotes = stocked.flatMap((c) => {
   return text ? [{ category: c, text }] : [];
 });
 
-// One row per box. Nutrition is per 100 g, like everywhere else on the site.
+// What each shelf's nutrition columns are per. Milk is per 250 mL, everything
+// else per 100 g, so Everything names both once milk is in stock. The script
+// swaps the table heading to match the shelf on show.
+const basisText = {
+  ...Object.fromEntries(stocked.map((c) => [c, basisFor(c).label])),
+  all: counts.milk > 0 ? `100 g, milk per ${basisFor('milk').label}` : '100 g',
+};
+
+// One row per box. Nutrition is per 100 g (per 250 mL for milk), like
+// everywhere else on the site.
 // A null stays null: the cell prints a dash and sorts to the bottom.
 // `pos` is the first paint's position number, counted within the category.
 const seen = new Map<string, number>();
 const rows = ranked.map((c) => {
   const d = c.data;
-  const n = per100gOf(c);
+  const n = nutritionOf(c);
   const s = scoreCereal(c);
   const taste = d.rating == null ? null : d.rating * 10;
   const pos = seen.get(d.category) ?? 0;
@@ -83,6 +92,7 @@ const rows = ranked.map((c) => {
     tier: s.tier,
     tierColor: s.tier == null ? 'na' : tierColor(s.tier),
     n,
+    basis: basisFor(d.category).label,
     tags: [...d.formFactors, ...d.attributes],
   };
 });
@@ -120,7 +130,7 @@ type Metric = (typeof METRICS)[number];
 // uses its %DV (marked "~" when estimated from grams), everything else uses
 // `percentOfDay`, which gives total sugars and calories a reference too.
 // Both are null when the label leaves the nutrient out.
-function amounts(n: Nutrition, m: Metric) {
+function amounts(n: Nutrition, m: Metric, basis: string) {
   const raw = n[m.key];
   const day = m.key === 'protein' ? proteinDVOf(n) : { dv: percentOfDay(m.key, raw), estimated: false };
   const pct = raw == null ? null : day.dv;
@@ -132,7 +142,7 @@ function amounts(n: Nutrition, m: Metric) {
     g,
     p,
     pct,
-    title: g == null ? 'Not listed on the label' : `${m.title} per 100 g: ${amount}, ${p} of a day${est ? ' (estimated)' : ''}`,
+    title: g == null ? 'Not listed on the label' : `${m.title} per ${basis}: ${amount}, ${p} of a day${est ? ' (estimated)' : ''}`,
   };
 }
 
@@ -157,7 +167,7 @@ const dataAttrs = (r: (typeof rows)[number]) => ({
   ...Object.fromEntries(METRICS.map((m) => [`data-s-${kebab(m.key)}`, sortVal(r.n[m.key as MetricKey])])),
   // The same nutrients as a percent of a day. The percent view sorts on these,
   // so protein sorts by %DV, the number its tint and the Health score use.
-  ...Object.fromEntries(METRICS.map((m) => [`data-p-${kebab(m.key)}`, sortVal(amounts(r.n, m).pct)])),
+  ...Object.fromEntries(METRICS.map((m) => [`data-p-${kebab(m.key)}`, sortVal(amounts(r.n, m, r.basis).pct)])),
 });
 
 // The Boxes view has no column headings to click, so it sorts from a menu.
@@ -200,8 +210,8 @@ const MEDALS = ['m1', 'm2', 'm3'];
       <button type="button" data-view="table" aria-pressed="false">Table</button>
     </div>
     <div class="viewer" role="group" aria-label="Show nutrients as">
-      <button type="button" data-units="pct" class="on" aria-pressed="true" title="Share of a day's worth, per 100 g">% of day</button>
-      <button type="button" data-units="g" aria-pressed="false" title="Grams per 100 g, as on the label">Grams</button>
+      <button type="button" data-units="pct" class="on" aria-pressed="true" title="Share of a day's worth">% of day</button>
+      <button type="button" data-units="g" aria-pressed="false" title="Grams">Grams</button>
     </div>
     <label class="finder">
       <span>Search</span>
@@ -219,7 +229,13 @@ const MEDALS = ['m1', 'm2', 'm3'];
     <div class="count" id="count" aria-live="polite"></div>
   </div>
 
-  <section class="shelf wrap" id="shelf" data-units="pct" data-default-sorts={JSON.stringify(defaultSorts)}>
+  <section
+    class="shelf wrap"
+    id="shelf"
+    data-units="pct"
+    data-default-sorts={JSON.stringify(defaultSorts)}
+    data-basis-text={JSON.stringify(basisText)}
+  >
     <ol class="tiles" id="tiles" aria-label="All cereals, as boxes">
       {rows.map((r) => (
         <li class="tile" {...dataAttrs(r)} hidden={r.d.category !== 'cereal'}>
@@ -276,7 +292,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
               const raw = r.n[m.key as MetricKey];
               const tintValue = m.key === 'protein' ? proteinDVOf(r.n).dv : raw;
               const tier = macroTier(m.key as MacroTintKey, tintValue);
-              const a = amounts(r.n, m);
+              const a = amounts(r.n, m, r.basis);
               return (
                 <div class:list={['tm', tier && `t-${tier}`]} title={a.title}>
                   <dt>{m.label}</dt>
@@ -323,8 +339,8 @@ const MEDALS = ['m1', 'm2', 'm3'];
               <th class="g-name" scope="col"></th>
               <th class="g-scores" colspan="3" scope="colgroup">Scores · out of 10</th>
               <th class="g-macros" colspan={SCORED_COUNT} scope="colgroup">
-                <span class="u-pct">Scored · % of a day, per 100 g</span>
-                <span class="u-g">Scored · grams per 100 g</span>
+                <span class="u-pct">Scored · % of a day, per <span data-basis>100 g</span></span>
+                <span class="u-g">Scored · grams per <span data-basis>100 g</span></span>
               </th>
               <th class="g-minor" colspan={METRICS.length - SCORED_COUNT} scope="colgroup">Not scored</th>
               <th class="g-rest" colspan="3" scope="colgroup">On the box</th>
@@ -400,7 +416,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
                   // Protein is tinted by its %DV, the same number the Tier score uses.
                   const tintValue = m.key === 'protein' ? proteinDVOf(r.n).dv : raw;
                   const tier = m.scored ? macroTier(m.key as MacroTintKey, tintValue) : null;
-                  const a = amounts(r.n, m);
+                  const a = amounts(r.n, m, r.basis);
                   return (
                     <td class:list={['c-num', { minor: !m.scored }, tier && `tint t-${tier}`]} title={a.title}>
                       {a.g == null ? (
@@ -440,7 +456,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
     </div>
 
     <p class="ledger-foot">
-      Taste is my score out of ten. Nutrition columns are per 100 g; a dash means the
+      Taste is my score out of ten. Nutrition columns are per 100 g{counts.milk > 0 && ', or per 250 mL for milk'}; a dash means the
       label doesn’t list it. % of a day uses the FDA’s Daily Values for a 2,000-calorie diet. Total
       sugar has no Daily Value, so it is counted against 50 g, and calories against 2,000. ~ means
       the label prints no protein %DV, so it is estimated from grams. Dark red marks sugar or
@@ -509,6 +525,9 @@ const MEDALS = ['m1', 'm2', 'm3'];
   const defaultSorts: Record<string, string> = JSON.parse(shelf.dataset.defaultSorts ?? '{}');
   const defaultSort = () => defaultSorts[state.c] ?? 'taste';
   const shelfNotes = Array.from(document.querySelectorAll<HTMLElement>('[data-shelf-note]'));
+  // What the nutrition columns are per on the shelf on show: 250 mL for milk.
+  const basisText: Record<string, string> = JSON.parse(shelf.dataset.basisText ?? '{}');
+  const basisEls = Array.from(document.querySelectorAll<HTMLElement>('[data-basis]'));
 
   // The filter buttons of the category on show.
   const barFor = (c: string) => filterBars.find((b) => b.dataset.filterBar === c);
@@ -657,6 +676,7 @@ const MEDALS = ['m1', 'm2', 'm3'];
     }
     for (const bar of filterBars) bar.hidden = bar.dataset.filterBar !== state.c;
     for (const note of shelfNotes) note.hidden = note.dataset.shelfNote !== state.c;
+    for (const el of basisEls) el.textContent = basisText[state.c] ?? '100 g';
     for (const b of filterBtnsIn(state.c)) b.classList.toggle('on', b.dataset.filter === state.f);
     for (const b of catBtns) {
       const on = b.dataset.category === state.c;

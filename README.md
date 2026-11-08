@@ -279,10 +279,18 @@ Health wherever a Tier would go. The three files named `typical-*-milk.md` are n
 Each holds the median of about 190 plain milk labels of that kind from USDA's Branded Foods
 database, with the cup weight from USDA (245 g fat-free, 244 g for 1% and 2%).
 
-It uses the same formula per 100 g as everything else, and that has two effects worth
-knowing. Milk is about 90% water and has no fiber, so all three land near 4 out of 10
-(fat-free 4.0, 1% 3.9, 2% 3.9). And the three barely differ, because saturated fat is the
-only number that changes between them and it counts for 10% of the score.
+**Milk is measured per 250 mL, not per 100 g.** 250 mL is about what goes on a bowl of
+cereal, while 100 g of milk is less than half a glass. Everything about a milk uses that
+basis: its Nutrition Facts panel, the Aisle table and tiles, the home page cards, the Price
+Check (the column says "Per 250 mL" under the name) and the Health score. The scaling is
+`per250ml()` in [src/lib/nutrition.ts](src/lib/nutrition.ts). It reads the millilitres from
+the serving description ("1 cup (240 mL)") and assumes 240 mL, the FDA's milk serving, when
+the description has none.
+
+The Health score uses the same formula and targets as everything else, applied to 250 mL.
+Milk has no fiber and about 12 g of lactose a cup, so all three land between 3.5 and 4 out
+of 10: fat-free 4.0, 1% 3.8, 2% 3.6. Saturated fat is the only number that changes between
+them, and it counts for 10% of the score. Per 100 g the three were 4.0, 3.9 and 3.9.
 
 ## Updating a cereal you already have
 

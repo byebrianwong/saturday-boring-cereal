@@ -1,5 +1,5 @@
 import type { CollectionEntry } from 'astro:content';
-import { per100gOf, percentDV, percentOfDay, type DVKey, type Nutrition } from './nutrition';
+import { nutritionOf, percentDV, percentOfDay, type DVKey, type Nutrition } from './nutrition';
 import { grams } from './format';
 
 /** "5.4g · 19% DV", or plain grams when the label omits the value. */
@@ -20,7 +20,8 @@ function sugarWithDay(value: number | null | undefined): string {
 // whole shelf at once. The methodology is posted on /about §6.
 
 // --- Tunable targets, per 100 g. Grading per 100 g instead of per serving
-// means a box can't score better by stating a bigger serving. ---
+// means a box can't score better by stating a bigger serving. Milk is graded
+// per 250 mL against the same targets (see `nutritionOf` in nutrition.ts). ---
 // Protein is scored on % Daily Value, because the label's %DV is adjusted for
 // protein quality. 35% DV per 100 g earns full marks.
 const PROTEIN_DV_TARGET = 35;
@@ -71,7 +72,7 @@ export interface Subscore {
   score: number | null;
   /** Bar colour: the same tint the nutrient gets everywhere else. */
   tier: Tint | null;
-  /** Raw value shown beside the bar, e.g. "14g" (per 100 g) or "8.5/10". */
+  /** Raw value shown beside the bar, e.g. "14g" (per 100 g, or 250 mL for milk) or "8.5/10". */
   detail: string;
 }
 
@@ -141,7 +142,7 @@ export function proteinDVOf(n: Nutrition): { dv: number | null; estimated: boole
 
 export function scoreCereal(c: CollectionEntry<'cereals'>): Score {
   const { rating } = c.data;
-  const n = per100gOf(c);
+  const n = nutritionOf(c);
 
   const taste = rating == null ? null : rating * 10;
   const { dv: proteinDV, estimated: proteinDVEstimated } = proteinDVOf(n);
