@@ -10,7 +10,7 @@ import { u } from '../lib/url';
 import RecordCard from '../components/RecordCard.astro';
 import { shelfRecords, type ShelfRecord } from '../lib/records';
 import { dayShare, type ShareKey } from '../lib/macros';
-import { per100gOf } from '../lib/nutrition';
+import { nutritionOf } from '../lib/nutrition';
 
 const everything = await getCollection('cereals');
 // It's a cereal site: the Tiers, the champion and the shelf records are all
@@ -160,8 +160,9 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
           <div class="section-kicker">Also in stock</div>
           <h2 class="section-title">The <em>other</em> aisles</h2>
           <p class="section-lede">
-            The same nutrition targets per 100 grams as the cereals, so a number means the same thing
-            in every aisle. Each aisle is ranked only against itself, never against the cereals.
+            The same nutrition targets as the cereals. Bars and snacks are measured per 100 grams, like
+            the cereals, and milk per 250 mL, about what goes on a bowl. Each aisle is ranked only
+            against itself, never against the cereals.
           </p>
           {others.map(({ category, n, top, note }) => (
             <div class="aisle-block">
@@ -205,7 +206,7 @@ const tagColour = ['y', 'o', 't', 'r', 'w'];
         {recordCards.map((r) => (
           <RecordCard
             label={r.label}
-            value={dayShare(per100gOf(r.rec!.cereal), r.key)!}
+            value={dayShare(nutritionOf(r.rec!.cereal), r.key)!}
             note="of a day, per 100g"
             caveat={r.caveat}
             cereal={r.rec!.cereal}

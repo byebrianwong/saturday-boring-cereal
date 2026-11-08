@@ -1,11 +1,11 @@
 import type { CollectionEntry } from 'astro:content';
-import { per100gOf } from './nutrition';
+import { nutritionOf } from './nutrition';
 
 type Cereal = CollectionEntry<'cereals'>;
 
 export interface ShelfRecord {
   cereal: Cereal;
-  /** The winning amount, per 100 g. */
+  /** The winning amount, per 100 g (records are cereal only). */
   value: number;
 }
 
@@ -16,7 +16,7 @@ type Key = 'protein' | 'dietaryFiber' | 'totalSugars';
 function best(cereals: Cereal[], key: Key, pick: 'max' | 'min'): ShelfRecord | null {
   let out: ShelfRecord | null = null;
   for (const cereal of cereals) {
-    const value = per100gOf(cereal)[key];
+    const value = nutritionOf(cereal)[key];
     if (value == null) continue;
     if (!out || (pick === 'max' ? value > out.value : value < out.value)) out = { cereal, value };
   }

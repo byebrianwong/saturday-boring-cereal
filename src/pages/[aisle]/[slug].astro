@@ -115,7 +115,7 @@ const health = scoreCereal(cereal).nutrition;
 
     <div class="right">
       <ScorePanel cereal={cereal} />
-      <NutritionPanel nutrition={data.nutrition} />
+      <NutritionPanel nutrition={data.nutrition} basis={data.category === 'milk' ? '250ml' : '100g'} />
       <IngredientsPanel ingredients={data.ingredients} source={data.ingredientsSource} />
     </div>
   </div>

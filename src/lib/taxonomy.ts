@@ -104,7 +104,7 @@ export function healthOnly(c: CollectionEntry<'cereals'>): boolean {
  */
 export function aisleNote(category: Category, list: CollectionEntry<'cereals'>[]): string | null {
   if (category === 'milk') {
-    return 'Milk gets a Health score only: the nutrition half of the Tier score, with no Taste score and no Tier letter. It is graded per 100 grams like everything else. Milk is about 90% water, so compare it with other milks, not with a dry cereal.';
+    return 'Milk gets a Health score only: the nutrition half of the Tier score, with no Taste score and no Tier letter. It is shown and graded per 250 mL, about what goes on a bowl of cereal, where everything else is per 100 grams. Compare it with other milks, not with a dry cereal.';
   }
   if (list.length > 0 && list.every((c) => c.data.rating == null)) {
     return 'Not tasted yet, so there is no Taste score and no Tier. These are ordered by Health, the nutrition half of the score, until they are.';

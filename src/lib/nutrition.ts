@@ -7,6 +7,11 @@ export type Nutrition = CollectionEntry<'cereals'>['data']['nutrition'];
 // from box to box (28 g to 65 g on the current shelf). Comparing per serving
 // rewards a box for stating a bigger serving. Scaling happens here, at build
 // time, so the stored numbers always match the physical label.
+//
+// Milk is the one exception: it is shown and graded per 250 mL. That is about
+// what someone pours on a bowl of cereal or into a glass, while 100 g of milk
+// is less than half a glass. Milk labels state the serving in millilitres, so
+// scaling by volume needs no density.
 
 const SCALED_KEYS = [
   'calories',
@@ -24,13 +29,8 @@ const SCALED_KEYS = [
   'sodium',
 ] as const;
 
-/**
- * The same nutrition scaled to 100 g. `servingSize` and `servingDescription`
- * are left as the label states them. Values the label omits stay null.
- * Values are not rounded; round only when displaying.
- */
-export function per100g(n: Nutrition): Nutrition {
-  const factor = 100 / n.servingSize;
+/** Every amount multiplied by `factor`. Values the label omits stay null. */
+function scaled(n: Nutrition, factor: number): Nutrition {
   const out: Nutrition = { ...n };
   for (const k of SCALED_KEYS) {
     const v = n[k];
@@ -39,9 +39,56 @@ export function per100g(n: Nutrition): Nutrition {
   return out;
 }
 
-/** Shorthand: a cereal's nutrition per 100 g. */
-export function per100gOf(c: CollectionEntry<'cereals'>): Nutrition {
-  return per100g(c.data.nutrition);
+/**
+ * The same nutrition scaled to 100 g. `servingSize` and `servingDescription`
+ * are left as the label states them. Values the label omits stay null.
+ * Values are not rounded; round only when displaying.
+ */
+export function per100g(n: Nutrition): Nutrition {
+  return scaled(n, 100 / n.servingSize);
+}
+
+/** How much milk the site shows and grades, in millilitres. */
+export const MILK_ML = 250;
+
+// The FDA's serving for milk, which every US carton prints: 1 cup, 240 mL.
+// Used only when a milk's serving description doesn't give the millilitres.
+const CUP_ML = 240;
+
+/** A label serving in millilitres: read from "1 cup (240 mL)", else 1 cup. */
+export function servingMl(n: Nutrition): number {
+  const m = /(\d+(?:\.\d+)?)\s*ml\b/i.exec(n.servingDescription ?? '');
+  return m ? Number(m[1]) : CUP_ML;
+}
+
+/** The same nutrition scaled to 250 mL, for milk. Like `per100g` otherwise. */
+export function per250ml(n: Nutrition): Nutrition {
+  return scaled(n, MILK_ML / servingMl(n));
+}
+
+/** What a product's numbers are shown and graded per. */
+export interface Basis {
+  /** For "per …" text: "100 g" or "250 mL". */
+  label: string;
+  /** The same, squeezed for a price tag: "/100g" or "/250mL". */
+  short: string;
+}
+
+const PER_100G: Basis = { label: '100 g', short: '/100g' };
+const PER_250ML: Basis = { label: `${MILK_ML} mL`, short: `/${MILK_ML}mL` };
+
+/** Per 250 mL for milk, per 100 g for everything else. */
+export function basisFor(category: string): Basis {
+  return category === 'milk' ? PER_250ML : PER_100G;
+}
+
+/**
+ * A product's nutrition on its own basis (see `basisFor`): per 250 mL for
+ * milk, per 100 g for everything else. Everything the site shows or grades
+ * uses this.
+ */
+export function nutritionOf(c: CollectionEntry<'cereals'>): Nutrition {
+  return c.data.category === 'milk' ? per250ml(c.data.nutrition) : per100g(c.data.nutrition);
 }
 
 // FDA Daily Values for adults and children 4+, based on a 2,000-calorie diet
